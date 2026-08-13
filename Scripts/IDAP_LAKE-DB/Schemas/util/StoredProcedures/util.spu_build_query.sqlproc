@@ -1,0 +1,88 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_BUILD_QUERY(SCHEMA_NAME VARCHAR, TABLE_NAME VARCHAR, STAGE_NAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS '
+var table_name = TABLE_NAME;
+var schema_name = SCHEMA_NAME;
+var stage_name = STAGE_NAME;
+
+// Getting the max ordinal number for the table 
+var max_ordinal_query = "select max(ordinal_position) from information_schema.columns where table_schema = ''"+schema_name+"'' AND table_name = ''"+table_name+"'';" ;
+var max_ordinal_snowflake = snowflake.createStatement(
+           {
+           sqlText: max_ordinal_query
+           }
+        );
+    var res_max_ordinal = max_ordinal_snowflake.execute();
+    res_max_ordinal.next();
+var max_ordinal_number = res_max_ordinal.getColumnValue(1);
+
+//return max_ordinal_number;
+// We now have the max ordinal number stored for our for loops
+//var text = "Begin: ";
+
+var query_builder;
+var column_gather_query = "select column_name, is_identity from information_schema.columns where table_schema = ''"+schema_name+"'' AND table_name = ''"+table_name+"'' and ordinal_position = " 
+
+//Set variables to be used in SELECT before for loop
+var final_select_query = "SELECT";
+var current_ordinal_position = 1;
+
+var last = 1;
+//This for loop will go from 1 to whatever the max ordinal number is
+for (let i = 1; i <= max_ordinal_number; i++) {
+    //THIS GIVES US THE QUERY TO GET THE i NUMBERED COLUMN NAME
+    column_gather_query = column_gather_query + i + ";";
+    var column_gather_sql = snowflake.createStatement({sqlText: column_gather_query});
+    var column_gather_results = column_gather_sql.execute();
+   
+
+    
+    column_gather_results.next();
+    var col_name = column_gather_results.getColumnValue(1);
+    var is_identity = column_gather_results.getColumnValue(2);
+    //THIS RETURNS THE QUERY TO ITS STATE BEFORE ADDING i TO THE END
+    last = column_gather_query.lastIndexOf("=");
+    column_gather_query = column_gather_query.substring(0, last);
+    column_gather_query = column_gather_query + "= ";
+
+
+    //If the identity column is no we need will need to make sure it isnt filename or insert_datetime
+    if(is_identity == "NO"){
+        if(col_name == "FILENAME" || col_name == "INSERT_DATETIME"){
+            if(col_name == "FILENAME"){
+                final_select_query = final_select_query + " METADATA$FILENAME AS FILENAME,";
+            }
+            if(col_name == "INSERT_DATETIME"){
+                final_select_query = final_select_query + " METADATA$FILE_LAST_MODIFIED AS INSERT_DATETIME,";
+            
+            }
+            }
+            //If it isnt filename or insert datetime build query using column data
+            else{
+
+            //Build your query and increment the $ number
+            final_select_query = final_select_query + " $"+ current_ordinal_position;
+            final_select_query = final_select_query + " AS " + col_name+","
+            current_ordinal_position = current_ordinal_position + 1;
+        
+            }
+    
+    } //END IF IS IDENTITY
+
+    
+}// END OF FOR LOOP
+//If there is a comma at the end of the query, remove it
+if(final_select_query.at(-1) == ",")
+{
+    final_select_query = final_select_query.substr(0,final_select_query.length-1)
+}
+
+//Add stage
+final_select_query = final_select_query + " FROM @UTIL." + stage_name;
+//Return the final query
+return final_select_query;
+
+
+';

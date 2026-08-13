@@ -1,0 +1,121 @@
+CREATE OR REPLACE TEMPORARY TABLE
+	ODSDATA.TMP_SERVICE_AREA_DATA_SOURCE_REL (
+		SERVICE_AREA_DATA_SOURCE_REL_KEY NUMBER(38,0) AUTOINCREMENT START 1 INCREMENT 1 NOT NULL,
+		SERVICE_AREA_KEY NUMBER(38,0) NOT NULL,
+		DATA_SOURCE_KEY NUMBER(38,0) NOT NULL,
+		SERVICE_AREA_SOURCE_DESC VARCHAR NOT NULL,
+		LAST_UPDATED_DATETIME TIMESTAMP_TZ(9) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		CONSTRAINT PK_SERVICE_AREA_DATA_SOURCE_REL PRIMARY KEY (SERVICE_AREA_DATA_SOURCE_REL_KEY),
+		CONSTRAINT UK_SERVICE_AREA_DATA_SOURCE_REL UNIQUE (DATA_SOURCE_KEY, SERVICE_AREA_KEY, SERVICE_AREA_SOURCE_DESC)
+	)COMMENT='Relates source ServiceArea values to standard values in ServiceArea'
+	;
+
+INSERT INTO ODSDATA.TMP_SERVICE_AREA_DATA_SOURCE_REL
+(SERVICE_AREA_KEY, DATA_SOURCE_KEY, SERVICE_AREA_SOURCE_DESC)
+VALUES
+(1, 1, 'Adams, PA'),
+(1, 2, 'Allegheny, PA'),
+(1, 3, 'Armstrong, PA'),
+(1, 4, 'Beaver, PA'),
+(1, 5, 'Bedford, PA'),
+(1, 6, 'Berks, PA'),
+(1, 7, 'Blair, PA'),
+(1, 8, 'Bradford, PA'),
+(1, 9, 'Bucks, PA'),
+(1, 10, 'Butler, PA'),
+(1, 11, 'Cambria, PA'),
+(1, 12, 'Cameron, PA'),
+(1, 13, 'Carbon, PA'),
+(1, 14, 'Centre, PA'),
+(1, 15, 'Chester, PA'),
+(1, 16, 'Clarion, PA'),
+(1, 17, 'Clearfield, PA'),
+(1, 18, 'Clinton, PA'),
+(1, 19, 'Columbia, PA'),
+(1, 20, 'Crawford, PA'),
+(1, 21, 'Cumberland, PA'),
+(1, 22, 'Dauphin, PA'),
+(1, 23, 'Delaware, PA'),
+(1, 24, 'Elk, PA'),
+(1, 25, 'Erie, PA'),
+(1, 26, 'Fayette, PA'),
+(1, 27, 'Forest, PA'),
+(1, 28, 'Franklin, PA'),
+(1, 29, 'Fulton, PA'),
+(1, 30, 'Greene, PA'),
+(1, 31, 'Huntingdon, PA'),
+(1, 32, 'Indiana, PA'),
+(1, 33, 'Jefferson, PA'),
+(1, 34, 'Juniata, PA'),
+(1, 35, 'Lackawanna, PA'),
+(1, 36, 'Lancaster, PA'),
+(1, 37, 'Lawrence, PA'),
+(1, 38, 'Lebanon, PA'),
+(1, 39, 'Lehigh, PA'),
+(1, 40, 'Luzerne, PA'),
+(1, 41, 'Lycoming, PA'),
+(1, 42, 'McKean, PA'),
+(1, 43, 'Mercer, PA'),
+(1, 44, 'Mifflin, PA'),
+(1, 45, 'Monroe, PA'),
+(1, 46, 'Montgomery, PA'),
+(1, 47, 'Montour, PA'),
+(1, 48, 'Northampton, PA'),
+(1, 49, 'Northumberland, PA'),
+(1, 50, 'Perry, PA'),
+(1, 51, 'Philadelphia, PA'),
+(1, 52, 'Pike, PA'),
+(1, 53, 'Potter, PA'),
+(1, 54, 'Schuylkill, PA'),
+(1, 55, 'Snyder, PA'),
+(1, 56, 'Somerset, PA'),
+(1, 57, 'Sullivan, PA'),
+(1, 58, 'Susquehanna, PA'),
+(1, 59, 'Tioga, PA'),
+(1, 60, 'Union, PA'),
+(1, 61, 'Venango, PA'),
+(1, 62, 'Warren, PA'),
+(1, 63, 'Washington, PA'),
+(1, 64, 'Wayne, PA'),
+(1, 65, 'Westmoreland, PA'),
+(1, 66, 'Wyoming, PA'),
+(1, 67, 'York, PA');
+
+--Use a minus query to find any diffs and update or insert as needed	 
+MERGE INTO ODSDATA.SERVICE_AREA_DATA_SOURCE_REL AS TGT
+USING (SELECT DATA_SOURCE_KEY, SERVICE_AREA_KEY, SERVICE_AREA_SOURCE_DESC
+	FROM ODSDATA.TMP_SERVICE_AREA_DATA_SOURCE_REL
+	MINUS 
+	SELECT DATA_SOURCE_KEY, SERVICE_AREA_KEY, SERVICE_AREA_SOURCE_DESC
+	FROM ODSDATA.SERVICE_AREA_DATA_SOURCE_REL
+	) AS SRC
+ON TGT.DATA_SOURCE_KEY = SRC.DATA_SOURCE_KEY
+AND TGT.SERVICE_AREA_KEY = SRC.SERVICE_AREA_KEY
+WHEN MATCHED 
+THEN UPDATE
+	SET TGT.SERVICE_AREA_SOURCE_DESC = SRC.SERVICE_AREA_SOURCE_DESC
+	,TGT.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHEN NOT MATCHED 
+THEN INSERT
+	(DATA_SOURCE_KEY
+	,SERVICE_AREA_KEY
+	,SERVICE_AREA_SOURCE_DESC
+	)
+VALUES
+	(
+	SRC.DATA_SOURCE_KEY
+	,SRC.SERVICE_AREA_KEY
+	,SRC.SERVICE_AREA_SOURCE_DESC
+	);
+	
+--Flip the minus and delete from the target
+DELETE FROM ODSDATA.SERVICE_AREA_DATA_SOURCE_REL TGT
+USING
+(SELECT DATA_SOURCE_KEY, SERVICE_AREA_KEY, SERVICE_AREA_SOURCE_DESC
+	FROM ODSDATA.SERVICE_AREA_DATA_SOURCE_REL
+	MINUS 
+	SELECT DATA_SOURCE_KEY, SERVICE_AREA_KEY, SERVICE_AREA_SOURCE_DESC
+	FROM ODSDATA.TMP_SERVICE_AREA_DATA_SOURCE_REL
+	) SRC
+WHERE TGT.DATA_SOURCE_KEY = SRC.DATA_SOURCE_KEY
+AND TGT.SERVICE_AREA_KEY = SRC.SERVICE_AREA_KEY;

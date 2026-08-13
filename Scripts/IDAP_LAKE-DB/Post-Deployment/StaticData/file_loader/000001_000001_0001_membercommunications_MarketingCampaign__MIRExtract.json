@@ -1,0 +1,440 @@
+{
+  "outputSchema": "MEMBER_COMMUNICATIONS",
+  "outputTable": "MKTG_CAMPAIGN_CONTACT_HISTORY",
+  "hasHeader": false,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "fileFormat": "MIR_MKTG_CAMPAIGN_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "CELLID",
+          "outputField": "CELL_ID"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "PACKAGEID",
+          "outputField": "PACKAGE_ID"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "CONTACTDATETIME",
+          "outputField": "CONTACT_DATETIME"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "UPDATEDATETIME",
+          "outputField": "UPDATE_DATETIME"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "CONTACTSTATUSID",
+          "outputField": "CONTACT_STATUS_ID"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "DATEID",
+          "outputField": "DATE_ID"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "TIMEID",
+          "outputField": "TIME_ID"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "TREATMENT_CODE",
+          "outputField": "TREATMENT_CODE"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "MEMBER_KEY",
+          "outputField": "MEMBER_KEY"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "MASTER_MEMBER_ID",
+          "outputField": "MASTER_MEMBER_ID"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "MEMBER_NBR",
+          "outputField": "MEMBER_NBR"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "INDIVIDUAL_KEY",
+          "outputField": "INDIVIDUAL_KEY"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "INDIVIDUAL_ID",
+          "outputField": "INDIVIDUAL_ID"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "HOUSEHOLD_KEY",
+          "outputField": "HOUSEHOLD_KEY"
+        },
+        {
+          "columnOrder": 15,
+          "inputField": "HOUSEHOLD_ID",
+          "outputField": "HOUSEHOLD_ID"
+        },
+        {
+          "columnOrder": 16,
+          "inputField": "BUSINESS_ID",
+          "outputField": "BUSINESS_ID"
+        },
+        {
+          "columnOrder": 17,
+          "inputField": "BUSINESS_KEY",
+          "outputField": "BUSINESS_KEY"
+        },
+        {
+          "columnOrder": 18,
+          "inputField": "CAMPAIGN_CODE",
+          "outputField": "CAMPAIGN_CODE"
+        },
+        {
+          "columnOrder": 19,
+          "inputField": "CAMPAIGN_NAME",
+          "outputField": "CAMPAIGN_NAME"
+        },
+        {
+          "columnOrder": 20,
+          "inputField": "CAMPAIGN_DESCRIPTION",
+          "outputField": "CAMPAIGN_DESCRIPTION"
+        },
+        {
+          "columnOrder": 21,
+          "inputField": "CAMPAIGN_OBJECTIVE",
+          "outputField": "CAMPAIGN_OBJECTIVE"
+        },
+        {
+          "columnOrder": 22,
+          "inputField": "CAMPAIGN_OWNER",
+          "outputField": "CAMPAIGN_OWNER"
+        },
+        {
+          "columnOrder": 23,
+          "inputField": "CAMPAIGN_EFFECTIVE_DATE",
+          "outputField": "CAMPAIGN_EFFECTIVE_DATE"
+        },
+        {
+          "columnOrder": 24,
+          "inputField": "CAMPAIGN_EXPIRATION_DATE",
+          "outputField": "CAMPAIGN_EXPIRATION_DATE"
+        },
+        {
+          "columnOrder": 25,
+          "inputField": "CAMPAIGN_EXTERNAL_ID",
+          "outputField": "CAMPAIGN_EXTERNAL_ID"
+        },
+        {
+          "columnOrder": 26,
+          "inputField": "CAMPAIGN_AUDIENCE_LEVEL",
+          "outputField": "CAMPAIGN_AUDIENCE_LEVEL"
+        },
+        {
+          "columnOrder": 27,
+          "inputField": "AUDIENCE_SELECTION_DATE",
+          "outputField": "AUDIENCE_SELECTION_DATE"
+        },
+        {
+          "columnOrder": 28,
+          "inputField": "OFFER_CODE",
+          "outputField": "OFFER_CODE"
+        },
+        {
+          "columnOrder": 29,
+          "inputField": "OFFER_NAME",
+          "outputField": "OFFER_NAME"
+        },
+        {
+          "columnOrder": 30,
+          "inputField": "OFFER_CHANNEL",
+          "outputField": "OFFER_CHANNEL"
+        },
+        {
+          "columnOrder": 31,
+          "inputField": "OFFER_MEDIA",
+          "outputField": "OFFER_MEDIA"
+        },
+        {
+          "columnOrder": 32,
+          "inputField": "OFFER_PACKAGE",
+          "outputField": "OFFER_PACKAGE"
+        },
+        {
+          "columnOrder": 33,
+          "inputField": "OFFER_CPP",
+          "outputField": "OFFER_CPP"
+        },
+        {
+          "columnOrder": 34,
+          "inputField": "OFFER_EFFECTIVE_DATE",
+          "outputField": "OFFER_EFFECTIVE_DATE"
+        },
+        {
+          "columnOrder": 35,
+          "inputField": "OFFER_EXPIRATION_DATE",
+          "outputField": "OFFER_EXPIRATION_DATE"
+        },
+        {
+          "columnOrder": 36,
+          "inputField": "MAIL_DATE",
+          "outputField": "MAIL_DATE"
+        },
+        {
+          "columnOrder": 37,
+          "inputField": "IN_HOME_DATE",
+          "outputField": "IN_HOME_DATE"
+        },
+        {
+          "columnOrder": 38,
+          "inputField": "LINE_OF_BUSINESS",
+          "outputField": "LINE_OF_BUSINESS"
+        },
+        {
+          "columnOrder": 39,
+          "inputField": "EXTERNAL_TASK_ID",
+          "outputField": "EXTERNAL_TASK_ID"
+        },
+        {
+          "columnOrder": 40,
+          "inputField": "CELL_CODE",
+          "outputField": "CELL_CODE"
+        },
+        {
+          "columnOrder": 41,
+          "inputField": "CELL_NAME",
+          "outputField": "CELL_NAME"
+        },
+        {
+          "columnOrder": 42,
+          "inputField": "ACXIOM_SEGMENT",
+          "outputField": "ACXIOM_SEGMENT"
+        },
+        {
+          "columnOrder": 43,
+          "inputField": "SALESFORCE_CAMPAIGN_ID",
+          "outputField": "SALESFORCE_CAMPAIGN_ID"
+        },
+        {
+          "columnOrder": 44,
+          "inputField": "RELATIONSHIP_DESC",
+          "outputField": "RELATIONSHIP_DESC"
+        },
+        {
+          "columnOrder": 45,
+          "inputField": "MEMBERSHIP_STATUS",
+          "outputField": "MEMBERSHIP_STATUS"
+        },
+        {
+          "columnOrder": 46,
+          "inputField": "TITLE",
+          "outputField": "TITLE"
+        },
+        {
+          "columnOrder": 47,
+          "inputField": "FIRST_NAME",
+          "outputField": "FIRST_NAME"
+        },
+        {
+          "columnOrder": 48,
+          "inputField": "LAST_NAME",
+          "outputField": "LAST_NAME"
+        },
+        {
+          "columnOrder": 49,
+          "inputField": "AGE",
+          "outputField": "AGE"
+        },
+        {
+          "columnOrder": 50,
+          "inputField": "EMAIL_ADDRESS",
+          "outputField": "EMAIL_ADDRESS"
+        },
+        {
+          "columnOrder": 51,
+          "inputField": "ADDRESS_TYPE",
+          "outputField": "ADDRESS_TYPE"
+        },
+        {
+          "columnOrder": 52,
+          "inputField": "ADDRESS_LINE_1",
+          "outputField": "ADDRESS_LINE_1"
+        },
+        {
+          "columnOrder": 53,
+          "inputField": "ADDRESS_LINE_2",
+          "outputField": "ADDRESS_LINE_2"
+        },
+        {
+          "columnOrder": 54,
+          "inputField": "CITY",
+          "outputField": "CITY"
+        },
+        {
+          "columnOrder": 55,
+          "inputField": "STATE",
+          "outputField": "STATE"
+        },
+        {
+          "columnOrder": 56,
+          "inputField": "ZIP",
+          "outputField": "ZIP"
+        },
+        {
+          "columnOrder": 57,
+          "inputField": "PHONE",
+          "outputField": "PHONE"
+        },
+        {
+          "columnOrder": 58,
+          "inputField": "LATITUDE",
+          "outputField": "LATITUDE"
+        },
+        {
+          "columnOrder": 59,
+          "inputField": "LONGITUDE",
+          "outputField": "LONGITUDE"
+        },
+        {
+          "columnOrder": 60,
+          "inputField": "PLAN_KEY",
+          "outputField": "PLAN_KEY"
+        },
+        {
+          "columnOrder": 61,
+          "inputField": "GROUP_ID",
+          "outputField": "GROUP_ID"
+        },
+        {
+          "columnOrder": 62,
+          "inputField": "CORPORATION_ID",
+          "outputField": "CORPORATION_ID"
+        },
+        {
+          "columnOrder": 63,
+          "inputField": "PLAN_DESC",
+          "outputField": "PLAN_DESC"
+        },
+        {
+          "columnOrder": 64,
+          "inputField": "PRODUCT_DESC",
+          "outputField": "PRODUCT_DESC"
+        },
+        {
+          "columnOrder": 65,
+          "inputField": "PLAN_NBR",
+          "outputField": "PLAN_NBR"
+        },
+        {
+          "columnOrder": 66,
+          "inputField": "PLAN_TYPE",
+          "outputField": "PLAN_TYPE"
+        },
+        {
+          "columnOrder": 67,
+          "inputField": "HEALTHY_U",
+          "outputField": "HEALTHY_U"
+        },
+        {
+          "columnOrder": 68,
+          "inputField": "BUSINESS_INSURED_TYPE",
+          "outputField": "BUSINESS_INSURED_TYPE"
+        },
+        {
+          "columnOrder": 69,
+          "inputField": "PRODUCT_CODE",
+          "outputField": "PRODUCT_CODE"
+        },
+        {
+          "columnOrder": 70,
+          "inputField": "RESPONSE_START_DATE",
+          "outputField": "RESPONSE_START_DATE"
+        },
+        {
+          "columnOrder": 71,
+          "inputField": "RESPONSE_END_DATE",
+          "outputField": "RESPONSE_END_DATE"
+        },
+        {
+          "columnOrder": 72,
+          "inputField": "AUDIENCE_SELECTION_EXT_ID",
+          "outputField": "AUDIENCE_SELECTION_EXT_ID"
+        },
+        {
+          "columnOrder": 73,
+          "inputField": "AUDIENCE_SELECTION_EXT_SCORE",
+          "outputField": "AUDIENCE_SELECTION_EXT_SCORE"
+        },
+        {
+          "columnOrder": 74,
+          "inputField": "CAMPAIGN_PURL",
+          "outputField": "CAMPAIGN_PURL"
+        },
+        {
+          "columnOrder": 75,
+          "inputField": "EXTERNAL_SOURCE",
+          "outputField": "EXTERNAL_SOURCE"
+        },
+        {
+          "columnOrder": 76,
+          "inputField": "EXTERNAL_SOURCE_ID",
+          "outputField": "EXTERNAL_SOURCE_ID"
+        },
+        {
+          "columnOrder": 77,
+          "inputField": "DEPLOYMENT_VENDOR",
+          "outputField": "DEPLOYMENT_VENDOR"
+        },
+        {
+          "columnOrder": 78,
+          "inputField": "EXTERNAL_CELL_CODE",
+          "outputField": "EXTERNAL_CELL_CODE"
+        },
+        {
+          "columnOrder": 79,
+          "inputField": "EMAIL_DATABASE_ID_COMMTAG",
+          "outputField": "EMAIL_DATABASE_ID_COMMTAG"
+        },
+        {
+          "columnOrder": 80,
+          "inputField": "EMAIL_TEMPLATE_ID_COMMTAG",
+          "outputField": "EMAIL_TEMPLATE_ID_COMMTAG"
+        },
+        {
+          "columnOrder": 81,
+          "inputField": "CREATIVE_CONTENT_CODE",
+          "outputField": "CREATIVE_CONTENT_CODE"
+        },
+        {
+          "columnOrder": 82,
+          "inputField": "COMMUNICATION_ID",
+          "outputField": "COMMUNICATION_ID"
+        },
+        {
+          "columnOrder": 83,
+          "inputField": "CONTROL_FLAG",
+          "outputField": "CONTROL_FLAG"
+        },
+        {
+          "columnOrder": 84,
+          "inputField": "HASH_COMM_ID",
+          "outputField": "HASH_COMM_ID"
+        },
+        {
+          "columnOrder": 85,
+          "inputField": "EMAIL",
+          "outputField": "EMAIL"
+        }
+      ]
+    }
+  }
+}

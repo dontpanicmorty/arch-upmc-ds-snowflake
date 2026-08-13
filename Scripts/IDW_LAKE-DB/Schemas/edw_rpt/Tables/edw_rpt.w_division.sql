@@ -1,0 +1,24 @@
+CREATE OR REPLACE TABLE EDW_RPT.W_DIVISION
+(
+W_DIVISION_KEY               NUMBER(38),
+BUSINESS_INSURED_TYPE           VARCHAR,
+CORPORATION_ID                  VARCHAR,
+CORPORATION_NAME                VARCHAR,
+GROUP_ID                        VARCHAR,
+GROUP_DESC                      VARCHAR,
+DIVISION_ID                     VARCHAR,
+DIVISION_DESC                   VARCHAR,
+PLAN_TYPE                       VARCHAR,
+EFFECTIVE_START_DATE      TIMESTAMP_NTZ,
+EFFECTIVE_END_DATE        TIMESTAMP_NTZ,
+LOAD_DATE                 TIMESTAMP_NTZ,
+UPDATE_DATE               TIMESTAMP_NTZ,
+PLAN_NBR                        VARCHAR,
+BUSINESS_UNIT_CODE              VARCHAR,
+BUSINESS_UNIT_DESC              VARCHAR,
+PROGRAM_CODE                    VARCHAR,
+PROGRAM_DESC                    VARCHAR,
+PLAN_CATEGORY                   VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

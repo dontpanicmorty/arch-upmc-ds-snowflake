@@ -1,0 +1,12 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.ZIP_COUNTY
+AS
+SELECT
+ZIP_CODE,
+CITY,
+COUNTY,
+COUNTY_FIPS,
+STATE,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_RPT.ZIP_COUNTY;
+!set variable_substitution=false;

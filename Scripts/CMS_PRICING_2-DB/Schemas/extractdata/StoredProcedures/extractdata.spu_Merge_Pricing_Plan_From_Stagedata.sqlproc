@@ -1,0 +1,104 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_MERGE_PRICING_PLAN_FROM_STAGEDATA ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+// PRICING_FILE has update based off last_updated_on_date
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let resultSet, result;
+
+/* Create MERGE statement to be run */
+let sqlText = `MERGE INTO EXTRACTDATA.PRICING_PLAN AS tgt
+USING (
+  SELECT REPORTING_ENTITY_KEY, PLAN_NAME, PLAN_ID_TYPE, PLAN_ID, PLAN_MARKET_TYPE_NAME, PLAN_SPONSOR_NAME, SPECIFIC_PLAN_NAME, ISSUER_NAME
+  FROM STAGEDATA.PRICING_PLAN_SELECT_VW
+) AS src
+ON (
+  tgt.REPORTING_ENTITY_KEY = src.REPORTING_ENTITY_KEY
+  AND tgt.PLAN_NAME = src.PLAN_NAME
+  AND tgt.PLAN_ID_TYPE = src.PLAN_ID_TYPE
+  AND tgt.PLAN_ID = src.PLAN_ID
+  AND tgt.PLAN_MARKET_TYPE_NAME = src.PLAN_MARKET_TYPE_NAME
+  AND tgt.PLAN_SPONSOR_NAME = src.PLAN_SPONSOR_NAME
+  AND tgt.SPECIFIC_PLAN_NAME = src.SPECIFIC_PLAN_NAME
+  AND tgt.ISSUER_NAME = src.ISSUER_NAME
+)
+
+WHEN NOT MATCHED THEN
+INSERT 
+    (REPORTING_ENTITY_KEY, PLAN_NAME, PLAN_ID_TYPE, PLAN_ID, PLAN_MARKET_TYPE_NAME, PLAN_SPONSOR_NAME, SPECIFIC_PLAN_NAME, ISSUER_NAME)
+VALUES
+    (src.REPORTING_ENTITY_KEY, src.PLAN_NAME, src.PLAN_ID_TYPE, src.PLAN_ID, src.PLAN_MARKET_TYPE_NAME, src.PLAN_SPONSOR_NAME, src.SPECIFIC_PLAN_NAME, src.ISSUER_NAME)
+;`;
+
+try 
+{
+    /*Execute INSERT OVERRIDE Command */
+    const sfStatement = snowflake.createStatement({sqlText});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    result = 'Successful';
+    
+    const endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,INSERT_COUNT
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${resultSet.getColumnValueAsString("number of rows inserted")}',
+      '${result}',
+      '${sqlText}'
+    )`;
+    snowflake.execute({sqlText});
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    
+    result = 'Failed';
+    let endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+        ,ERROR_CODE
+        ,ERROR_STATE
+        ,ERROR_MESSAGE
+        ,ERROR_STACK_TRACE_TEXT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${result}',
+      '${sqlText}',
+      '${code}',
+      '${state}',
+      '${message}',
+      '${stack}'
+    )`;
+    snowflake.execute({sqlText});
+    throw err;
+}
+return result;
+
+$$;

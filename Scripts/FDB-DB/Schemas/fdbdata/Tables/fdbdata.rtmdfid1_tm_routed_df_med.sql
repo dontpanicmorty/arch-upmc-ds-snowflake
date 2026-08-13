@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE FDBDATA.RTMDFID1_TM_ROUTED_DF_MED (
+	ROUTED_DOSAGE_FORM_MED_ID NUMERIC(8, 0) NOT NULL,
+	TM_SOURCE_ID NUMERIC(5, 0) NULL,
+	TM_IND NUMERIC(1, 0) NULL,
+	TM_ALT_ROUTED_DF_MED_ID_DESC VARCHAR(70) NULL,
+	CONSTRAINT PK_RTMDFID1_TM_ROUTED_DF_MED PRIMARY KEY (ROUTED_DOSAGE_FORM_MED_ID)
+)
+COMMENT = 'When appropriate, provides Tall Man lettering of a Routed Dosage Form Medication Concept as well as the sources of the recommendations for inclusion. '
+;

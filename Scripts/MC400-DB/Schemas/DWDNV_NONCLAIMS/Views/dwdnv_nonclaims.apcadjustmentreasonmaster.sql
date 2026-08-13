@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.APCAdjustmentReasonMaster
+AS
+SELECT * FROM CDC_Merge.dbo.APCAdjustmentReasonMaster WHERE TPADIVISION ='0002'
+;

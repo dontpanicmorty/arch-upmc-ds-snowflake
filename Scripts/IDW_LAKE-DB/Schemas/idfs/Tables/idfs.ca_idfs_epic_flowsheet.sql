@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE IDFS.CA_IDFS_EPIC_FLOWSHEET
+(
+PAT_ID                   VARCHAR,
+PAT_ENC_CSN_ID        NUMBER(18),
+CONTACT_DATE       TIMESTAMP_NTZ,
+RECORDED_TIME      TIMESTAMP_NTZ,
+FORM_ID                  VARCHAR,
+DISPLAY_NAME             VARCHAR,
+MEAS_COMMENT             VARCHAR,
+QUEST_ID                 VARCHAR,
+FLO_MEAS_NAME            VARCHAR,
+MEAS_VALUE               VARCHAR,
+HP_MMI                   VARCHAR
+)
+COMMENT='Created for IDFS Migration'
+;

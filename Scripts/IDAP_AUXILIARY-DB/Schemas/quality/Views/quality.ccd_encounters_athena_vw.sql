@@ -1,0 +1,125 @@
+CREATE OR REPLACE VIEW QUALITY.CCD_ENCOUNTERS_ATHENA_VW(
+	FILENAME,
+	SECTION_TITLE,
+	MRN,
+	ENCOUNTER_ID_EXTENSION,
+	ENCOUNTER_HKEY,
+	TEMPLATE_ID_EXTENSION,
+	TEMPLATE_ID_ROOT,
+	TEMPLATE_ID_ROOT_2,
+	ENCOUNTER_CODE,
+	ENCOUNTER_CODE_SYSTEM,
+	ENCOUNTER_CODE_SYSTEM_NAME,
+	ENCOUNTER_CODE_DISPLAY_NAME,
+	ENTRY_TYPE_CODE,
+	ENCOUNTER_CLASS_CODE,
+	ENCOUNTER_MOOD_CODE,
+	ENCOUNTER_TEMPLATE_EXTENSION,
+	ENCOUNTER_TEMPLATE_ROOT,
+	ENCOUNTER_TEMPLATE_ROOT_2,
+	ENTRY_ID_ASSIGN_AUTH_NAME,
+	ENTRY_ID_ROOT,
+	ENTRY_ID_ASSIGN_AUTH_NAME_2,
+	ENTRY_ID_EXT_2,
+	ENTRY_ID_ROOT_2,
+	ENTRY_CODE,
+	ENTRY_CODE_SYSTEM,
+	ENTRY_CODE_SYSTEM_NAME,
+	ENTRY_DISPLAY_NAME,
+	ENTRY_TRANSLATION_CODE,
+	ENTRY_TRANSLATION_CODE_SYSTEM,
+	ENTRY_TRANSLATION_CODE_SYSTEM_NAME,
+	ENTRY_TRANSLATION_DISPLAY_NAME,
+	ENTRY_TEXT_REF_VALUE,
+	ENTRY_STATUS_CODE,
+	ENTRY_TIME_LOW,
+	ENTRY_TIME_HIGH,
+	XML_ROW_NUM,
+	TS_LAST_MODIFY,
+	SCAN_TIME
+) AS
+ SELECT
+          FILENAME
+         ,SECTION_TITLE
+         ,MRN
+         ,ENCOUNTER_ID_EXTENSION
+         ,IDAP_AUXILIARY_DEV.UTIL.FXN_ARRAY_HASH( [FILENAME, MRN, SECTION_TITLE, ENCOUNTER_ID_EXTENSION]) AS ENCOUNTER_HKEY         
+         ,TEMPLATE_ID_EXTENSION          
+         ,TEMPLATE_ID_ROOT         
+         ,TEMPLATE_ID_ROOT_2
+         ,ENCOUNTER_CODE
+         ,ENCOUNTER_CODE_SYSTEM
+         ,ENCOUNTER_CODE_SYSTEM_NAME
+         ,ENCOUNTER_CODE_DISPLAY_NAME
+         ,ENTRY_TYPE_CODE
+         ,ENCOUNTER_CLASS_CODE
+         ,ENCOUNTER_MOOD_CODE         
+         ,ENCOUNTER_TEMPLATE_EXTENSION         
+         ,ENCOUNTER_TEMPLATE_ROOT         
+         ,ENCOUNTER_TEMPLATE_ROOT_2
+         ,ENTRY_ID_ASSIGN_AUTH_NAME         
+         ,ENTRY_ID_ROOT
+         ,ENTRY_ID_ASSIGN_AUTH_NAME_2
+         ,ENTRY_ID_EXT_2
+         ,ENTRY_ID_ROOT_2     
+         ,ENTRY_CODE         
+         ,ENTRY_CODE_SYSTEM         
+         ,ENTRY_CODE_SYSTEM_NAME         
+         ,ENTRY_DISPLAY_NAME         
+         ,ENTRY_TRANSLATION_CODE
+         ,ENTRY_TRANSLATION_CODE_SYSTEM         
+         ,ENTRY_TRANSLATION_CODE_SYSTEM_NAME         
+         ,ENTRY_TRANSLATION_DISPLAY_NAME                  
+         ,ENTRY_TEXT_REF_VALUE
+         ,ENTRY_STATUS_CODE         
+         ,ENTRY_TIME_LOW         
+         ,ENTRY_TIME_HIGH
+         ,XML_ROW_NUM
+         ,TS_LAST_MODIFY
+	     ,SCAN_TIME
+FROM (
+     SELECT
+          X.FILENAME
+         ,X.SECTION_TITLE
+         ,X.MRN AS MRN
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId'),'@extension')::STRING AS TEMPLATE_ID_EXTENSION          
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId'),'@root')::STRING AS TEMPLATE_ID_ROOT         
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId',1),'@root')::STRING AS TEMPLATE_ID_ROOT_2         
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@code')::STRING AS ENCOUNTER_CODE
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@codeSystem')::STRING AS ENCOUNTER_CODE_SYSTEM         
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@codeSystemName')::STRING AS ENCOUNTER_CODE_SYSTEM_NAME
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@displayName')::STRING AS ENCOUNTER_CODE_DISPLAY_NAME         
+         ,GET(ENTRY.VALUE,'@typeCode')::STRING AS ENTRY_TYPE_CODE
+         ,GET(XMLGET(ENTRY.VALUE,'encounter'),'@classCode')::STRING AS ENCOUNTER_CLASS_CODE
+         ,GET(XMLGET(ENTRY.VALUE,'encounter'),'@moodCode')::STRING AS ENCOUNTER_MOOD_CODE         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'templateId'),'@extension')::STRING AS ENCOUNTER_TEMPLATE_EXTENSION         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'templateId'),'@root')::STRING AS ENCOUNTER_TEMPLATE_ROOT         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'templateId',1),'@root')::STRING AS ENCOUNTER_TEMPLATE_ROOT_2
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'id'),'@assigningAuthorityName')::STRING AS ENTRY_ID_ASSIGN_AUTH_NAME         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'id'),'@extension')::STRING AS ENCOUNTER_ID_EXTENSION
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'id'),'@root')::STRING AS ENTRY_ID_ROOT
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'id',1),'@assigningAuthorityName')::STRING AS ENTRY_ID_ASSIGN_AUTH_NAME_2
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'id',1),'@extension')::STRING AS ENTRY_ID_EXT_2
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'id',1),'@root')::STRING AS ENTRY_ID_ROOT_2     
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'@code')::STRING AS ENTRY_CODE         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'@codeSystem')::STRING AS ENTRY_CODE_SYSTEM         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'@codeSystemName')::STRING AS ENTRY_CODE_SYSTEM_NAME         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'@displayName')::STRING AS ENTRY_DISPLAY_NAME         
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'translation'),'@code')::STRING AS ENTRY_TRANSLATION_CODE
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'translation'),'@codeSystem')::STRING AS ENTRY_TRANSLATION_CODE_SYSTEM         
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'translation'),'@codeSystemName')::STRING AS ENTRY_TRANSLATION_CODE_SYSTEM_NAME         
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'code'),'translation'),'@displayName')::STRING AS ENTRY_TRANSLATION_DISPLAY_NAME                  
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'text'),'reference'),'@value')::STRING AS ENTRY_TEXT_REF_VALUE
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'statusCode'),'@code')::STRING AS ENTRY_STATUS_CODE         
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'effectiveTime'),'low'),'@value')::STRING AS ENTRY_TIME_LOW         
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'encounter'),'effectiveTime'),'high'),'@value')::STRING AS ENTRY_TIME_HIGH
+         ,ROW_NUM AS XML_ROW_NUM
+         ,TS_LAST_MODIFY
+	     ,SCAN_TIME
+     FROM QUALITY.SECTION_XML X
+             ,LATERAL FLATTEN(X.xml) SECTION     
+             ,LATERAL FLATTEN(SECTION.VALUE:"$"::ARRAY) ENTRY
+     WHERE X.SECTION_TITLE = 'ENCOUNTERS'
+           AND GET(SECTION.VALUE, '@') = 'section'
+           AND GET(ENTRY.VALUE, '@') = 'entry'
+);

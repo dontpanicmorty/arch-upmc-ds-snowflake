@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.INTERACTION_REQUIRED_INCIDENCE
+(
+ID                      INT,
+TITLE               VARCHAR,
+IS_DELETED              INT,
+IS_LOCKED               INT,
+LAST_UPDATED_BY         INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

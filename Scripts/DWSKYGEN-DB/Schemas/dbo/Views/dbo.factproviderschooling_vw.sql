@@ -1,0 +1,23 @@
+CREATE OR REPLACE VIEW DBO.FactProviderSchooling_VW
+AS 
+SELECT 	$1:CountyKey::NUMBER(38, 0) AS CountyKey, 
+		$1:EducationalInstitutionKey::NUMBER(38, 0) AS EducationalInstitutionKey, 
+		$1:GraduationDateKey::NUMBER(38, 0) AS GraduationDateKey, 
+		$1:ZipKey::NUMBER(38, 0) AS ZipKey, 
+		$1:ProviderKey::NUMBER(38, 0) AS ProviderKey, 
+		$1:StateKey::NUMBER(38, 0) AS StateKey, 
+		$1:CITY::VARCHAR AS CITY, 
+		$1:CONTACT_NAME::VARCHAR AS CONTACT_NAME, 
+		$1:CountryDescription::VARCHAR AS CountryDescription, 
+		$1:SCHOOL_NAME::VARCHAR AS SCHOOL_NAME, 
+		$1:ADDRESS1::VARCHAR AS ADDRESS1, 
+		$1:ADDRESS2::VARCHAR AS ADDRESS2, 
+		$1:DENTAL_DEGREE::VARCHAR AS DENTAL_DEGREE, 
+		$1:FAX_PHONE::VARCHAR AS FAX_PHONE, 
+		$1:VOICE_PHONE::VARCHAR AS VOICE_PHONE, 
+		$1:VOICE_PHONE_EXTENSION::VARCHAR AS VOICE_PHONE_EXTENSION, 
+		--$1:DW_Hash::VARCHAR AS DW_Hash, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactProviderSchooling/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

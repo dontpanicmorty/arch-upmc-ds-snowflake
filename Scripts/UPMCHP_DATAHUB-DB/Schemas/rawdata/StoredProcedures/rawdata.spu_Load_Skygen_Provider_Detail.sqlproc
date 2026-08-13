@@ -1,0 +1,225 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_SKYGEN_PROVIDER_DETAIL(JOB_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `RAWDATA.DWSKYGEN_PROVIDER_DETAIL`
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE RAWDATA.DWSKYGEN_PROVIDER_DETAIL_TMP
+AS
+SELECT * FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO RAWDATA.DWSKYGEN_PROVIDER_DETAIL AS tgt
+USING (
+		SELECT 
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        PROVIDER_ID,
+        PROVIDER_FULL_NAME,
+        PROVIDER_FIRST_NAME,
+        PROVIDER_MIDDLE_NAME,
+        PROVIDER_LAST_NAME,
+        PROVIDER_GENDER,
+        PROVIDER_DATE_OF_BIRTH,
+        PROVIDER_EMAIL,
+        PROVIDER_SSN,
+        E_PRESCRIBE_IND,
+        CULTURAL_COMPETENCY_IND,
+        PROVIDER_TYPE,
+        PROVIDER_NPI,
+        TAX_ID
+        FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL_TMP
+    MINUS
+		SELECT 
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        PROVIDER_ID,
+        PROVIDER_FULL_NAME,
+        PROVIDER_FIRST_NAME,
+        PROVIDER_MIDDLE_NAME,
+        PROVIDER_LAST_NAME,
+        PROVIDER_GENDER,
+        PROVIDER_DATE_OF_BIRTH,
+        PROVIDER_EMAIL,
+        PROVIDER_SSN,
+        E_PRESCRIBE_IND,
+        CULTURAL_COMPETENCY_IND,
+        PROVIDER_TYPE,
+        PROVIDER_NPI,
+        TAX_ID
+        FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL
+    ) AS src /*returns everything in the source that is not a match in the target*/
+ON (tgt.PROVIDER_ID = src.PROVIDER_ID
+AND tgt.TPA_CLIENT_ID = src.TPA_CLIENT_ID
+AND tgt.TPA_ID = src.TPA_ID
+AND tgt.TPA_DIV_ID = src.TPA_DIV_ID
+) /*key columns to determine if this is a new record or an update*/
+
+WHEN NOT MATCHED
+THEN INSERT
+    (
+		DWSKYGEN_PROVIDER_DETAIL_KEY
+		,INSERT_DATETIME
+		,LAST_UPDATED_DATETIME
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,PROVIDER_ID
+        ,PROVIDER_FULL_NAME
+        ,PROVIDER_FIRST_NAME
+        ,PROVIDER_MIDDLE_NAME
+        ,PROVIDER_LAST_NAME
+        ,PROVIDER_GENDER
+        ,PROVIDER_DATE_OF_BIRTH
+        ,PROVIDER_EMAIL
+        ,PROVIDER_SSN
+        ,E_PRESCRIBE_IND
+        ,CULTURAL_COMPETENCY_IND
+        ,PROVIDER_TYPE
+        ,PROVIDER_NPI
+        ,TAX_ID		
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DWSKYGEN_PROVIDER_DETAIL_KEY), 1000) FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,src.TPA_CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.PROVIDER_ID
+        ,src.PROVIDER_FULL_NAME
+        ,src.PROVIDER_FIRST_NAME
+        ,src.PROVIDER_MIDDLE_NAME
+        ,src.PROVIDER_LAST_NAME
+        ,src.PROVIDER_GENDER
+        ,src.PROVIDER_DATE_OF_BIRTH
+        ,src.PROVIDER_EMAIL
+        ,src.PROVIDER_SSN
+        ,src.E_PRESCRIBE_IND
+        ,src.CULTURAL_COMPETENCY_IND
+        ,src.PROVIDER_TYPE
+        ,src.PROVIDER_NPI
+        ,src.TAX_ID		
+    )
+
+WHEN MATCHED
+THEN UPDATE SET
+        tgt.PROVIDER_FULL_NAME = src.PROVIDER_FULL_NAME
+        ,tgt.PROVIDER_FIRST_NAME = src.PROVIDER_FIRST_NAME
+        ,tgt.PROVIDER_MIDDLE_NAME = src.PROVIDER_MIDDLE_NAME
+        ,tgt.PROVIDER_LAST_NAME = src.PROVIDER_LAST_NAME
+        ,tgt.PROVIDER_GENDER = src.PROVIDER_GENDER
+        ,tgt.PROVIDER_DATE_OF_BIRTH = src.PROVIDER_DATE_OF_BIRTH
+        ,tgt.PROVIDER_EMAIL = src.PROVIDER_EMAIL
+        ,tgt.PROVIDER_SSN = src.PROVIDER_SSN
+        ,tgt.E_PRESCRIBE_IND = src.E_PRESCRIBE_IND
+        ,tgt.CULTURAL_COMPETENCY_IND = src.CULTURAL_COMPETENCY_IND
+        ,tgt.PROVIDER_TYPE = src.PROVIDER_TYPE
+        ,tgt.PROVIDER_NPI = src.PROVIDER_NPI
+        ,tgt.TAX_ID = src.TAX_ID	
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+DELETE FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL 
+WHERE DWSKYGEN_PROVIDER_DETAIL_KEY IN 
+(
+    SELECT DWSKYGEN_PROVIDER_DETAIL.DWSKYGEN_PROVIDER_DETAIL_KEY
+    FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL
+        LEFT OUTER JOIN  RAWDATA.DWSKYGEN_PROVIDER_DETAIL_TMP
+            ON (DWSKYGEN_PROVIDER_DETAIL.PROVIDER_ID = DWSKYGEN_PROVIDER_DETAIL_TMP.PROVIDER_ID
+            AND DWSKYGEN_PROVIDER_DETAIL.TPA_ID = DWSKYGEN_PROVIDER_DETAIL_TMP.TPA_ID
+            AND DWSKYGEN_PROVIDER_DETAIL.TPA_CLIENT_ID = DWSKYGEN_PROVIDER_DETAIL_TMP.TPA_CLIENT_ID
+            AND DWSKYGEN_PROVIDER_DETAIL.TPA_DIV_ID = DWSKYGEN_PROVIDER_DETAIL_TMP.TPA_DIV_ID)
+    WHERE DWSKYGEN_PROVIDER_DETAIL_TMP.PROVIDER_ID IS NULL
+);`;
+
+try 
+{
+	//Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

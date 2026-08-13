@@ -1,0 +1,23 @@
+CREATE OR REPLACE TABLE WPDW.EAP_FCT_ORG_SERVICES
+(
+SERVICE_NBR                           NUMBER(33,5),
+DAYBREAK_SERVICE_NBR                 VARCHAR,
+ACCOUNT_MANAGER                      VARCHAR,
+CISM_DATE                      TIMESTAMP_NTZ,
+CISM_REPORTED_DATE             TIMESTAMP_NTZ,
+CISM_FOLLOWUP_DATE             TIMESTAMP_NTZ,
+CISM_FOLLOWUP_COMPLETED               NUMBER(33,5),
+SERVICE_DATE                   TIMESTAMP_NTZ,
+SERVICE_ATTENDANCE                    NUMBER(33,5),
+ONSITE_HOURS                          NUMBER(33,5),
+SERVICE_SUBJECT                      VARCHAR,
+CANCELLED                             NUMBER(33,5),
+AUDIENCE_EMPLOYEES                    NUMBER(33,5),
+AUDIENCE_MANAGERS                     NUMBER(33,5),
+ORGANIZATIONAL_SERVICE_KEY           VARCHAR,
+SERVICE_TYPE_KEY                     VARCHAR,
+EMPLOYER_KEY                         VARCHAR,
+ORGANIZATIONAL_SURVEY_KEY            VARCHAR
+)
+COMMENT='Created for WPDW Migration'
+;

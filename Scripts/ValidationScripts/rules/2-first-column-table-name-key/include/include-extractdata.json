@@ -1,0 +1,7 @@
+{
+  "CATALOG_PATTERN": "%",
+  "SCHEMA_PATTERN": "EXTRACTDATA",
+  "OBJECT_PATTERN": "%",
+  "TEST_INDEX": 2,
+  "INCLUDE": 1
+}

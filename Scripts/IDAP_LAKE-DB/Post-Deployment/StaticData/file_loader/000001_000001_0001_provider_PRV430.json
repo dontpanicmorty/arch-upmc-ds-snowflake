@@ -1,0 +1,70 @@
+{
+  "outputSchema": "PROVIDER",
+  "outputTable": "PRV430",
+  "hasHeader": true,
+  "hasTrailer": true,
+  "fileType": "fixed",
+  "headerFormat": "PRV430_FILE_FORMAT_HEADER",
+  "fileFormat": "PRV430_FILE_FORMAT",
+  "truncReload": false,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "outputField": "PromiseProviderNumber",
+          "startPos": "1",
+          "length": "9",
+          "columnOrder": 1
+        },
+        {
+          "outputField": "ServiceLocation",
+          "startPos": "10",
+          "length": "4",
+          "columnOrder": 2
+        },
+        {
+          "outputField": "NPINumber",
+          "startPos": "14",
+          "length": "10",
+          "columnOrder": 3
+        },
+        {
+          "outputField": "TaxonomyCode",
+          "startPos": "24",
+          "length": "10",
+          "columnOrder": 4
+        },
+        {
+          "outputField": "AddressZip",
+          "startPos": "34",
+          "length": "9",
+          "columnOrder": 5
+        },
+        {
+          "outputField": "EffectiveDate",
+          "startPos": "43",
+          "length": "8",
+          "columnOrder": 6
+        },
+        {
+          "outputField": "EndDate",
+          "startPos": "51",
+          "length": "8",
+          "columnOrder": 7
+        },
+        {
+          "outputField": "ValidationIndicator",
+          "startPos": "59",
+          "length": "1",
+          "columnOrder": 8
+        },
+        {
+          "outputField": "CurrentlyProcessedFileName",
+          "startPos": "60",
+          "length": "256",
+          "columnOrder": 9
+        }
+      ]
+    }
+  }
+}

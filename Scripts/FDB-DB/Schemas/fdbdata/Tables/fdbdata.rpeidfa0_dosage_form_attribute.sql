@@ -1,0 +1,7 @@
+CREATE OR REPLACE TABLE FDBDATA.RPEIDFA0_DOSAGE_FORM_ATTRIBUTE (
+	DOSAGE_FORM_ATTRIBUTE_ID NUMERIC(8, 0) NOT NULL,
+	DOSAGE_FORM_ATTRIBUTE_DESC VARCHAR(100) NOT NULL,
+	CONSTRAINT PK_RPEIDFA0_DOSAGE_FORM_ATTRIBUTE PRIMARY KEY (DOSAGE_FORM_ATTRIBUTE_ID)
+)
+COMMENT = 'Contains descriptions of dosage form components by which dosage forms, and by extension drug formulations, may be delineated or grouped.'
+;

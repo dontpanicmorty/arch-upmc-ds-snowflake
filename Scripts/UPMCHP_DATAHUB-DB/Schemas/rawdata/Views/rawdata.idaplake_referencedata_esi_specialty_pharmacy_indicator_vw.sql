@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW RAWDATA.IDAPLAKE_REFERENCEDATA_ESI_SPECIALTY_PHARMACY_INDICATOR_VW
+COMMENT = 'View to external stage for ESI Specialty Pharmacy Indicator refdata set'
+AS
+SELECT
+$1 AS NPI
+FROM '@RAWDATA.HPDSDATALAKE_IDAPLAKE/referencedata/claim/esi/esi_specialty_pharmacy_indicator.txt'
+    (FILE_FORMAT => RAWDATA.IDAPLAKE_REFERENCEDATA_FILE_FORMAT);

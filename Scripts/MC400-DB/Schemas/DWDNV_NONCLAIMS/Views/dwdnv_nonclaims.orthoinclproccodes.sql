@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.OrthoInclProcCodes
+AS
+SELECT * FROM CDC_Merge.dbo.OrthoInclProcCodes 
+;

@@ -1,0 +1,29 @@
+CREATE OR REPLACE VIEW DBO.FactAuthorizationRequirements_VW
+AS 
+SELECT 	$1:AuthorizationScheduleKey::NUMBER(38, 0) AS AuthorizationScheduleKey, 
+		$1:CodeKey::NUMBER(38, 0) AS CodeKey, 
+		$1:AgeMinKey::NUMBER(38, 0) AS AgeMinKey, 
+		$1:AgeMaxKey::NUMBER(38, 0) AS AgeMaxKey, 
+		$1:DateEffectiveKey::NUMBER(38, 0) AS DateEffectiveKey, 
+		$1:DateTerminationKey::NUMBER(38, 0) AS DateTerminationKey, 
+		$1:AUTHORIZATION_TYPE::NUMBER(38, 0) AS AUTHORIZATION_TYPE, 
+		$1:AuthorizationTypeDescription::VARCHAR AS AuthorizationTypeDescription, 
+		$1:AUTHORIZATION_MATCH::NUMBER(38, 0) AS AUTHORIZATION_MATCH, 
+		$1:AuthorizationMatchDescription::VARCHAR AS AuthorizationMatchDescription, 
+		$1:DOCUMENTATION_REQUIREMENT_ID::NUMBER(38, 0) AS DOCUMENTATION_REQUIREMENT_ID, 
+		$1:DocumentationRequirementDescription::VARCHAR AS DocumentationRequirementDescription, 
+		$1:EXCLUSION_RULE_ID::NUMBER(38, 0) AS EXCLUSION_RULE_ID, 
+		$1:ExclusionRuleDescription::VARCHAR AS ExclusionRuleDescription, 
+		$1:EXCLUSION_FORMULA_ID::NUMBER(38, 0) AS EXCLUSION_FORMULA_ID, 
+		$1:ExclusionFormulaDescription::VARCHAR AS ExclusionFormulaDescription, 
+		$1:ORTHO_CASE_TEMPLATE_ID::NUMBER(38, 0) AS ORTHO_CASE_TEMPLATE_ID, 
+		$1:OrthoCaseTemplateDescription::VARCHAR AS OrthoCaseTemplateDescription, 
+		$1:CLIENT_AUTHORIZATION_SCHEDULE_ID::VARCHAR AS CLIENT_AUTHORIZATION_SCHEDULE_ID, 
+		$1:POST_TREATMENT_DOCUMENTS_REQUIRED_FLAG::BOOLEAN AS POST_TREATMENT_DOCUMENTS_REQUIRED_FLAG, 
+		$1:ORTHO_CASE_TEMPLATE_FLAG::BOOLEAN AS ORTHO_CASE_TEMPLATE_FLAG, 
+		$1:GUIDELINE_REQUIRED_FLAG::BOOLEAN AS GUIDELINE_REQUIRED_FLAG, 
+		$1:CREATE_POST_TREATMENT_REVIEW_FLAG::BOOLEAN AS CREATE_POST_TREATMENT_REVIEW_FLAG, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactAuthorizationRequirements/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

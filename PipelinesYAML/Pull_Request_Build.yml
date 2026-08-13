@@ -1,0 +1,41 @@
+# Snowflake Pull Request Pipeline
+name: Snowflake Pull Request Build $(Build.BuildID)
+appendCommitMessageToRunName: false
+trigger: none
+pool:
+  name: DS-WindowsAgents
+variables:
+- name: pipeline_scripts_path
+  value: '$(Build.Repository.LocalPath)/DS-Admin_Tools/Snowflake/Pipeline_Scripts'
+- group: DS-SF-PR_VALIDATION
+resources:
+  repositories:
+    - repository: DS-ADMIN_TOOLS
+      type: git
+      ref: refs/heads/master
+      name: DS-Admin_Tools
+jobs:
+  - job: BuildDB
+    displayName: Build Changes
+    workspace: 
+      clean: all
+    steps:
+      - checkout: self
+        clean: true
+        persistCredentials: true
+      - checkout: DS-Admin_Tools
+        clean: true
+        persistCredentials: true
+      - task: colinsalmcorner.colinsalmcorner-buildtasks.replace-tokens-task.ReplaceTokens@1
+        displayName: Replace Tokens
+        inputs:
+          sourcePath: $(lib_tokenFilePath)
+          filePattern: $(lib_tokenFileName)
+          tokenRegex: '\$\((\w+)\)'
+      - powershell: '$(pipeline_scripts_path)/Pull_Request_Build.ps1'
+        name: BuildChangedDBs
+        displayName: Build Changed DBs
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          lib_passphrase: $(lib_passphrase)
+          failOnStderr: true

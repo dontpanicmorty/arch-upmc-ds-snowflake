@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE EDW_RPT.LINE_OF_BUSINESS
+(
+LINE_OF_BUSINESS_KEY            NUMBER,
+LOB_LEVEL_1                    VARCHAR,
+LOB_LEVEL_1_DESC               VARCHAR,
+LOB_LEVEL_2                    VARCHAR,
+LOB_LEVEL_2_DESC               VARCHAR,
+LOAD_DATE                TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

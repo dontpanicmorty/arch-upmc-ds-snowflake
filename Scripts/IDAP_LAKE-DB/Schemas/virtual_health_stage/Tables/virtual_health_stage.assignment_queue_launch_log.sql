@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.ASSIGNMENT_QUEUE_LAUNCH_LOG
+(
+ID                                    INT,
+REPORT_FILENAME                   VARCHAR,
+TOTAL_CLIENTS                         INT,
+TOTAL_PROCESSED_CLIENTS               INT,
+IS_SUCCESSFUL                         INT,
+STARTED_AT                  TIMESTAMP_NTZ,
+FINISHED_AT                 TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

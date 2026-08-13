@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.COMMON_LTSS_AUTH_STATUS_REASON_SETTINGS
+(
+ID                            INT,
+NAME                      VARCHAR,
+REQUIRE_SPECIFY_OTHER         INT,
+IS_DELETED                    INT,
+LAST_UPDATED_BY               INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

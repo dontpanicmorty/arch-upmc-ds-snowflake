@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW ENGAGEMENT.VALID_EMAILS
+AS
+SELECT
+EMAIL_ADDRESS
+FROM &{IDW_LAKE}.ENGAGEMENT.VALID_EMAILS;
+!set variable_substitution=false;

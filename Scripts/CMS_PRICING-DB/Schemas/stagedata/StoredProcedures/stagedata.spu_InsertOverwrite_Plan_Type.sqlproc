@@ -1,0 +1,81 @@
+/**
+Stored procedure to copy DWOAO data into a smaller table. Manual lists provided 
+by Ryan Askey; check PBI 336732 in Azure for more details.
+*/
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_INSERT_OVERWRITE_PLAN_TYPE ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+  // Copy data from DWOAO_CONTRACTS into STAGEDATA.PLAN_TYPE
+  sqlText = `INSERT OVERWRITE INTO STAGEDATA.PLAN_TYPE (PLAN_TYPE_CODE)
+    SELECT DISTINCT PLANTYPE
+    FROM RAWDATA.DWOAO_CONTRACTS
+    WHERE PLANTYPE IN (
+      'E', 'E01', 'E03', 'H', 'H03', 'I', 'I01', 'J', 'P', 'P03', '2', '3', 
+      '5', 'N', 'O', 'X'
+    );`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+
+  // Logging success
+  var result = "Succeeded";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw new Error(message + ' | ' + stack);
+}
+$$;

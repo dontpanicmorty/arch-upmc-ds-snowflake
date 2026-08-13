@@ -1,0 +1,12 @@
+CREATE OR REPLACE VIEW RAWDATA.IDAPLAKE_REFERENCEDATA_PROVDIR_MEMBERNETWORK_PLANTYPE_EXCLUSION_VW 
+COMMENT = 'View to external stage for Provider Member Network Plan Type Exclusion'
+AS
+SELECT 
+    $1 AS CLIENT_ID
+    ,$2 AS TPA_ID
+    ,$3 AS TPA_DIV
+    ,$4 AS PLAN_TYPE_CODE
+    ,$5 AS CARE_TYPE_DESC
+FROM '@RAWDATA.HPDSDATALAKE_IDAPLAKE/referencedata/member/membernetwork/Provider_MemberNetwork_PlanType_Exclusion.txt'
+    (FILE_FORMAT => RAWDATA.IDAPLAKE_REFERENCEDATA_FILE_FORMAT)
+;

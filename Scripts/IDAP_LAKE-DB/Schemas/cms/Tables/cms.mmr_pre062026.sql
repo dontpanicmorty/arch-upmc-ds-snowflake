@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE CMS.MMR_PRE062026 (
+	FILENAME VARCHAR NOT NULL,
+	FILE_ROW_NUMBER NUMBER(18,0) NOT NULL,
+	FILE_LOAD_DATETIME TIMESTAMP_LTZ(9) NOT NULL,
+	RECORD_DATA VARCHAR NOT NULL,
+	CONSTRAINT PK_MMR PRIMARY KEY (FILENAME, FILE_ROW_NUMBER),
+	CONSTRAINT UK_MMR UNIQUE (FILENAME, FILE_ROW_NUMBER)
+)COMMENT='Monthly Membership Detail data file (MMR) from CMS is the basic accounting file of beneficiary level payments and adjustments for Medicare Advantage and Part D organizations.'
+;

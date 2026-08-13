@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE EDW_RPT.W_MEMBER_MONTH_FACT
+(
+W_MEMBER_MONTH_KEY                    NUMBER,
+MEMBER_DEMOGRAPHIC_KEY                NUMBER,
+ELIGIBILITY_EFFECTIVE_DATE     TIMESTAMP_NTZ,
+W_MEMBER_KEY                          NUMBER,
+MEMBERSHIP_DATE                TIMESTAMP_NTZ,
+W_PLAN_KEY                            NUMBER,
+REPORT_EFFECTIVE_DATE          TIMESTAMP_NTZ,
+EMPLOYEE_CNT                       NUMBER(1),
+MEMBER_CNT                         NUMBER(1),
+LOAD_DATE                      TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.PRIMARY_PARTICIPANT
+(
+ID                             INT,
+NAME                       VARCHAR,
+DISPLAY                        INT,
+IS_DELETABLE                   INT,
+IS_DELETED                     INT,
+LAST_UPDATED_BY                INT,
+INCOMING_IDENTIFIERS       VARIANT,
+OUTGOING_IDENTIFIERS       VARIANT,
+INCOMING_MINIMUM_COUNT         INT,
+OUTGOING_MINIMUM_COUNT         INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

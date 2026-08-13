@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "provider",
+  "dataSourceName": "NVA",
+  "targetTableName": "RAWDATA.NVA_PROVIDER",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/provider/nva",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_PROVIDER_NVA_FILE_FORMAT",
+  "sourceFilePattern": "provider\\/nva\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}/\\.*(U135BU_UPMCLCR_UPMCL_Provider|U135BU_UPMCLCR_UPMCL_Provider_Extra).*[.](?i)txt",
+  "sourceFileDelimitedColumnCount": 58,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

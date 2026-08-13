@@ -1,0 +1,11 @@
+{
+  "name": "hpd-ea-func-hpds-dev-nsapy",
+  "version": "1.0.0",
+  "description": "Functions for the HPD-EA-FUNC-HPDS-DEV-NSAPY Functions App",
+  "scripts": {
+    "deploy": "func azure functionapp publish hpd-ea-func-hpds-dev-nsapy --python",
+    "start": "func start",
+    "test": "echo \"No tests yet...\""
+  },
+  "dependencies": {}
+}

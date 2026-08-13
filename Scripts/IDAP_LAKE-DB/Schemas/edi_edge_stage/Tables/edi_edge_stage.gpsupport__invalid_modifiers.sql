@@ -1,0 +1,6 @@
+CREATE OR REPLACE TABLE EDI_EDGE_STAGE.GPSUPPORT__INVALID_MODIFIERS
+(
+CODE VARCHAR(510)
+
+) COMMENT = 'Auto Generated via UPMCHP_DS_SQLServerObjectExtract Powershell module'
+;    

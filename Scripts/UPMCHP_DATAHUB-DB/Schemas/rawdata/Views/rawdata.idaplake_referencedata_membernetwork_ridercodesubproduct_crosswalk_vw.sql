@@ -1,0 +1,12 @@
+CREATE OR REPLACE VIEW RAWDATA.IDAPLAKE_REFERENCEDATA_MEMBERNETWORK_RIDERCODESUBPRODUCT_CROSSWALK_VW 
+COMMENT ='View to external stage for Member Network Rider Code Sub Product Crosswalk'
+AS
+SELECT 
+    $1 AS CLIENT_ID
+    ,$2 AS TPA_ID
+    ,$3 AS TPA_DIV_ID
+    ,$4 AS RIDER_CODE
+    ,$5 AS SUB_PRODUCT_KEY
+FROM '@RAWDATA.HPDSDATALAKE_IDAPLAKE/referencedata/member/membernetwork/MemberNetwork_RiderCodeSubProduct_Crosswalk.txt'
+    (FILE_FORMAT => RAWDATA.IDAPLAKE_REFERENCEDATA_FILE_FORMAT)
+;

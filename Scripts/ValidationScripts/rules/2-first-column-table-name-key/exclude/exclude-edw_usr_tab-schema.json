@@ -1,0 +1,7 @@
+{
+  "CATALOG_PATTERN": "%",
+  "SCHEMA_PATTERN": "EDW_USR_TAB",
+  "OBJECT_PATTERN": "%",
+  "TEST_INDEX": 2,
+  "INCLUDE": 0
+}

@@ -1,0 +1,41 @@
+
+
+CREATE OR REPLACE PROCEDURE REPORTDATA.SPU_WRITE_MEMBER_PREFERENCE_EXTRACT(VIEW_NAME varchar, AZURE_PATH varchar)
+RETURNS string NOT NULL
+LANGUAGE javascript
+EXECUTE AS OWNER
+AS   
+$$  
+    let copy_query = (
+        `COPY INTO '` + AZURE_PATH + 
+        `' FROM ` + VIEW_NAME + 
+        ` FILE_FORMAT = (
+            TYPE = 'CSV'
+            FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+        )
+        OVERWRITE = TRUE
+        SINGLE = TRUE
+        MAX_FILE_SIZE = 5000000000
+        HEADER = TRUE
+    `)
+                    
+    let result = '';
+        
+    try {
+        let copy_statement = snowflake.createStatement( { sqlText: copy_query } );
+        copy_statement.execute();
+
+        result = `Succeeded!`;
+    } 
+    
+    catch (err)  {
+        result =  `Failed to copy files to blob store`;
+        result += `\nCode: ` + err.code;
+        result += `\nState: ` + err.state;
+        result += `\nMessage: ` + err.message;
+        result += `\nStack Trace:\n` + err.stackTraceTxt; 
+        throw result;
+    }
+
+    return result
+$$;

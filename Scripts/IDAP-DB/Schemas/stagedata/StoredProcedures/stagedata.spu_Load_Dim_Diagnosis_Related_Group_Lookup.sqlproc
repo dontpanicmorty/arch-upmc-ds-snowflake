@@ -1,0 +1,70 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+/* get procedure start time and set variables */
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP`;
+
+var sqlCommand =
+`INSERT OVERWRITE INTO STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP
+(
+    HUB_CLAIM_HKEY
+    ,DIM_DIAGNOSIS_RELATED_GROUP_KEY
+    ,LOAD_DATETIME
+)
+SELECT
+    HUB_CLAIM_HKEY
+    ,DIM_DIAGNOSIS_RELATED_GROUP_KEY
+    ,CURRENT_TIMESTAMP()
+FROM STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP_SELECT_VW
+WHERE DIM_DIAGNOSIS_RELATED_GROUP_KEY IS NOT NULL
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

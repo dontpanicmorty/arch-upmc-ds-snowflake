@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+
+
+CREATE OR REPLACE TABLE RAWDATA.HEALTHPLANET_APP_DBO_BD_ENROLLEE
+LIKE &{IDAP_LAKE}.HEALTHPLANET_APP_STAGE.DBO__BD_ENROLLEE
+;
+
+
+!set variable_substitution=false;

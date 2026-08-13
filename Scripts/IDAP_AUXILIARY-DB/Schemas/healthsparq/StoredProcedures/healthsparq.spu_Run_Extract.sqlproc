@@ -1,0 +1,80 @@
+/**
+Master stored procedure for the Healthsparq extract.
+*/
+!set variable_substitution=true;
+CREATE OR REPLACE PROCEDURE HEALTHSPARQ.SPU_RUN_EXTRACT ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let startTime = new Date();
+let sqlText, resultSet;
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+
+try {
+  sqlText = `SELECT &{CMS_PRICING_HEALTHSPARQ}.EXTRACTDATA.FXN_GET_CURRENT_TIC_DATE() AS TIC_DATE;`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  const ticDate = resultSet.getColumnValue('TIC_DATE');
+
+  // Keys are the viewnames, values are the Healthsparq filename components
+  const extracts = {
+    EXTERNAL_MRF_MAPPING_EXTRACT_VW: 'LEASED_NETWORKS_MAPPING',
+    REGION_CROSSWALK_EXTRACT_VW: 'OON_Region_XWalk', // Intentionally lower-case per Healthsparq's specs
+    OON_ALLOWED_AMOUNT_EXTRACT_VW: 'OUTOFNETWORK_ALLOWED_AMOUNT',
+    PLAN_DETAILS_EXTRACT_VW: 'PLAN_DETAILS',
+    POS_MAPPING_EXTRACT_VW: 'POS_MAPPING',
+    CONTROL_FILE_EXTRACT_VW: 'CONTROL_FILE',
+  };
+
+  for (const view in extracts) {
+    const filename = extracts[view];
+    sqlText = `CALL HEALTHSPARQ.SPU_EXTRACT_FILE(
+      CONCAT('${ticDate}/', HEALTHSPARQ.FXN_MAKE_FILENAME('${filename}', '${ticDate}')),
+      'HEALTHSPARQ',
+      '${view}'
+    );`;
+    resultSet = snowflake.execute({sqlText});
+    resultSet.next();
+  }
+
+
+  let diag = 'Congratulations!';
+  return diag;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.HEALTHSPARQ_EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw err;
+}
+$$;
+!set variable_substitution=false;

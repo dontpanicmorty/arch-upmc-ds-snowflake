@@ -1,0 +1,3 @@
+CREATE SCHEMA IF NOT EXISTS AUTHORIZATION
+    COMMENT = 'Authorization data domain.'
+;

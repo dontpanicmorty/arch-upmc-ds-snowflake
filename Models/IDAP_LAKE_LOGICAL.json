@@ -1,0 +1,2471 @@
+{
+    "modelName": "IDAP_LAKE_LOGICAL",
+    "collections": [
+        {
+            "collectionName": "MEMBER_PREFERENCES_VW",
+            "type": "object",
+            "properties": [
+                {
+                    "name": "MEMBER_PREFERENCES_KEY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1,
+                        "GUID": "ec0991af-f2c3-4f8f-b344-66383ddb2141"
+                    },
+                    "tPrecision": 9,
+                    "index": true,
+                    "exclusiveMinimum": false,
+                    "exclusiveMaximum": false,
+                    "primaryKey": true,
+                    "alternateKey": false,
+                    "childType": "integer",
+                    "type": "numeric",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "90b534c3-c6c3-4cc5-8808-b11a967da62e",
+                    "error": {},
+                    "childRelationships": [
+                        "ae5c0fb2-aa44-4ac5-94b5-dbe87247cf3d",
+                        "4201983e-ef3c-4357-8ba2-6b5495fb0eec"
+                    ]
+                },
+                {
+                    "name": "FILENAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "0a09656f-b8f1-4f58-9480-da2b414f8521",
+                    "error": {}
+                },
+                {
+                    "name": "INSERT_DATETIME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "timestamp_tz",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "aa6d52d4-3aaf-4eb7-a1ef-0a0c5842d82f",
+                    "error": {}
+                },
+                {
+                    "name": "ID",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "ce862c2f-d136-4628-9483-65a2c90eb4b6",
+                    "error": {}
+                },
+                {
+                    "name": "SUBSCRIPTION_TYPE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "e1849de6-41b6-4dcd-a7e4-a7d1c8c3b883",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_ID",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "a077ad57-73ec-4240-b814-794747448777",
+                    "error": {}
+                },
+                {
+                    "name": "TPA_CLIENT",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "1ab690d3-d7e4-4f77-8016-8a2c45636ed9",
+                    "error": {}
+                },
+                {
+                    "name": "TPA_ID",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "a05b628c-a456-41e5-9bc7-afd3744206fd",
+                    "error": {}
+                },
+                {
+                    "name": "TPA_DIV",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "5255e96a-8819-4913-a42f-17aca1f17f53",
+                    "error": {}
+                },
+                {
+                    "name": "SOURCE_LAST_UPDATED_DATE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "3cbe2c3f-a59e-4a7f-bf04-4fc5fc22fe76",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_PREFIX",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "c1831dcd-b1be-4129-91ff-c63a2a71f446",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_FIRST_NAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "aa985483-cee0-48a4-9782-989a9caa5854",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_MIDDLE_NAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "f8ed8c38-1b8f-44be-bf15-31bfd51576ab",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_LAST_NAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "ee146d77-46fe-43ee-841f-21ec901f4923",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_SUFFIX",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "278c1542-b369-4ef1-9a30-7c959d0535be",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_HAS_H6",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "dadff624-3b9b-4823-8aa7-4e9459dd3fda",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_COUNTY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "5c68e216-f891-4525-8c17-0f649de2acee",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_COUNTY_CODE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "3c377a67-5b20-498a-945b-434b9b680cdb",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_HAS_AUTOPAY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "56bfa17f-055d-42b7-aef3-737e1a1802db",
+                    "error": {}
+                },
+                {
+                    "name": "MEMBER_PROFILE_IS_ELECTRONIC_INVOICE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "5c847d69-69e1-435c-ae8b-1c53df98f82b",
+                    "error": {}
+                },
+                {
+                    "name": "EMAIL_ADDRESS",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "9b20f20b-b05d-4aff-a95c-354143313f7b",
+                    "error": {}
+                },
+                {
+                    "name": "EMAIL_IS_VALID",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "9e756239-07be-4df6-adcc-397730b16fab",
+                    "error": {}
+                },
+                {
+                    "name": "EMAIL_IS_VERIFIED",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "9eba3ee1-00f2-4caa-a38a-a27a420ed5a5",
+                    "error": {}
+                },
+                {
+                    "name": "EMAIL_VERIFICATION_METHOD",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "9041e2b2-2c4c-47a3-8648-4c149cab95fe",
+                    "error": {}
+                },
+                {
+                    "name": "EMAIL_VERIFIED_ON",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "86a0913c-75f2-4aec-a921-458b3b2bd83e",
+                    "error": {}
+                },
+                {
+                    "name": "EMAIL_DATA_SOURCE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "919df476-89ca-4c9f-8b14-f739547e88ea",
+                    "error": {}
+                },
+                {
+                    "name": "HOME_PHONE_NUMBER",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "b0a2a21f-fd16-4c92-b70d-efe53baf1806",
+                    "error": {}
+                },
+                {
+                    "name": "HOME_PHONE_PRIORITY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "7fafc037-570d-42a0-9d2d-4bad3ca4796e",
+                    "error": {}
+                },
+                {
+                    "name": "HOME_PHONE_TYPE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "16724205-8e12-4ff6-a382-980881928151",
+                    "error": {}
+                },
+                {
+                    "name": "HOME_PHONE_VERIFICATION_METHOD",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "67920e7f-2df7-473d-bee7-e2cd8798d05d",
+                    "error": {}
+                },
+                {
+                    "name": "HOME_PHONE_VERIFIED_ON",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "12c14bd1-46d3-4f79-b524-3661dc094463",
+                    "error": {}
+                },
+                {
+                    "name": "HOME_PHONE_DATA_SOURCE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "96e0275e-c0b6-4ec9-b5bd-f4aa0b87d5dd",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_NUMBER",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "e9dab159-9ef6-4e92-bce1-09da670a4738",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_IS_VALID",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "b452e1c6-e364-412f-abc7-9a8617a813b3",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_IS_VERIFIED",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "a1c4bc79-9456-47b4-8f41-d011904c9421",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_PRIORITY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "fcbdf37a-3034-4ba2-bd91-af43ed9d846c",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_TYPE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "5c6d9066-4cae-4365-be0a-f28237a9efff",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_VERIFICATION_METHOD",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "669bceed-04aa-497b-81a5-1ca5790ae6ae",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_VERIFIED_ON",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "3128770b-2d98-40e1-99b1-beec60b569a3",
+                    "error": {}
+                },
+                {
+                    "name": "MOBILE_PHONE_DATA_SOURCE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "ff60bb60-d415-4e07-8315-ecd9f3862d7b",
+                    "error": {}
+                },
+                {
+                    "name": "PERSONAL_PREFERENCES_PRONOUN",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "e262290e-d642-490f-87e5-fd4ac3890e63",
+                    "error": {}
+                },
+                {
+                    "name": "PERSONAL_PREFERENCES_NAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "4ff7d4fa-db2b-4b5c-8064-c46ae8977677",
+                    "error": {}
+                },
+                {
+                    "name": "PERSONAL_PREFERENCES_GENDER_IDENTITY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "6809214c-a511-4cc1-a069-97adc98514b2",
+                    "error": {}
+                },
+                {
+                    "name": "PERSONAL_PREFERENCES_DATA_SOURCE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "8151978d-ab4c-4dad-a037-3eb11dee2789",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_IS_PAPERLESS",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "23b04603-b4d7-45ec-87ce-a093f0c63201",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_SPOKEN_LANGUAGE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "0d683c5c-6ccc-48ba-9900-6c31e56f0420",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_SPOKEN_LANGUAGE_CODE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "45c10197-4946-4845-8b21-4b49587d46e0",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_WRITTEN_LANGUAGE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "2be65820-aec2-4bd7-93c0-19158c56d079",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_WRITTEN_LANGUAGE_CODE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "b0d4d443-21ce-4eb0-a45c-afac4c4e8c50",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_ALTERNATE_FORMAT",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "0aa0fb82-b30c-406e-9d44-5071278c44e6",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_ALTERNATE_FORMAT_CODE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "eaeec561-0608-47a4-b2d2-f526a8b7a322",
+                    "error": {}
+                },
+                {
+                    "name": "COMMUNICATION_PREFERENCES_DATA_SOURCE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "cc7e1d1c-82ff-4199-a4de-83cf6ec7a3a0",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESSES_ARRAY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "properties": [
+                        {
+                            "hackoladeMeta": {},
+                            "isActivated": true,
+                            "autoincrement": {
+                                "step_num": 1
+                            },
+                            "tPrecision": 9,
+                            "primaryKey": false,
+                            "mode": "var",
+                            "enabled": true,
+                            "variantType": "JSON",
+                            "properties": [],
+                            "subtype": "object",
+                            "additionalProperties": false,
+                            "childType": "variant",
+                            "type": "document",
+                            "compositeKey": [
+                                "clusteringKey",
+                                "partitioningKey",
+                                "compositePrimaryKey",
+                                "compositeUniqueKey"
+                            ],
+                            "clusteringKey": false,
+                            "partitioningKey": false,
+                            "compositePrimaryKey": false,
+                            "compositeUniqueKey": false,
+                            "GUID": "76a6d204-5056-4919-8ac7-6cf14324a135",
+                            "arrayItem": true,
+                            "arrayParentType": "array"
+                        }
+                    ],
+                    "primaryKey": false,
+                    "additionalItems": true,
+                    "subtype": "json",
+                    "uniqueItems": false,
+                    "alternateKey": false,
+                    "childType": "array",
+                    "type": "array",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "306d8d07-59aa-4564-a19e-661cb038e4fd",
+                    "error": {}
+                },
+                {
+                    "name": "CAMPAIGNS_ARRAY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "properties": [
+                        {
+                            "hackoladeMeta": {},
+                            "isActivated": true,
+                            "autoincrement": {
+                                "step_num": 1
+                            },
+                            "tPrecision": 9,
+                            "primaryKey": false,
+                            "mode": "var",
+                            "enabled": true,
+                            "variantType": "JSON",
+                            "properties": [],
+                            "subtype": "object",
+                            "additionalProperties": false,
+                            "childType": "variant",
+                            "type": "document",
+                            "compositeKey": [
+                                "clusteringKey",
+                                "partitioningKey",
+                                "compositePrimaryKey",
+                                "compositeUniqueKey"
+                            ],
+                            "clusteringKey": false,
+                            "partitioningKey": false,
+                            "compositePrimaryKey": false,
+                            "compositeUniqueKey": false,
+                            "GUID": "f1ffc0b8-bf6c-457c-8a88-09ffcc02754e",
+                            "arrayItem": true,
+                            "arrayParentType": "array"
+                        }
+                    ],
+                    "primaryKey": false,
+                    "additionalItems": true,
+                    "subtype": "json",
+                    "uniqueItems": false,
+                    "alternateKey": false,
+                    "childType": "array",
+                    "type": "array",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "da8497b7-41d7-49ae-8632-f64c43c365df",
+                    "error": {}
+                },
+                {
+                    "name": "CONSENTS_ARRAY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "properties": [
+                        {
+                            "hackoladeMeta": {},
+                            "isActivated": true,
+                            "autoincrement": {
+                                "step_num": 1
+                            },
+                            "tPrecision": 9,
+                            "primaryKey": false,
+                            "mode": "var",
+                            "enabled": true,
+                            "variantType": "JSON",
+                            "properties": [],
+                            "subtype": "object",
+                            "additionalProperties": false,
+                            "childType": "variant",
+                            "type": "document",
+                            "compositeKey": [
+                                "clusteringKey",
+                                "partitioningKey",
+                                "compositePrimaryKey",
+                                "compositeUniqueKey"
+                            ],
+                            "clusteringKey": false,
+                            "partitioningKey": false,
+                            "compositePrimaryKey": false,
+                            "compositeUniqueKey": false,
+                            "GUID": "d31f7ed3-d08e-4f53-bb76-20f792833948",
+                            "arrayItem": true,
+                            "arrayParentType": "array"
+                        }
+                    ],
+                    "primaryKey": false,
+                    "additionalItems": true,
+                    "subtype": "json",
+                    "uniqueItems": false,
+                    "alternateKey": false,
+                    "childType": "array",
+                    "type": "array",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "6969c40f-0b4b-4226-9354-06fecaa10565",
+                    "error": {}
+                }
+            ],
+            "definitions": {
+                "type": "definitions",
+                "properties": [],
+                "GUID": "6f15e792-dcc5-4a33-b385-a32d4139bd4c"
+            },
+            "isActivated": true,
+            "additionalProperties": false,
+            "formatTypeOptions": {
+                "NULL_IF": [
+                    {
+                        "NULL_IF_item": "\\N",
+                        "GUID": "bcede52d-67ac-421c-bf80-352f68d23c48"
+                    }
+                ],
+                "GUID": "e68f3832-a7fa-4a7c-a90f-c19150eea5ad"
+            },
+            "external": false,
+            "GUID": "32d769bf-6cca-4101-8084-0e7903492523",
+            "bucketId": "2be712aa-064e-44a3-a3bc-7b1de2fd6ade"
+        },
+        {
+            "collectionName": "MEMBER_PREFERENCES_ADDRESSES_VW",
+            "type": "object",
+            "properties": [
+                {
+                    "name": "MEMBER_PREFERENCES_KEY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1,
+                        "GUID": "940df9cd-c2d8-49ad-a6a6-c34d683eb1bc"
+                    },
+                    "tPrecision": 9,
+                    "index": true,
+                    "exclusiveMinimum": false,
+                    "exclusiveMaximum": false,
+                    "primaryKey": false,
+                    "childType": "integer",
+                    "type": "numeric",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": true,
+                    "GUID": "4aaf85f9-4c50-4d52-be21-39233a13ce73",
+                    "relationshipType": "Foreign Key",
+                    "foreignCollection": "32d769bf-6cca-4101-8084-0e7903492523",
+                    "foreignField": [
+                        "32d769bf-6cca-4101-8084-0e7903492523",
+                        "90b534c3-c6c3-4cc5-8808-b11a967da62e"
+                    ],
+                    "parentRelationship": "ae5c0fb2-aa44-4ac5-94b5-dbe87247cf3d",
+                    "required": true,
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_ARRAY_INDEX",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1,
+                        "GUID": "edd6e13d-d482-41ee-9992-da3f23f98dc0"
+                    },
+                    "tPrecision": 9,
+                    "index": true,
+                    "exclusiveMinimum": false,
+                    "exclusiveMaximum": false,
+                    "primaryKey": false,
+                    "childType": "integer",
+                    "type": "numeric",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": true,
+                    "GUID": "bcb97443-bdf3-49a1-8619-00599063ca85",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_TYPE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "b59f47da-df15-4969-8f64-8759ff2147d5",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_LINE_1",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "33fc9766-3698-4891-be4f-7820a5d7cfe7",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_LINE_2",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "188233a6-8cbd-4fe0-a1d9-b3d075289640",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_LINE_3",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "dfa01ca8-4443-4a09-a81a-6729f64ba822",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_CITY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "40f76de0-dd6e-4990-881b-358a9d073739",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_STATE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "7c073c81-caf1-4f23-bd0f-75d5f1a041fc",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_ZIP_CODE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "b5c228f3-1a9c-48af-989b-34d272b0bb23",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_COUNTRY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "5e263b1a-121c-473c-9430-43214e89d9e0",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_IS_VALID",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "7ed2e931-25db-4689-8212-e6d9bf9f8089",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_IS_VERIFIED",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "0bf8c072-cb86-4ab2-bfba-bb88cdd40ef0",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_VERIFIED_ON",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "5fde9d58-7f00-4132-aef5-885a853a7b98",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_DATA_SOURCE_NAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "f39a08fd-c7ac-4520-bd80-7c8d79f49d73",
+                    "error": {}
+                },
+                {
+                    "name": "ADDRESS_DATA_SOURCE_UPDATED_ON",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "3d9ea1fa-d340-4b5b-a1fe-b5505e2903f1",
+                    "error": {}
+                }
+            ],
+            "definitions": {
+                "type": "definitions",
+                "properties": [],
+                "GUID": "1685da53-b878-492a-97cd-f470e31fbf4a"
+            },
+            "isActivated": true,
+            "additionalProperties": false,
+            "formatTypeOptions": {
+                "NULL_IF": [
+                    {
+                        "NULL_IF_item": "\\N",
+                        "GUID": "6bd1c4cb-2ec7-48e0-991f-5e06bb7005a9"
+                    }
+                ],
+                "GUID": "f8e1286e-f81c-4ab5-9dbf-22ebd64e1c06"
+            },
+            "external": false,
+            "GUID": "4f79776e-5cde-4be6-9d13-ce6db2dab15e",
+            "bucketId": "2be712aa-064e-44a3-a3bc-7b1de2fd6ade",
+            "description": "Parses Address Array from JSON to expose individual rows along with an index and MEMBER_PREFERENCES_KEY",
+            "uniqueKey": [
+                {
+                    "GUID": "a96a7a88-3f0b-4865-887a-022d3220342f",
+                    "constraintName": "UK_MEMBER_PREFERENCES_ADDRESSES_VW",
+                    "compositeUniqueKey": [
+                        {
+                            "keyId": "4aaf85f9-4c50-4d52-be21-39233a13ce73",
+                            "type": ""
+                        },
+                        {
+                            "keyId": "bcb97443-bdf3-49a1-8619-00599063ca85",
+                            "type": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "collectionName": "MEMBER_PREFERENCES_CAMPAIGNS_VW",
+            "type": "object",
+            "properties": [
+                {
+                    "name": "MEMBER_PREFERENCES_KEY",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1,
+                        "GUID": "60d03968-535d-4b16-8af0-918be613eaf6"
+                    },
+                    "tPrecision": 9,
+                    "index": true,
+                    "exclusiveMinimum": false,
+                    "exclusiveMaximum": false,
+                    "primaryKey": false,
+                    "childType": "integer",
+                    "type": "numeric",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": true,
+                    "GUID": "f7e43dd2-c6ab-426a-9a11-06895798433b",
+                    "required": true,
+                    "error": {},
+                    "relationshipType": "Foreign Key",
+                    "foreignCollection": "32d769bf-6cca-4101-8084-0e7903492523",
+                    "foreignField": [
+                        "32d769bf-6cca-4101-8084-0e7903492523",
+                        "90b534c3-c6c3-4cc5-8808-b11a967da62e"
+                    ],
+                    "parentRelationship": "4201983e-ef3c-4357-8ba2-6b5495fb0eec"
+                },
+                {
+                    "name": "CAMPAIGN_ARRAY_INDEX",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1,
+                        "GUID": "a06516c2-1b94-445a-8255-043a578fe683"
+                    },
+                    "tPrecision": 9,
+                    "index": true,
+                    "exclusiveMinimum": false,
+                    "exclusiveMaximum": false,
+                    "primaryKey": false,
+                    "childType": "integer",
+                    "type": "numeric",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": true,
+                    "GUID": "231606d8-7085-49fa-96a5-dac4b80a7a36",
+                    "error": {}
+                },
+                {
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": true,
+                    "GUID": "4123a03c-d338-4d44-9938-11f65cd46582",
+                    "name": "CONTACT_METHODS_ARRAY_INDEX",
+                    "error": {}
+                },
+                {
+                    "name": "CAMPAIGN_TYPE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "011acfd6-fba1-4fe6-af21-a260f12768e4",
+                    "error": {}
+                },
+                {
+                    "name": "CONTACT_METHOD_TYPE",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "8cb084da-f275-4e9f-9755-3e1244a97a86",
+                    "error": {}
+                },
+                {
+                    "name": "CONTACT_METHOD_SOURCE_NAME",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "721ccdea-0ea6-4d19-acde-c8a0d2f816c7",
+                    "error": {}
+                },
+                {
+                    "name": "CONTACT_METHOD_SOURCE_UPDATED_ON",
+                    "hackoladeMeta": {},
+                    "isActivated": true,
+                    "autoincrement": {
+                        "step_num": 1
+                    },
+                    "tPrecision": 9,
+                    "primaryKey": false,
+                    "alternateKey": false,
+                    "childType": "varchar",
+                    "type": "string",
+                    "compositeKey": [
+                        "clusteringKey",
+                        "partitioningKey",
+                        "compositePrimaryKey",
+                        "compositeUniqueKey"
+                    ],
+                    "clusteringKey": false,
+                    "partitioningKey": false,
+                    "compositePrimaryKey": false,
+                    "compositeUniqueKey": false,
+                    "GUID": "b7052168-bb0b-4b73-8430-947fe63a63b9",
+                    "error": {}
+                }
+            ],
+            "definitions": {
+                "type": "definitions",
+                "properties": [],
+                "GUID": "96626924-b1a9-4034-8e67-e0d991b990d2"
+            },
+            "isActivated": true,
+            "additionalProperties": false,
+            "formatTypeOptions": {
+                "NULL_IF": [
+                    {
+                        "NULL_IF_item": "\\N",
+                        "GUID": "37fa6d28-72e0-4072-a34f-d18937369211"
+                    }
+                ],
+                "GUID": "4e098fda-474c-4bfc-8254-63c992d12567"
+            },
+            "external": false,
+            "GUID": "6479a7f7-7169-485b-a162-d6cbde1719db",
+            "bucketId": "2be712aa-064e-44a3-a3bc-7b1de2fd6ade",
+            "uniqueKey": [
+                {
+                    "GUID": "982d0b4a-9056-4ae6-8682-722026ce7e09",
+                    "constraintName": "UK_MEMBER_PREFERENCES_CAMPAIGNS_VW",
+                    "compositeUniqueKey": [
+                        {
+                            "keyId": "f7e43dd2-c6ab-426a-9a11-06895798433b",
+                            "type": ""
+                        },
+                        {
+                            "keyId": "231606d8-7085-49fa-96a5-dac4b80a7a36",
+                            "type": ""
+                        },
+                        {
+                            "keyId": "4123a03c-d338-4d44-9938-11f65cd46582",
+                            "type": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "buckets": [
+        {
+            "name": "MEMBER",
+            "type": "bucket",
+            "collectionIds": [
+                "32d769bf-6cca-4101-8084-0e7903492523",
+                "4f79776e-5cde-4be6-9d13-ce6db2dab15e",
+                "6479a7f7-7169-485b-a162-d6cbde1719db"
+            ],
+            "backgroundColor": {
+                "r": 216,
+                "g": 0,
+                "b": 115,
+                "a": 1
+            },
+            "show": true,
+            "isActivated": true,
+            "indexes": [],
+            "GUID": "2be712aa-064e-44a3-a3bc-7b1de2fd6ade"
+        }
+    ],
+    "views": [],
+    "relationships": [
+        {
+            "name": "New Relationship",
+            "relationshipType": "",
+            "parentField": [],
+            "parentCardinality": "1",
+            "childField": [],
+            "childCardinality": "1",
+            "GUID": "5feb6fe1-dfaa-4288-8d56-0cc8f54bfa6c"
+        },
+        {
+            "name": "fk MEMBER_PREFERENCES_ADDRESSES_VW.MEMBER_PREFERENCES_KEY to MEMBER_PREFERENCES_VW.MEMBER_PREFERENCES_KEY",
+            "relationshipType": "Foreign Key",
+            "parentField": [
+                [
+                    "32d769bf-6cca-4101-8084-0e7903492523",
+                    "90b534c3-c6c3-4cc5-8808-b11a967da62e"
+                ]
+            ],
+            "parentCardinality": "1",
+            "childField": [
+                [
+                    "4f79776e-5cde-4be6-9d13-ce6db2dab15e",
+                    "4aaf85f9-4c50-4d52-be21-39233a13ce73"
+                ]
+            ],
+            "childCardinality": "0..n",
+            "parentCollection": "32d769bf-6cca-4101-8084-0e7903492523",
+            "childCollection": "4f79776e-5cde-4be6-9d13-ce6db2dab15e",
+            "GUID": "ae5c0fb2-aa44-4ac5-94b5-dbe87247cf3d"
+        },
+        {
+            "name": "fk MEMBER_PREFERENCES_CAMPAIGNS_VW.MEMBER_PREFERENCES_KEY to MEMBER_PREFERENCES_VW.MEMBER_PREFERENCES_KEY",
+            "relationshipType": "Foreign Key",
+            "parentField": [
+                [
+                    "32d769bf-6cca-4101-8084-0e7903492523",
+                    "90b534c3-c6c3-4cc5-8808-b11a967da62e"
+                ]
+            ],
+            "parentCardinality": "1",
+            "childField": [
+                [
+                    "6479a7f7-7169-485b-a162-d6cbde1719db",
+                    "f7e43dd2-c6ab-426a-9a11-06895798433b"
+                ]
+            ],
+            "childCardinality": "0..n",
+            "parentCollection": "32d769bf-6cca-4101-8084-0e7903492523",
+            "childCollection": "6479a7f7-7169-485b-a162-d6cbde1719db",
+            "GUID": "4201983e-ef3c-4357-8ba2-6b5495fb0eec"
+        }
+    ],
+    "users": [],
+    "diagramViews": [],
+    "idToNameHashTable": {
+        "2be712aa-064e-44a3-a3bc-7b1de2fd6ade": "MEMBER",
+        "32d769bf-6cca-4101-8084-0e7903492523": "MEMBER_PREFERENCES_VW",
+        "90b534c3-c6c3-4cc5-8808-b11a967da62e": "MEMBER_PREFERENCES_KEY",
+        "0a09656f-b8f1-4f58-9480-da2b414f8521": "FILENAME",
+        "aa6d52d4-3aaf-4eb7-a1ef-0a0c5842d82f": "INSERT_DATETIME",
+        "ce862c2f-d136-4628-9483-65a2c90eb4b6": "ID",
+        "e1849de6-41b6-4dcd-a7e4-a7d1c8c3b883": "SUBSCRIPTION_TYPE",
+        "a077ad57-73ec-4240-b814-794747448777": "MEMBER_ID",
+        "5feb6fe1-dfaa-4288-8d56-0cc8f54bfa6c": "New Relationship",
+        "1ab690d3-d7e4-4f77-8016-8a2c45636ed9": "TPA_CLIENT",
+        "a05b628c-a456-41e5-9bc7-afd3744206fd": "TPA_ID",
+        "5255e96a-8819-4913-a42f-17aca1f17f53": "TPA_DIV",
+        "3cbe2c3f-a59e-4a7f-bf04-4fc5fc22fe76": "SOURCE_LAST_UPDATED_DATE",
+        "c1831dcd-b1be-4129-91ff-c63a2a71f446": "MEMBER_PROFILE_PREFIX",
+        "aa985483-cee0-48a4-9782-989a9caa5854": "MEMBER_PROFILE_FIRST_NAME",
+        "f8ed8c38-1b8f-44be-bf15-31bfd51576ab": "MEMBER_PROFILE_MIDDLE_NAME",
+        "ee146d77-46fe-43ee-841f-21ec901f4923": "MEMBER_PROFILE_LAST_NAME",
+        "278c1542-b369-4ef1-9a30-7c959d0535be": "MEMBER_PROFILE_SUFFIX",
+        "dadff624-3b9b-4823-8aa7-4e9459dd3fda": "MEMBER_PROFILE_HAS_H6",
+        "5c68e216-f891-4525-8c17-0f649de2acee": "MEMBER_PROFILE_COUNTY",
+        "3c377a67-5b20-498a-945b-434b9b680cdb": "MEMBER_PROFILE_COUNTY_CODE",
+        "56bfa17f-055d-42b7-aef3-737e1a1802db": "MEMBER_PROFILE_HAS_AUTOPAY",
+        "5c847d69-69e1-435c-ae8b-1c53df98f82b": "MEMBER_PROFILE_IS_ELECTRONIC_INVOICE",
+        "9b20f20b-b05d-4aff-a95c-354143313f7b": "EMAIL_ADDRESS",
+        "9e756239-07be-4df6-adcc-397730b16fab": "EMAIL_IS_VALID",
+        "9eba3ee1-00f2-4caa-a38a-a27a420ed5a5": "EMAIL_IS_VERIFIED",
+        "9041e2b2-2c4c-47a3-8648-4c149cab95fe": "EMAIL_VERIFICATION_METHOD",
+        "86a0913c-75f2-4aec-a921-458b3b2bd83e": "EMAIL_VERIFIED_ON",
+        "919df476-89ca-4c9f-8b14-f739547e88ea": "EMAIL_DATA_SOURCE",
+        "b0a2a21f-fd16-4c92-b70d-efe53baf1806": "HOME_PHONE_NUMBER",
+        "7fafc037-570d-42a0-9d2d-4bad3ca4796e": "HOME_PHONE_PRIORITY",
+        "16724205-8e12-4ff6-a382-980881928151": "HOME_PHONE_TYPE",
+        "67920e7f-2df7-473d-bee7-e2cd8798d05d": "HOME_PHONE_VERIFICATION_METHOD",
+        "12c14bd1-46d3-4f79-b524-3661dc094463": "HOME_PHONE_VERIFIED_ON",
+        "96e0275e-c0b6-4ec9-b5bd-f4aa0b87d5dd": "HOME_PHONE_DATA_SOURCE",
+        "e9dab159-9ef6-4e92-bce1-09da670a4738": "MOBILE_PHONE_NUMBER",
+        "b452e1c6-e364-412f-abc7-9a8617a813b3": "MOBILE_PHONE_IS_VALID",
+        "a1c4bc79-9456-47b4-8f41-d011904c9421": "MOBILE_PHONE_IS_VERIFIED",
+        "fcbdf37a-3034-4ba2-bd91-af43ed9d846c": "MOBILE_PHONE_PRIORITY",
+        "5c6d9066-4cae-4365-be0a-f28237a9efff": "MOBILE_PHONE_TYPE",
+        "669bceed-04aa-497b-81a5-1ca5790ae6ae": "MOBILE_PHONE_VERIFICATION_METHOD",
+        "3128770b-2d98-40e1-99b1-beec60b569a3": "MOBILE_PHONE_VERIFIED_ON",
+        "ff60bb60-d415-4e07-8315-ecd9f3862d7b": "MOBILE_PHONE_DATA_SOURCE",
+        "e262290e-d642-490f-87e5-fd4ac3890e63": "PERSONAL_PREFERENCES_PRONOUN",
+        "4ff7d4fa-db2b-4b5c-8064-c46ae8977677": "PERSONAL_PREFERENCES_NAME",
+        "6809214c-a511-4cc1-a069-97adc98514b2": "PERSONAL_PREFERENCES_GENDER_IDENTITY",
+        "8151978d-ab4c-4dad-a037-3eb11dee2789": "PERSONAL_PREFERENCES_DATA_SOURCE",
+        "23b04603-b4d7-45ec-87ce-a093f0c63201": "COMMUNICATION_PREFERENCES_IS_PAPERLESS",
+        "0d683c5c-6ccc-48ba-9900-6c31e56f0420": "COMMUNICATION_PREFERENCES_SPOKEN_LANGUAGE",
+        "45c10197-4946-4845-8b21-4b49587d46e0": "COMMUNICATION_PREFERENCES_SPOKEN_LANGUAGE_CODE",
+        "2be65820-aec2-4bd7-93c0-19158c56d079": "COMMUNICATION_PREFERENCES_WRITTEN_LANGUAGE",
+        "b0d4d443-21ce-4eb0-a45c-afac4c4e8c50": "COMMUNICATION_PREFERENCES_WRITTEN_LANGUAGE_CODE",
+        "0aa0fb82-b30c-406e-9d44-5071278c44e6": "COMMUNICATION_PREFERENCES_ALTERNATE_FORMAT",
+        "eaeec561-0608-47a4-b2d2-f526a8b7a322": "COMMUNICATION_PREFERENCES_ALTERNATE_FORMAT_CODE",
+        "cc7e1d1c-82ff-4199-a4de-83cf6ec7a3a0": "COMMUNICATION_PREFERENCES_DATA_SOURCE",
+        "306d8d07-59aa-4564-a19e-661cb038e4fd": "ADDRESSES_ARRAY",
+        "da8497b7-41d7-49ae-8632-f64c43c365df": "CAMPAIGNS_ARRAY",
+        "6969c40f-0b4b-4226-9354-06fecaa10565": "CONSENTS_ARRAY",
+        "4f79776e-5cde-4be6-9d13-ce6db2dab15e": "MEMBER_PREFERENCES_ADDRESSES_VW",
+        "4aaf85f9-4c50-4d52-be21-39233a13ce73": "MEMBER_PREFERENCES_KEY",
+        "bcb97443-bdf3-49a1-8619-00599063ca85": "ADDRESS_ARRAY_INDEX",
+        "b59f47da-df15-4969-8f64-8759ff2147d5": "ADDRESS_TYPE",
+        "33fc9766-3698-4891-be4f-7820a5d7cfe7": "ADDRESS_LINE_1",
+        "188233a6-8cbd-4fe0-a1d9-b3d075289640": "ADDRESS_LINE_2",
+        "dfa01ca8-4443-4a09-a81a-6729f64ba822": "ADDRESS_LINE_3",
+        "40f76de0-dd6e-4990-881b-358a9d073739": "ADDRESS_CITY",
+        "7c073c81-caf1-4f23-bd0f-75d5f1a041fc": "ADDRESS_STATE",
+        "b5c228f3-1a9c-48af-989b-34d272b0bb23": "ADDRESS_ZIP_CODE",
+        "5e263b1a-121c-473c-9430-43214e89d9e0": "ADDRESS_COUNTRY",
+        "7ed2e931-25db-4689-8212-e6d9bf9f8089": "ADDRESS_IS_VALID",
+        "0bf8c072-cb86-4ab2-bfba-bb88cdd40ef0": "ADDRESS_IS_VERIFIED",
+        "5fde9d58-7f00-4132-aef5-885a853a7b98": "ADDRESS_VERIFIED_ON",
+        "f39a08fd-c7ac-4520-bd80-7c8d79f49d73": "ADDRESS_DATA_SOURCE_NAME",
+        "3d9ea1fa-d340-4b5b-a1fe-b5505e2903f1": "ADDRESS_DATA_SOURCE_UPDATED_ON",
+        "ae5c0fb2-aa44-4ac5-94b5-dbe87247cf3d": "fk MEMBER_PREFERENCES_ADDRESSES_VW.MEMBER_PREFERENCES_KEY to MEMBER_PREFERENCES_VW.MEMBER_PREFERENCES_KEY",
+        "6479a7f7-7169-485b-a162-d6cbde1719db": "MEMBER_PREFERENCES_CAMPAIGNS_VW",
+        "f7e43dd2-c6ab-426a-9a11-06895798433b": "MEMBER_PREFERENCES_KEY",
+        "231606d8-7085-49fa-96a5-dac4b80a7a36": "CAMPAIGN_ARRAY_INDEX",
+        "011acfd6-fba1-4fe6-af21-a260f12768e4": "CAMPAIGN_TYPE",
+        "8cb084da-f275-4e9f-9755-3e1244a97a86": "CONTACT_METHOD_TYPE",
+        "721ccdea-0ea6-4d19-acde-c8a0d2f816c7": "CONTACT_METHOD_SOURCE_NAME",
+        "b7052168-bb0b-4b73-8430-947fe63a63b9": "CONTACT_METHOD_SOURCE_UPDATED_ON",
+        "4123a03c-d338-4d44-9938-11f65cd46582": "CONTACT_METHODS_ARRAY_INDEX",
+        "4201983e-ef3c-4357-8ba2-6b5495fb0eec": "fk MEMBER_PREFERENCES_CAMPAIGNS_VW.MEMBER_PREFERENCES_KEY to MEMBER_PREFERENCES_VW.MEMBER_PREFERENCES_KEY"
+    },
+    "definitions": {
+        "type": "definitions",
+        "properties": [],
+        "GUID": "5183b464-f9f4-4ae4-bc3b-004a128dfbde"
+    },
+    "polyglotDefinitions": {
+        "type": "polyglotDefinitions",
+        "properties": [],
+        "GUID": "c8db76b6-e8cf-4a8b-ad8d-621f0b8be9fe"
+    },
+    "externalDefinitions": {
+        "type": "externalDefinitions",
+        "properties": [],
+        "GUID": "50143779-01a4-43ae-9c7b-755ceff2341d"
+    },
+    "sources": [],
+    "decorativeSymbols": [
+        {
+            "GUID": "b9612f7f-bb0d-4ea0-a939-ad4971f96f45",
+            "name": "Notes",
+            "type": "annotation",
+            "bucketId": "2be712aa-064e-44a3-a3bc-7b1de2fd6ade",
+            "disableInitialFocus": true,
+            "value": "-  Addresses and Campaigns should be LEFT JOINED from the main MEMBER_PREFERENCES_VW on MEMBER_PREFERENCES_KEY because if no address or campaign data is available, no record will exist\n-  Addresses are unique by MEMBER_PREFERENCES_KEY + ADDRESS_ARRAY_INDEX because a member can have multiple addresses\n-  Campaigns are unique by MEMBER_PREFERENCES_KEY + CAMPAIGN_ARRAY_INDEX + CONTACT_METHODS_ARRAY_INDEX because of their nested relationship\n  \n"
+        }
+    ],
+    "dbVendor": "Snowflake",
+    "appTarget": "Snowflake",
+    "creationTS": "2022-09-07T12:31:30.668Z",
+    "GUID": "8895400d-c56b-4514-adac-35f7ee129384",
+    "isLineageEnabled": false,
+    "hackoladeMeta": {
+        "validationErrors": {
+            "modelName": false
+        }
+    },
+    "comments": "Logical model of tables and views in IDAP_LAKE where every object in here is shown as a table even though many of them are views in the database. We parse VARIANT columns in many of those views which Hackolade has a very difficult time interpreting for a model since the schema is applied at runtime. Therefor this model is to be used only to illustrate relationships for users but not to actually build or deploy anything.",
+    "author": "Paul Diamond",
+    "version": "1.0",
+    "lastModifTS": "2022-09-07T12:58:47.062Z",
+    "persistenceSchemaVersion": "6",
+    "isCreatedByPlugin": true,
+    "pluginInformation": {
+        "pluginName": "Snowflake",
+        "pluginVersion": "0.1.53",
+        "pluginEngineVersion": "1.0.0"
+    },
+    "applicationInformation": {
+        "version": "6.4.3"
+    },
+    "settings": {
+        "centralPane": {
+            "dbLevel": {
+                "erd": [
+                    {
+                        "GUID": "32d769bf-6cca-4101-8084-0e7903492523",
+                        "x": 316,
+                        "y": 148,
+                        "width": 487,
+                        "height": 1023,
+                        "color": {}
+                    },
+                    {
+                        "GUID": "4f79776e-5cde-4be6-9d13-ce6db2dab15e",
+                        "x": 893,
+                        "y": 199,
+                        "width": 382,
+                        "height": 303,
+                        "color": {}
+                    },
+                    {
+                        "GUID": "6479a7f7-7169-485b-a162-d6cbde1719db",
+                        "x": 881,
+                        "y": 727,
+                        "width": 405,
+                        "height": 159,
+                        "color": {}
+                    }
+                ],
+                "buckets": [
+                    {
+                        "x": 276,
+                        "y": 108,
+                        "GUID": "2be712aa-064e-44a3-a3bc-7b1de2fd6ade"
+                    }
+                ],
+                "collapsedNodes": [
+                    "32d769bf-6cca-4101-8084-0e7903492523306d8d07-59aa-4564-a19e-661cb038e4fd",
+                    "32d769bf-6cca-4101-8084-0e79034925236969c40f-0b4b-4226-9354-06fecaa10565",
+                    "32d769bf-6cca-4101-8084-0e7903492523da8497b7-41d7-49ae-8632-f64c43c365df"
+                ],
+                "activeRelationship": "",
+                "activeRelationshipFields": {
+                    "childField": [],
+                    "parentField": []
+                },
+                "selectedCollections": [],
+                "displayColorPicker": false,
+                "graphView": {
+                    "erd": [],
+                    "buckets": [],
+                    "decorativeSymbols": [],
+                    "forceLayout": true,
+                    "defaultLinkLength": 300
+                },
+                "diagramViews": [],
+                "decorativeSymbols": [
+                    {
+                        "GUID": "b9612f7f-bb0d-4ea0-a939-ad4971f96f45",
+                        "x": 814,
+                        "y": 518,
+                        "height": 174,
+                        "width": 527
+                    }
+                ],
+                "nestedCollectionsLayout": "horizontal",
+                "options": []
+            },
+            "collectionLevel": {},
+            "changed": false
+        },
+        "dtDiagram": {
+            "collapsedNodes": [],
+            "shouldDistributeCollections": false
+        }
+    }
+}

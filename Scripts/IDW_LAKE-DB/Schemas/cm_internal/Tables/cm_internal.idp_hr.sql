@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_HR
+(
+EMPLOYEE_ID                  VARCHAR,
+FILE_MONTH                   VARCHAR,
+VARIABLE_PAY                  NUMBER(33,5),
+VARIABLE_PAY_AMT              NUMBER(33,5),
+BONUS_COMMISSION              NUMBER(33,5),
+BONUS_COMMISSION_AMT          NUMBER(33,5),
+MULTIPLE_SHIFT_TYPES          NUMBER(33,5),
+ALL_THREE_SHIFT_TYPES         NUMBER(33,5),
+DAY_HOURS                     NUMBER(33,5),
+EVENING_HOURS                 NUMBER(33,5),
+NIGHT_HOURS                   NUMBER(33,5),
+DAY_SHIFT                     NUMBER(33,5),
+EVENING_SHIFT                 NUMBER(33,5),
+NIGHT_SHIFT                   NUMBER(33,5),
+DAY_SHIFT_PROPORTION          NUMBER(33,5),
+EVENING_SHIFT_PROPORTION      NUMBER(33,5),
+NIGHT_SHIFT_PROPORTION        NUMBER(33,5),
+WEEKEND_HOURS                 NUMBER(33,5),
+WEEKEND_SHIFT                 NUMBER(33,5),
+WEEKEND_HOURS_PROPORTION      NUMBER(33,5),
+ALL_HOURS                     NUMBER(33,5),
+OVERTIME                      NUMBER(33,5),
+OVERTIME_HOURS                NUMBER(33,5),
+OVERTIME_EARNS                NUMBER(33,5),
+CALL_STANDBY                  NUMBER(33,5),
+CALL_STANDBY_HOURS            NUMBER(33,5),
+TUITION_ASSISTANCE            NUMBER(33,5),
+PTO_SOLD                      NUMBER(33,5),
+PTO_HOURS_SOLD                NUMBER(33,5),
+PTO_BOUGHT                    NUMBER(33,5),
+PTO_HOURS_BOUGHT              NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

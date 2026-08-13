@@ -1,0 +1,28 @@
+CREATE OR REPLACE TABLE EDW_RPT.CHC_VISION_CLAIM_FACT
+(
+CHC_VISION_CLAIM_FACT_KEY        NUMBER(38),
+VISION_PROVIDER_KEY              NUMBER(38),
+CPT4_PROCEDURE_KEY               NUMBER(38),
+MEMBER_DEMOGRAPHIC_KEY           NUMBER(38),
+CHC_VISION_UNRESOLVED_KEY        NUMBER(38),
+CHC_PLAN_KEY                     NUMBER(38),
+CHC_MEMBER_KEY                   NUMBER(38),
+PAYMENT_DATE                  TIMESTAMP_NTZ,
+PAID_AMT                       NUMBER(10,2),
+SERVICE_DATE                  TIMESTAMP_NTZ,
+CHARGED_AMT                    NUMBER(10,2),
+REPORT_EFFECTIVE_DATE         TIMESTAMP_NTZ,
+LOAD_DATE                     TIMESTAMP_NTZ,
+UPDATE_DATE                   TIMESTAMP_NTZ,
+SERVICE_CNT                       NUMBER(3),
+COPAY_AMT                      NUMBER(10,2),
+BENEFIT_ALLOW_AMT              NUMBER(10,2),
+THIRD_PARTY_APPLIED_AMT        NUMBER(10,2),
+APPROVED_AMT                   NUMBER(10,2),
+PROVIDER_PCP_KEY                     NUMBER,
+DORAL_CLAIM_TYPE_KEY                 NUMBER,
+CLAIM_REFERENCE_ID                  VARCHAR,
+NOT_COVERED_AMT                NUMBER(10,2)
+)
+COMMENT='Created for EDWRPT Migration'
+;

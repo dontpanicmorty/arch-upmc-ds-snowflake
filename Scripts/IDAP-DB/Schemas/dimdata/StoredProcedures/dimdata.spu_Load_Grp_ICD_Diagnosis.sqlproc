@@ -1,0 +1,168 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_GRP_ICD_DIAGNOSIS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.GRP_ICD_DIAGNOSIS`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.GRP_ICD_DIAGNOSIS AS tgt
+USING (
+        SELECT DISTINCT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,GRP_ICD_DIAGNOSIS_KEY
+        ,DIM_ICD_DIAGNOSIS_KEY
+        ,ICD_POSITION_NBR
+        ,POA_CODE
+        ,ICD_QUALIFIER_CODE
+        ,ICD_QUALIFIER_DESC
+        ,PRIMARY_DIAGNOSIS_IND
+        FROM STAGEDATA.GRP_ICD_DIAGNOSIS_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,GRP_ICD_DIAGNOSIS_KEY
+        ,DIM_ICD_DIAGNOSIS_KEY
+        ,ICD_POSITION_NBR
+        ,POA_CODE
+        ,ICD_QUALIFIER_CODE
+        ,ICD_QUALIFIER_DESC
+        ,PRIMARY_DIAGNOSIS_IND
+        FROM DIMDATA.GRP_ICD_DIAGNOSIS
+    ) AS src
+ON (tgt.GRP_ICD_DIAGNOSIS_KEY = src.GRP_ICD_DIAGNOSIS_KEY
+AND tgt.DIM_ICD_DIAGNOSIS_KEY = src.DIM_ICD_DIAGNOSIS_KEY
+AND tgt.ICD_POSITION_NBR = src.ICD_POSITION_NBR
+AND tgt.POA_CODE = src.POA_CODE
+AND tgt.ICD_QUALIFIER_CODE = src.ICD_QUALIFIER_CODE)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.ICD_QUALIFIER_DESC = src.ICD_QUALIFIER_DESC,
+    tgt.PRIMARY_DIAGNOSIS_IND = src.PRIMARY_DIAGNOSIS_IND
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        GRP_ICD_DIAGNOSIS_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIM_ICD_DIAGNOSIS_KEY
+        ,ICD_POSITION_NBR
+        ,POA_CODE
+        ,ICD_QUALIFIER_CODE
+        ,ICD_QUALIFIER_DESC
+        ,PRIMARY_DIAGNOSIS_IND
+    )
+    VALUES
+    (
+        src.GRP_ICD_DIAGNOSIS_KEY
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DIM_ICD_DIAGNOSIS_KEY
+        ,src.ICD_POSITION_NBR
+        ,src.POA_CODE
+        ,src.ICD_QUALIFIER_CODE
+        ,src.ICD_QUALIFIER_DESC
+        ,src.PRIMARY_DIAGNOSIS_IND
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.GRP_ICD_DIAGNOSIS
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+FROM (SELECT GRP_FROM.GRP_ICD_DIAGNOSIS_KEY, GRP_FROM.DIM_ICD_DIAGNOSIS_KEY, GRP_FROM.ICD_POSITION_NBR, GRP_FROM.POA_CODE, GRP_FROM.ICD_QUALIFIER_CODE
+    FROM DIMDATA.GRP_ICD_DIAGNOSIS GRP_FROM
+        LEFT OUTER JOIN (SELECT GRP_ICD_DIAGNOSIS_KEY, DIM_ICD_DIAGNOSIS_KEY, ICD_POSITION_NBR, POA_CODE, ICD_QUALIFIER_CODE
+            FROM STAGEDATA.GRP_ICD_DIAGNOSIS_SELECT_VW) STAGE_DATA
+        ON (STAGE_DATA.GRP_ICD_DIAGNOSIS_KEY = GRP_FROM.GRP_ICD_DIAGNOSIS_KEY
+        AND STAGE_DATA.DIM_ICD_DIAGNOSIS_KEY = GRP_FROM.DIM_ICD_DIAGNOSIS_KEY
+        AND STAGE_DATA.ICD_POSITION_NBR = GRP_FROM.ICD_POSITION_NBR
+        AND STAGE_DATA.POA_CODE = GRP_FROM.POA_CODE
+        AND STAGE_DATA.ICD_QUALIFIER_CODE = GRP_FROM.ICD_QUALIFIER_CODE)
+    WHERE STAGE_DATA.GRP_ICD_DIAGNOSIS_KEY IS NULL
+    AND GRP_FROM.GRP_ICD_DIAGNOSIS_KEY > 999
+    AND GRP_FROM.IS_LOGICAL_DELETE_FLAG = FALSE
+    ) DELETES
+WHERE GRP_ICD_DIAGNOSIS.GRP_ICD_DIAGNOSIS_KEY = DELETES.GRP_ICD_DIAGNOSIS_KEY
+AND GRP_ICD_DIAGNOSIS.DIM_ICD_DIAGNOSIS_KEY = DELETES.DIM_ICD_DIAGNOSIS_KEY
+AND GRP_ICD_DIAGNOSIS.ICD_POSITION_NBR = DELETES.ICD_POSITION_NBR
+AND GRP_ICD_DIAGNOSIS.POA_CODE = DELETES.POA_CODE
+AND GRP_ICD_DIAGNOSIS.ICD_QUALIFIER_CODE = DELETES.ICD_QUALIFIER_CODE
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

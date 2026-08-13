@@ -1,0 +1,6 @@
+CREATE OR REPLACE TABLE EDW_RPT.MC_PLAN_LOB_VW
+(
+
+)
+COMMENT='Created for EDWRPT Migration'
+;

@@ -1,0 +1,281 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_SKYGEN_CLAIM_AUTHORIZATION_DETAIL(JOB_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL`
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_TMP
+AS
+SELECT * FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL AS tgt
+USING (
+        SELECT TO_VARCHAR(AUTHORIZATION_NBR) AS AUTHORIZATION_NBR
+        ,TO_VARCHAR(AUTHORIZATION_LINE_NBR) AS AUTHORIZATION_LINE_NBR
+        ,TO_VARCHAR(RENDERING_PROVIDER_ID) AS RENDERING_PROVIDER_ID
+        ,TO_VARCHAR(PROCEDURE_CODE) AS PROCEDURE_CODE
+        ,TO_VARCHAR(PROCEDURE_DESC) AS PROCEDURE_DESC
+        ,TO_VARCHAR(DETERMINATION_STATUS) AS DETERMINATION_STATUS
+        ,TO_VARCHAR(DETERMINATION_STATUS_DESC) AS DETERMINATION_STATUS_DESC
+        ,DETERMINATION_DATE
+        ,SERVICE_BEGIN_DATE
+        ,SERVICE_END_DATE
+        ,AUTHORIZED_QTY
+        ,CONSUMED_QTY
+        ,DENIED_QTY
+        ,REQUESTED_QTY
+        ,AUTHORIZED_AMT
+        ,AUTHORIZED_PER_UNIT_AMT
+        ,BALANCE_DUE_AMT
+        ,BILLED_AMT
+        ,ALLOWED_AMT
+        ,USUAL_AND_CUSTOMARY_AMT
+        ,PAYABLE_AMT
+        ,PAID_AMT
+        ,COINSURANCE_AMT
+        ,COPAY_AMT
+        ,DEDUCTIBLE_APPLIED_AMT
+        ,PATIENT_PAY_APPLIED_AMT
+        ,TOOTH_ID
+        ,TOOTH_ARCH
+        ,TOOTH_QUADRANT
+            FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_TMP
+        MINUS
+         SELECT TO_VARCHAR(AUTHORIZATION_NBR) AS AUTHORIZATION_NBR
+        ,TO_VARCHAR(AUTHORIZATION_LINE_NBR) AS AUTHORIZATION_LINE_NBR
+        ,TO_VARCHAR(RENDERING_PROVIDER_ID) AS RENDERING_PROVIDER_ID
+        ,TO_VARCHAR(PROCEDURE_CODE) AS PROCEDURE_CODE
+        ,TO_VARCHAR(PROCEDURE_DESC) AS PROCEDURE_DESC
+        ,TO_VARCHAR(DETERMINATION_STATUS) AS DETERMINATION_STATUS
+        ,TO_VARCHAR(DETERMINATION_STATUS_DESC) AS DETERMINATION_STATUS_DESC
+        ,DETERMINATION_DATE
+        ,SERVICE_BEGIN_DATE
+        ,SERVICE_END_DATE
+        ,AUTHORIZED_QTY
+        ,CONSUMED_QTY
+        ,DENIED_QTY
+        ,REQUESTED_QTY
+        ,AUTHORIZED_AMT
+        ,AUTHORIZED_PER_UNIT_AMT
+        ,BALANCE_DUE_AMT
+        ,BILLED_AMT
+        ,ALLOWED_AMT
+        ,USUAL_AND_CUSTOMARY_AMT
+        ,PAYABLE_AMT
+        ,PAID_AMT
+        ,COINSURANCE_AMT
+        ,COPAY_AMT 
+        ,DEDUCTIBLE_APPLIED_AMT
+        ,PATIENT_PAY_APPLIED_AMT
+        ,TO_VARCHAR(TOOTH_ID) AS TOOTH_ID
+        ,TO_VARCHAR(TOOTH_ARCH) AS TOOTH_ARCH
+        ,TO_VARCHAR(TOOTH_QUADRANT) AS TOOTH_QUADRANT
+            FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL
+    ) AS src /*returns everything in the source that is not a match in the target*/
+ON (tgt.AUTHORIZATION_NBR = src.AUTHORIZATION_NBR
+AND tgt.AUTHORIZATION_LINE_NBR = src.AUTHORIZATION_LINE_NBR) /*key columns to determine if this is a new record or an update*/
+
+WHEN NOT MATCHED
+THEN INSERT
+    (
+		DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_KEY
+		,INSERT_DATETIME
+		,LAST_UPDATED_DATETIME
+        ,AUTHORIZATION_NBR
+        ,AUTHORIZATION_LINE_NBR
+        ,RENDERING_PROVIDER_ID
+        ,PROCEDURE_CODE
+        ,PROCEDURE_DESC
+        ,DETERMINATION_STATUS
+        ,DETERMINATION_STATUS_DESC
+        ,DETERMINATION_DATE
+        ,SERVICE_BEGIN_DATE
+        ,SERVICE_END_DATE
+        ,AUTHORIZED_QTY
+        ,CONSUMED_QTY
+        ,DENIED_QTY
+        ,REQUESTED_QTY
+        ,AUTHORIZED_AMT
+        ,AUTHORIZED_PER_UNIT_AMT
+        ,BALANCE_DUE_AMT
+        ,BILLED_AMT
+        ,ALLOWED_AMT
+        ,USUAL_AND_CUSTOMARY_AMT
+        ,PAYABLE_AMT
+        ,PAID_AMT
+        ,COINSURANCE_AMT
+        ,COPAY_AMT 
+        ,DEDUCTIBLE_APPLIED_AMT
+        ,PATIENT_PAY_APPLIED_AMT
+        ,TOOTH_ID
+        ,TOOTH_ARCH
+        ,TOOTH_QUADRANT
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_KEY), 1000) FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,src.AUTHORIZATION_NBR
+        ,src.AUTHORIZATION_LINE_NBR
+        ,src.RENDERING_PROVIDER_ID
+        ,src.PROCEDURE_CODE
+        ,src.PROCEDURE_DESC
+        ,src.DETERMINATION_STATUS
+        ,src.DETERMINATION_STATUS_DESC
+        ,src.DETERMINATION_DATE
+        ,src.SERVICE_BEGIN_DATE
+        ,src.SERVICE_END_DATE
+        ,src.AUTHORIZED_QTY
+        ,src.CONSUMED_QTY
+        ,src.DENIED_QTY
+        ,src.REQUESTED_QTY
+        ,src.AUTHORIZED_AMT
+        ,src.AUTHORIZED_PER_UNIT_AMT
+        ,src.BALANCE_DUE_AMT
+        ,src.BILLED_AMT
+        ,src.ALLOWED_AMT
+        ,src.USUAL_AND_CUSTOMARY_AMT
+        ,src.PAYABLE_AMT
+        ,src.PAID_AMT
+        ,src.COINSURANCE_AMT
+        ,src.COPAY_AMT 
+        ,src.DEDUCTIBLE_APPLIED_AMT
+        ,src.PATIENT_PAY_APPLIED_AMT
+        ,src.TOOTH_ID
+        ,src.TOOTH_ARCH
+        ,src.TOOTH_QUADRANT
+    )
+
+WHEN MATCHED
+THEN UPDATE SET
+		tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()	
+        ,tgt.RENDERING_PROVIDER_ID = src.RENDERING_PROVIDER_ID
+        ,tgt.PROCEDURE_CODE = src.PROCEDURE_CODE
+        ,tgt.PROCEDURE_DESC = src.PROCEDURE_DESC
+        ,tgt.DETERMINATION_STATUS = src.DETERMINATION_STATUS
+        ,tgt.DETERMINATION_STATUS_DESC = src.DETERMINATION_STATUS_DESC
+        ,tgt.DETERMINATION_DATE = src.DETERMINATION_DATE
+        ,tgt.SERVICE_BEGIN_DATE = src.SERVICE_BEGIN_DATE
+        ,tgt.SERVICE_END_DATE = src.SERVICE_END_DATE
+        ,tgt.AUTHORIZED_QTY = src.AUTHORIZED_QTY
+        ,tgt.CONSUMED_QTY = src.CONSUMED_QTY
+        ,tgt.DENIED_QTY = src.DENIED_QTY
+        ,tgt.REQUESTED_QTY = src.REQUESTED_QTY
+        ,tgt.AUTHORIZED_AMT = src.AUTHORIZED_AMT
+        ,tgt.AUTHORIZED_PER_UNIT_AMT = src.AUTHORIZED_PER_UNIT_AMT
+        ,tgt.BALANCE_DUE_AMT = src.BALANCE_DUE_AMT
+        ,tgt.BILLED_AMT = src.BILLED_AMT
+        ,tgt.ALLOWED_AMT = src.ALLOWED_AMT
+        ,tgt.USUAL_AND_CUSTOMARY_AMT = src.USUAL_AND_CUSTOMARY_AMT
+        ,tgt.PAYABLE_AMT = src.PAYABLE_AMT
+        ,tgt.PAID_AMT = src.PAID_AMT
+        ,tgt.COINSURANCE_AMT = src.COINSURANCE_AMT
+        ,tgt.COPAY_AMT = src.COPAY_AMT
+        ,tgt.DEDUCTIBLE_APPLIED_AMT = src.DEDUCTIBLE_APPLIED_AMT
+        ,tgt.PATIENT_PAY_APPLIED_AMT = src.PATIENT_PAY_APPLIED_AMT
+        ,tgt.TOOTH_ID = src.TOOTH_ID
+        ,tgt.TOOTH_ARCH = src.TOOTH_ARCH
+        ,tgt.TOOTH_QUADRANT = src.TOOTH_QUADRANT
+;`; 
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+DELETE FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL 
+WHERE DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_KEY IN 
+(
+    SELECT DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_KEY
+    FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL
+        LEFT OUTER JOIN  RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_TMP
+            ON (DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL.AUTHORIZATION_NBR = DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_TMP.AUTHORIZATION_NBR
+            AND DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL.AUTHORIZATION_LINE_NBR = DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_TMP.AUTHORIZATION_LINE_NBR)
+    WHERE DWSKYGEN_CLAIM_AUTHORIZATION_DETAIL_TMP.AUTHORIZATION_NBR IS NULL
+);`;
+
+try 
+{
+	//Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

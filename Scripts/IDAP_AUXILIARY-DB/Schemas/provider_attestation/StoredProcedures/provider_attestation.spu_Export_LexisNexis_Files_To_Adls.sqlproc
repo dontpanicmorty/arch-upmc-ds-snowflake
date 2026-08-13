@@ -1,0 +1,42 @@
+CREATE OR REPLACE PROCEDURE PROVIDER_ATTESTATION.SPU_EXPORT_LEXISNEXIS_FILES_TO_ADLS() 
+RETURNS STRING 
+LANGUAGE JAVASCRIPT 
+EXECUTE AS CALLER 
+AS 
+$$
+try {
+    // Set up Snowflake external stage
+    var externalStageName = 'UTIL.HPDSDATALAKE_OUTGOING';
+
+    // Set up file format for CSV
+    var fileFormatName = 'PROVIDER_ATTESTATION.LEXIS_NEXIS_CSV_FORMAT';
+    
+
+    // Iterate over each view and copy it to Azure Data Lake Storage
+    var views = ['lexis_nexis_cactus_practice_adaaccess_vw', 'lexis_nexis_cactus_practice_email_vw',  'lexis_nexis_cactus_practice_location_hours_vw','lexis_nexis_cactus_practice_location_status_vw', 'lexis_nexis_cactus_practice_location_vw', 'lexis_nexis_cactus_practice_name_vw', 'lexis_nexis_cactus_practice_phone_vw','lexis_nexis_cactus_provider_board_certification_vw', 'lexis_nexis_cactus_provider_gender_vw', 'lexis_nexis_cactus_provider_hospital_affiliation_vw', 'lexis_nexis_cactus_provider_language_vw', 'lexis_nexis_cactus_provider_name_vw','lexis_nexis_cactus_provider_status_vw', 'lexis_nexis_cactus_provider_specialties_vw'] ;
+    views.forEach(function(view) {
+        var stmt = snowflake.createStatement({
+        sqlText: "SELECT MAX(SUBSTR(SOURCE_FILE_NAME, LENGTH(SOURCE_FILE_NAME) - 11, 8)) FROM " + view});
+        var rs = stmt.execute();
+        while (rs.next()) {
+        var date = rs.getColumnValue(1);
+        }
+        var year = date.substring(0, 4);
+        var month = date.substring(4, 6);
+        var day = date.substring(6, 8);
+        
+        var fileName = "VerifyHCP_"  + view.slice(0,-3) + "_" + date + ".csv";
+		var stagePath = "@" + externalStageName + "/lexisnexis/"+  year + "/" + month + "/" + day + "/" +fileName;
+        var copyQuery = `COPY INTO ` + stagePath+ ` FROM (SELECT * FROM ` + view + ` WHERE SUBSTR(SOURCE_FILE_NAME, LENGTH(SOURCE_FILE_NAME) - 11, 8) = (
+    SELECT MAX(SUBSTR(SOURCE_FILE_NAME, LENGTH(SOURCE_FILE_NAME) - 11, 8))
+    FROM ` + view + `)) FILE_FORMAT = (FORMAT_NAME = ` + fileFormatName + `)  OVERWRITE = TRUE
+								      SINGLE = TRUE HEADER = TRUE;`;
+        
+        snowflake.execute({sqlText: copyQuery});
+    });
+
+    return 'Views copied successfully to Azure Data Lake Storage.';
+} catch (err) {
+    return 'Error: ' + err.message;         
+}
+$$;

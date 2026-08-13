@@ -1,0 +1,24 @@
+CREATE OR REPLACE TABLE WPDW.IDP_RISK_LOOKUP
+(
+INDEX_ID                       NUMBER(33,5),
+RISK_ID                       VARCHAR,
+RISK_DESCR                    VARCHAR,
+RISK_CATEGORY_ID              VARCHAR,
+RISK_CATEGORY_DESCR           VARCHAR,
+SOURCE_SCHEMA                 VARCHAR,
+SOURCE_TABLE                  VARCHAR,
+SOURCE_DATE_FIELD             VARCHAR,
+COLUMN_NAME                   VARCHAR,
+COLUMN_OPERATOR               VARCHAR,
+COLUMN_VAL1                   VARCHAR,
+COLUMN_VAL2                   VARCHAR,
+COLUMN_VAL_DATATYPE           VARCHAR,
+COLUMN_CONDITIONAL            VARCHAR,
+UNIQUE_ID_COLUMN              VARCHAR,
+UNIQUE_ID_TARGET              VARCHAR,
+DATE_INSERTED           TIMESTAMP_NTZ,
+DATE_UPDATED            TIMESTAMP_NTZ,
+DELETED                 TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

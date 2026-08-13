@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "claim",
+  "dataSourceName": "MC400Upm",
+  "targetTableName": "RAWDATA.MC400_DWOAO_CLAIMSDETAIL",
+  "sourceCloneTableName": "CDC_MERGE.DBO.CLAIMSDETAIL",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": null
+}

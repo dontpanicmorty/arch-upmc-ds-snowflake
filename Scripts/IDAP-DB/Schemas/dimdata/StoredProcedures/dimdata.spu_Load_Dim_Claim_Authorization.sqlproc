@@ -1,0 +1,237 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_CLAIM_AUTHORIZATION()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var procedureName = Object.keys(this)[0];
+
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TRANSIENT TABLE STAGEDATA.DIM_CLAIM_AUTHORIZATION
+AS
+SELECT * FROM STAGEDATA.DIM_CLAIM_AUTHORIZATION_SELECT_VW
+;`;
+ 
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_CLAIM_AUTHORIZATION AS tgt
+USING (
+SELECT
+    FALSE AS IS_LOGICAL_DELETE_FLAG,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    DATA_SOURCE_NAME,
+    AUTHORIZATION_NBR,
+    CARE_TYPE_NAME,
+    STATUS_DESC,
+    DETERMINATION_STATUS_DESC,
+    DETERMINATION_DATE,
+    MEDICAL_GROUP_ADDRESS_LINE_1,
+    MEDICAL_GROUP_ADDRESS_LINE_2,
+    MEDICAL_GROUP_CITY,
+    MEDICAL_GROUP_STATE_ABBREV_NAME,
+    MEDICAL_GROUP_ZIP_CODE,
+    MEDICAL_GROUP_PRIMARY_PHONE_NBR
+    FROM STAGEDATA.DIM_CLAIM_AUTHORIZATION
+MINUS
+    SELECT
+    IS_LOGICAL_DELETE_FLAG,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    DATA_SOURCE_NAME,
+    AUTHORIZATION_NBR,
+    CARE_TYPE_NAME,
+    STATUS_DESC,
+    DETERMINATION_STATUS_DESC,
+    DETERMINATION_DATE,
+    MEDICAL_GROUP_ADDRESS_LINE_1,
+    MEDICAL_GROUP_ADDRESS_LINE_2,
+    MEDICAL_GROUP_CITY,
+    MEDICAL_GROUP_STATE_ABBREV_NAME,
+    MEDICAL_GROUP_ZIP_CODE,
+    MEDICAL_GROUP_PRIMARY_PHONE_NBR
+    FROM DIMDATA.DIM_CLAIM_AUTHORIZATION    
+    ) AS src
+ON 
+(
+    src.TPA_CLIENT_ID = tgt.TPA_CLIENT_ID
+    AND src.TPA_ID = tgt.TPA_ID
+    AND src.TPA_DIV_ID = tgt.TPA_DIV_ID
+    AND src.DATA_SOURCE_NAME = tgt.DATA_SOURCE_NAME
+    AND src.AUTHORIZATION_NBR = tgt.AUTHORIZATION_NBR
+)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.CARE_TYPE_NAME = src.CARE_TYPE_NAME,
+    tgt.STATUS_DESC = src.STATUS_DESC,
+    tgt.DETERMINATION_STATUS_DESC = src.DETERMINATION_STATUS_DESC,
+    tgt.DETERMINATION_DATE = src.DETERMINATION_DATE,
+    tgt.MEDICAL_GROUP_ADDRESS_LINE_1 = src.MEDICAL_GROUP_ADDRESS_LINE_1,
+    tgt.MEDICAL_GROUP_ADDRESS_LINE_2 = src.MEDICAL_GROUP_ADDRESS_LINE_2,
+    tgt.MEDICAL_GROUP_CITY = src.MEDICAL_GROUP_CITY,
+    tgt.MEDICAL_GROUP_STATE_ABBREV_NAME = src.MEDICAL_GROUP_STATE_ABBREV_NAME,
+    tgt.MEDICAL_GROUP_ZIP_CODE = src.MEDICAL_GROUP_ZIP_CODE,
+    tgt.MEDICAL_GROUP_PRIMARY_PHONE_NBR = src.MEDICAL_GROUP_PRIMARY_PHONE_NBR
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_CLAIM_AUTHORIZATION_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,AUTHORIZATION_NBR
+        ,CARE_TYPE_NAME
+        ,STATUS_DESC
+        ,DETERMINATION_STATUS_DESC
+        ,DETERMINATION_DATE
+        ,MEDICAL_GROUP_ADDRESS_LINE_1
+        ,MEDICAL_GROUP_ADDRESS_LINE_2
+        ,MEDICAL_GROUP_CITY
+        ,MEDICAL_GROUP_STATE_ABBREV_NAME
+        ,MEDICAL_GROUP_ZIP_CODE
+        ,MEDICAL_GROUP_PRIMARY_PHONE_NBR
+    )
+VALUES 
+    (
+        (SELECT IFNULL(MAX(DIM_CLAIM_AUTHORIZATION_KEY), 1000) FROM DIMDATA.DIM_CLAIM_AUTHORIZATION) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.TPA_CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.DATA_SOURCE_NAME
+        ,src.AUTHORIZATION_NBR
+        ,src.CARE_TYPE_NAME
+        ,src.STATUS_DESC
+        ,src.DETERMINATION_STATUS_DESC
+        ,src.DETERMINATION_DATE
+        ,src.MEDICAL_GROUP_ADDRESS_LINE_1
+        ,src.MEDICAL_GROUP_ADDRESS_LINE_2
+        ,src.MEDICAL_GROUP_CITY
+        ,src.MEDICAL_GROUP_STATE_ABBREV_NAME
+        ,src.MEDICAL_GROUP_ZIP_CODE
+        ,src.MEDICAL_GROUP_PRIMARY_PHONE_NBR
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+// The >999 is done to not update any of the static data, inserts start at 1000 from autoincrement
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_CLAIM_AUTHORIZATION
+SET 
+IS_LOGICAL_DELETE_FLAG = TRUE
+,LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_CLAIM_AUTHORIZATION_KEY IN
+(
+    SELECT DIM_CLAIM_AUTHORIZATION.DIM_CLAIM_AUTHORIZATION_KEY
+    FROM DIMDATA.DIM_CLAIM_AUTHORIZATION
+        LEFT OUTER JOIN 
+            (SELECT TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, DATA_SOURCE_NAME, AUTHORIZATION_NBR
+            FROM STAGEDATA.DIM_CLAIM_AUTHORIZATION
+            ) STAGE_DATA
+        ON (STAGE_DATA.TPA_CLIENT_ID = DIM_CLAIM_AUTHORIZATION.TPA_CLIENT_ID
+        AND STAGE_DATA.TPA_ID = DIM_CLAIM_AUTHORIZATION.TPA_ID
+        AND STAGE_DATA.TPA_DIV_ID = DIM_CLAIM_AUTHORIZATION.TPA_DIV_ID
+        AND STAGE_DATA.DATA_SOURCE_NAME = DIM_CLAIM_AUTHORIZATION.DATA_SOURCE_NAME
+        AND STAGE_DATA.AUTHORIZATION_NBR = DIM_CLAIM_AUTHORIZATION.AUTHORIZATION_NBR)
+    WHERE STAGE_DATA.AUTHORIZATION_NBR IS NULL
+    AND DIM_CLAIM_AUTHORIZATION.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_CLAIM_AUTHORIZATION.DIM_CLAIM_AUTHORIZATION_KEY > 999
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9)
+;`;
+
+try 
+{
+    //Stage source data to temp table to be reused later.
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.DIM_CLAIM_AUTHORIZATION`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText()]
+    });
+
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_CLAIM_AUTHORIZATION`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_CLAIM_AUTHORIZATION`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

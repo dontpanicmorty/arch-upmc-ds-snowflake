@@ -1,0 +1,117 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_CMS_RAWDATA()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet, result;
+
+// This procedure calls the individual procedures that truncate load the dwoao tables in rawdata from MC400 database
+try 
+{
+    const procedures = [
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_APCPRICINGEXCLUSION',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_ASACONVERSIONFACTORSET',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_ASCPAYMENTGROUPLEVEL',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_CASETYPE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_CONTRACTS',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_DRGINCLUDEEXCLUDE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_MODIFIERS',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_OUT_OF_NETWORK_CLAIMS',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PERDIEMCASERATESCHEDULE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PERDIEMPRICECATEGORY',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PRICECATEGORYFILE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PRICECATEGORYPROCEDURE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PRICINGHISTPRICECATG',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROCEDURECODES',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERAFFILIATION',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERPRICINGHISTORY',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERS',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERSPECIALTY',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERSUBPART',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERTYPEFEESCHEDULES',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_PROVIDERTYPESCHEDULE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_SNFPRICINGEXCLUSION',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_USUALCUSTOMARYREASONABLE',
+        'SPU_LOAD_CMS_RAWDATA_DWOAO_VENDORS'        
+        
+    ];
+
+    for (let proc of procedures) {
+        try {
+            sqlText = `CALL RAWDATA.${proc}()`;
+            resultSet = snowflake.execute({sqlText});
+            let procResult = resultSet.next() ? resultSet.getColumnValue(1) : null;
+            if (procResult === "Failure") {
+                throw new Error(`Procedure ${proc} failed.`);
+            }
+        } catch (err) {
+            throw new Error(`Error in procedure ${proc}: ${err.message}`);
+        }
+    }
+
+
+    result = 'Success';    
+    const endTime = new Date();
+
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME,
+        TYPE,
+        START_TIME,
+        END_TIME,
+        INSERT_COUNT,
+        RESULT_TEXT,
+        SQL_STATEMENT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '0',
+      '${result}',
+      '${sqlText}'
+    )`;
+    snowflake.execute({sqlText});
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)';
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''");
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    result = 'Failure';
+    let endTime = new Date();
+
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME,
+        TYPE,
+        START_TIME,
+        END_TIME,
+        RESULT_TEXT,
+        SQL_STATEMENT,
+        ERROR_CODE,
+        ERROR_STATE,
+        ERROR_MESSAGE,
+        ERROR_STACK_TRACE_TEXT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${result}',
+      '${sqlText}',
+      '${code}',
+      '${state}',
+      '${message}',
+      '${stack}'
+    )`;
+    snowflake.execute({sqlText});
+    throw err;
+}
+return result;
+
+$$;

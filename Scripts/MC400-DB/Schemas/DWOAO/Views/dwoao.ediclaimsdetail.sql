@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWOAO.EDIClaimsDetail
+AS
+SELECT * FROM CDC_Merge.dbo.EDIClaimsDetail
+;

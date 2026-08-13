@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_CCS2_DETAIL_V2
+(
+HCID                      VARCHAR,
+SVC_DATE            TIMESTAMP_NTZ,
+MED_PAID                   NUMBER(33,5),
+CCS_LVL_2_LABEL           VARCHAR
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

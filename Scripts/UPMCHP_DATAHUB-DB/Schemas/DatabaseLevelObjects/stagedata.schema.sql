@@ -1,0 +1,3 @@
+CREATE SCHEMA IF NOT EXISTS STAGEDATA
+COMMENT = 'Datahub Staging Work Area'
+;

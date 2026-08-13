@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE PLAN.CAA_D6_SUMMARY
+(
+FILENAME                                    VARCHAR,
+INSERT_DATETIME                             TIMESTAMP_NTZ,
+LOADED_FILE_ROW_NUMBER						NUMBER,
+CLIENT_ORG_ID                               VARCHAR,
+CLIENT_ORG_NME                              VARCHAR,
+CLIENT_CARRIER_ID                           VARCHAR,
+CLIENT_CARRIER_NME                          VARCHAR,
+CLIENT_CONTRACT_ID                          VARCHAR,
+CLIENT_CONTRACT_NME                         VARCHAR,
+CLIENT_BENEFIT_ID                           VARCHAR,
+CLIENT_BENEFIT_NME                          VARCHAR,
+CLIENT_GROUP_ID                             VARCHAR,
+CLIENT_GROUP_NME                            VARCHAR,
+REFERENCE_YEAR                              VARCHAR,
+GROSS_CLAIM_SPENDING_AMT                    NUMBER(24,8),
+MEMBER_CLAIM_SPENDING_AMT                   NUMBER(24,8),
+MANUFACTURER_COST_SHR_ASSIST_AMT            NUMBER(24,8),
+DOSAGE_UNIT_AMT                             NUMBER(24,8),
+PBM_SPREAD_AMT                              NUMBER(24,8),
+MEMBER_RETAINED_REBATE_AMT                  NUMBER(24,8),
+PBM_RETAINED_REBATE_AMT                     NUMBER(24,8),
+CLIENT_RETAINED_REBATE_AMT                  NUMBER(24,8),
+BONA_FIDE_SERVICE_FEE_AMT                   NUMBER(24,8),
+PBM_RETAINED_MANUFACTURER_FEE_AMT           NUMBER(24,8),
+PBM_RETAINED_PHARMACY_FEE_AMT               NUMBER(24,8),
+CLIENT_RETAINED_MFRADM_FEE_AMT              NUMBER(24,8),
+CLIENT_ID                                   VARCHAR,
+TPA_ID                                      VARCHAR,
+TPA_DIV                                     VARCHAR,
+CONSTRAINT PK_CAA_D6_SUMMARY PRIMARY KEY (FILENAME, LOADED_FILE_ROW_NUMBER), 
+CONSTRAINT UK_CAA_D6_SUMMARY UNIQUE (FILENAME, LOADED_FILE_ROW_NUMBER)
+)
+COMMENT='Annual Report to CMS for Consolidated Appropriations (No Suprises) Act'
+;

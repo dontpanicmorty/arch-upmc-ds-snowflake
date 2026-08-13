@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.HEALTH_SUMMARY_TILE
+(
+ID                             INT,
+NAME                       VARCHAR,
+ADMIN_SCREEN_ID                INT,
+ADMIN_ACCESS_SCREEN_ID         INT,
+CM_SCREEN_ID                   INT,
+CM_ACCESS_SCREEN_ID            INT,
+TYPE                       VARCHAR,
+LIMIT_RENAMED                  INT
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

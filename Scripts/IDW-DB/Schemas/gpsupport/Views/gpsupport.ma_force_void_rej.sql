@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW GPSUPPORT.MA_FORCE_VOID_REJ
+AS
+SELECT
+CLAIM_NBR,
+LOAD_DATE,
+MC400_CLAIM_NBR
+FROM &{IDW_LAKE}.GPSUPPORT.MA_FORCE_VOID_REJ;
+!set variable_substitution=false;

@@ -1,0 +1,106 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_ML_FILES_TO_STAGE(DOMAIN_NAME VARCHAR, ENTITY_NAME VARCHAR, FILE_PATH VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// Get the current datetime at procedure start
+let startTime = new Date().toISOString();
+let procedureName = Object.keys(this)[0];
+let sqlText = "";
+
+try 
+{
+    //set query_tag for session logging
+    sqlText = `CALL UTIL.SPU_SET_QUERY_TAG();`;
+    resultSet = snowflake.execute({sqlText});
+
+    //*****************************************************************************
+    //Call Merge Stored Procedure To Load data from BLOB storage to STAGEDATA
+    //*****************************************************************************
+    
+    // Run one query to load all the relevant sets of params to SPU_LOAD_STAGEDATA_TABLE
+    // for the specified domain/entity
+
+    // Prep filter values
+    const wheres = [];
+    if (DOMAIN_NAME) wheres.push(`UTIL.ML_STAGE_DOMAIN.DOMAIN_NAME = '${DOMAIN_NAME}'`);
+    if (ENTITY_NAME) wheres.push(`UTIL.ML_STAGE_ENTITY.ENTITY_NAME = '${ENTITY_NAME}'`);
+
+    // Assemble the SQL
+    sqlText = `SELECT SCHEMA_NAME, TABLE_NAME, ENTITY_NAME, JSON_PATH -- all from ML_STAGE_ENTITY
+        FROM UTIL.ML_STAGE_DOMAIN_TO_ENTITY
+        LEFT JOIN util.ML_STAGE_ENTITY ON 
+            (UTIL.ML_STAGE_DOMAIN_TO_ENTITY.ML_STAGE_ENTITY_KEY = UTIL.ML_STAGE_ENTITY.ML_STAGE_ENTITY_KEY)
+        LEFT JOIN UTIL.ML_STAGE_DOMAIN ON 
+            (UTIL.ML_STAGE_DOMAIN_TO_ENTITY.ML_STAGE_DOMAIN_KEY = UTIL.ML_STAGE_DOMAIN.ML_STAGE_DOMAIN_KEY)`;
+    if (wheres.length > 0) sqlText += '\nWHERE ' + wheres.join(' AND ');
+    sqlText += ';';
+
+    resultSet = snowflake.execute({sqlText});
+
+    const loadTableCalls = [];
+    const deleteStageCalls = [];
+    while(resultSet.next()) {
+        loadTableCalls.push([
+            resultSet.getColumnValueAsString('SCHEMA_NAME'),
+            resultSet.getColumnValueAsString('TABLE_NAME'),
+            FILE_PATH, // third arg to SPU_LOAD_STAGEDATA_TABLE
+            resultSet.getColumnValueAsString('ENTITY_NAME'),
+            resultSet.getColumnValueAsString('JSON_PATH'),
+        ])
+
+        deleteStageCalls.push([
+            resultSet.getColumnValueAsString('SCHEMA_NAME'),
+            resultSet.getColumnValueAsString('TABLE_NAME'),
+            resultSet.getColumnValueAsString('ENTITY_NAME')
+        ])
+    }
+    
+    // Call each load:
+    loadTableCalls.forEach(binds => {
+        sqlText = `CALL STAGEDATA.SPU_LOAD_STAGEDATA_TABLE(:1, :2, :3, :4, :5);`
+        resultSet = snowflake.execute({sqlText, binds});
+    });
+
+    
+    // And call each delete:
+    deleteStageCalls.forEach(binds => {
+        sqlText = `CALL STAGEDATA.SPU_DELETE_STAGEDATA_TABLE(:1, :2, :3);`
+        resultSet = snowflake.execute({sqlText, binds});
+    })
+    result = "Succeeded";
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+    
+    //log results to table
+    var sqlLogCommand = 
+        `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlText
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

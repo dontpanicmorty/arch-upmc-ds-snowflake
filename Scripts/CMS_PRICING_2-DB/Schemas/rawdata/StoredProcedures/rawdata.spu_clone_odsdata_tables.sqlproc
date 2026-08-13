@@ -1,0 +1,43 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_CLONE_ODSDATA_TABLES(ENVIRONMENT VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+/*THIS SPU IS CREATED FOR MRF PROVIDER PULL REWRITE, IT CLONES 8 VIEWS FROM IDAP.ODSDATA TO 8 TABLES IN CMS_PRICING.RAWDATA */
+
+    const validEnvs = ['DEV', 'TST', 'PRD'];
+ if (validEnvs.indexOf(ENVIRONMENT) === -1) {
+        throw new Error(`Environment ${ENVIRONMENT} not supported. Must be one of: ${validEnvs.join(', ')}`);
+    }
+   
+/* NOTE-  WHEN RUNNING IN LOCAL, PLEASE COMMENT OUT ABOVE "IF CLAUSE" FOR ENVIRONMENT VALIDATION */
+
+    let cloneSource = 'IDAP';
+    if (ENVIRONMENT === 'DEV') cloneSource += '_DEV';
+    if (ENVIRONMENT === 'TST') cloneSource += '_TST';
+       
+   const VIEW_NAMES = [
+        'PROVIDER_VW','DATA_SOURCE_VW', 'PRACTITIONER_VW', 'PROVIDER_ADDRESS_REL_VW', 
+        'MEDICAL_GROUP_VW', 'PROVIDER_LICENSE_REL_VW', 
+        'LICENSE_TYPE_VW', 'LICENSE_STATUS_VW'
+		]; 
+	const TABLE_NAMES = [
+        'ODSDATA_PROVIDER','ODSDATA_DATA_SOURCE','ODSDATA_PRACTITIONER', 'ODSDATA_PROVIDER_ADDRESS_REL', 
+        'ODSDATA_MEDICAL_GROUP', 'ODSDATA_PROVIDER_LICENSE_REL', 
+        'ODSDATA_LICENSE_TYPE', 'ODSDATA_LICENSE_STATUS'
+		];
+    
+    for (let i = 0; i < VIEW_NAMES.length; i++) {
+        const viewName = VIEW_NAMES[i];
+        const tableName = TABLE_NAMES[i];
+        const sqlStatement = `
+            CREATE OR REPLACE TABLE RAWDATA.${tableName} AS SELECT * FROM ${cloneSource}.ODSDATA.${viewName};
+        `;
+        snowflake.execute({ sqlText: sqlStatement });
+    }
+     return `Cloned ${VIEW_NAMES.length} views into tables in ${TABLE_NAMES.length}.`;
+
+$$
+;

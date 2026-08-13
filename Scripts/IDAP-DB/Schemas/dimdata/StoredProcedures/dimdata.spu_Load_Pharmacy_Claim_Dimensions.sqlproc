@@ -1,0 +1,215 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_PHARMACY_CLAIM_DIMENSIONS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var sqlCommand="";
+
+try 
+{
+    //set query_tag for session logging
+    sqlCommand = `CALL UTIL.SPU_SET_QUERY_TAG();`;
+    var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+   //generate a JOB_ID for tracing validations and failures
+   sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID('${procedureName}')`;
+   resultSet = snowflake.execute({sqlText: sqlCommand});
+   resultSet.next();
+   var jobId = resultSet.getColumnValue(1);
+
+    //*****************************************************************************
+    //Call Merge Stored Procedures To Load data from RAWDATA to STAGEDATA
+    //*****************************************************************************
+    
+    //Keep in alphabetical order
+    //A control table might be used as this grows.
+
+    //RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_CLAIM_HEADER_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_CLAIM_HEADER_BASE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    
+    //RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_CLAIM_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_CLAIM_DETAIL_BASE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    
+    //RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_DRUG_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_DRUG_DETAIL_BASE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    //RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_DETAIL_BASE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    //RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_PRESCRIBER_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_PHARMACY_PRESCRIBER_DETAIL_BASE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    //STAGEDATA.SPU_LOAD_DIM_ENROLLMENT_SPAN_LOOKUP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_DIM_ENROLLMENT_SPAN_LOOKUP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    
+    //DIMDATA.DIM_DRUG
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_DRUG();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_DRUG');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_DRUG');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+ 
+    //DIMDATA.DIM_PHARMACY_CLAIM_HEADER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PHARMACY_CLAIM_HEADER();`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PHARMACY_CLAIM_HEADER');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PHARMACY_CLAIM_HEADER');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    //DIMDATA.DIM_PHARMACY_CLAIM_DETAIL
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PHARMACY_CLAIM_DETAIL();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PHARMACY_CLAIM_DETAIL');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PHARMACY_CLAIM_DETAIL');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    //DIMDATA.DIM_PROVIDER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_PHARMACY_DIM_PROVIDER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+ 
+    //DIMDATA.DIM_PROVIDER_ADDRESS
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_PHARMACY_DIM_PROVIDER_ADDRESS();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+//commenting DIM_PROVIDER_ADDRESS validation checks one out temporarily until dupe issue unrelated to pharmacy is resolved
+   /*/ sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_ADDRESS');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_ADDRESS');`; */ 
+    
+    //DIMDATA.DIM_PROVIDER_CONTACT_INFO
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_PHARMACY_DIM_PROVIDER_CONTACT_INFO();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_CONTACT_INFO');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_CONTACT_INFO');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+    
+    //DIMDATA.DIM_PROVIDER_IDENTIFIER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_PHARMACY_DIM_PROVIDER_IDENTIFIER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_IDENTIFIER');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_IDENTIFIER');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+    
+    //DIMDATA.DIM_PROVIDER_TAXONOMY
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_PHARMACY_DIM_PROVIDER_TAXONOMY();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_TAXONOMY');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_TAXONOMY');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    //DIMDATA.FACT_PHARMACY_CLAIM_LINE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_FACT_PHARMACY_CLAIM_LINE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.FACT_PHARMACY_CLAIM_LINE');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.FACT_PHARMACY_CLAIM_LINE');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK(${jobId}, 'DIMDATA.FACT_PHARMACY_CLAIM_LINE');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+ 
+    sqlCommand = `CALL LOGDATA.SPU_UNKNOWN_FOREIGN_KEY_CHECK (${jobId}, 'DIMDATA.FACT_PHARMACY_CLAIM_LINE');`;
+    resultSet =snowflake.execute({sqlText: sqlCommand});
+
+    //<raw table name>  (Repeat these calls for all the tables you want to load)
+    //sqlCommand = 'CALL <schema_name>.<procedure name>();';
+    //var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+
+    //*****************************************************************************
+    // End calls to merge procedures
+    //*****************************************************************************
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

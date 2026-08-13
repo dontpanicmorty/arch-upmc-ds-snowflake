@@ -1,0 +1,17 @@
+{
+     "isActive": true,
+     "isCloneFlag": true,
+     "isCopyIntoFlag": false,
+     "dataDomain": "member",
+     "dataSourceName": "UPMC-HP",
+     "targetTableName": "RAWDATA.BPL_RIDER_NETWORK_CROSSWALK",
+     "sourceCloneTableName": "IDAP_LAKE.NETWORK.BPL_RIDER_NETWORK_CROSSWALK",
+     "sourceFileStageName": null,
+     "sourceFilePath": null,
+     "sourceFileFormatName": null,
+     "sourceFilePattern": null,
+     "sourceFileDelimitedColumnCount": null,
+     "sourceFileFixedWidthMapping": null,
+     "validateDataFlag": false
+} 
+  

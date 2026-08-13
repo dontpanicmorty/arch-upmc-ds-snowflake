@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_SHARED.LOCATION_CODE_LKP
+AS
+SELECT
+PLACEOFSERVICE,
+TYPE,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_SHARED.LOCATION_CODE_LKP;
+!set variable_substitution=false;

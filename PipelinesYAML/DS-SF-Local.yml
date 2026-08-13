@@ -1,0 +1,88 @@
+# Pipeline YAML for DS-SF-LOCAL, local dev builds 
+#no triggers, this pipeline should be run ad-hoc
+trigger: 
+- none
+#These values are set at queue time, then consumed by the powershell script LocalBranchBuild.ps1
+parameters:
+- name: BuildSpecificDB
+  displayName: Specific Database to Build (null builds all changes in branch)
+  type: string
+  default: $null
+  values:
+  - IDAP
+  - IDAP_AUXILIARY
+  - IDAP_LAKE
+  - CMS_PRICING
+  - UPMCHP_DATAHUB
+  - $null
+
+- name: JustBuildDB
+  displayName: Do not run compare or generate publish.sql
+  type: string
+  default: $false
+  values:
+  - $true
+  - $false
+
+- name: CompareDB
+  displayName: Specify which environment to compare DBs (Local DB must exist)
+  type: string
+  default: Local
+  values:
+  - Local
+  - DEV
+  - TST
+
+variables:
+- group: DS-Common-AccessTokens
+- group: DS-SF-DEV-COMMON
+- group: DS-SF-LOCAL
+- name: BuildSpecificDB
+  value: ${{ parameters.BuildSpecificDB }}
+- name: CompareDB
+  value: ${{ parameters.CompareDB }}
+- name: JustBuildDB
+  value: ${{ parameters.JustBuildDB }}
+
+jobs:
+- job: Job_1
+  displayName: Build DB and Compare with Target
+  pool:
+    name: DS-WindowsAgents
+  steps:
+  - checkout: self
+    clean: true
+    fetchTags: false
+  - task: colinsalmcorner.colinsalmcorner-buildtasks.replace-tokens-task.ReplaceTokens@1
+    displayName: Replace tokens in AutoDeploy
+    inputs:
+      sourcePath: AutoDeploy
+      filePattern: '*'
+      tokenRegex: '\$\((\w+)\)'
+  - task: PowerShell@2
+    displayName: Run Build/Compare
+    inputs:
+      filePath: AutoDeploy/LocalBranchBuild.ps1
+      arguments: -privatekeypath $(privatekeypath) -passphrase $(passphrase) -AzureDevOpsPAT $(AzureDevOpsPAT) -repo $(repo) -allowedDBs $(allowedDBs) -localBranch $(localBranch) -requestedUserEmail $(requestedUserEmail) -BuildSpecificDB $(BuildSpecificDB) -compareDB $(CompareDB) -justbuildDB $(JustBuildDB)
+      failOnStderr: true
+      showWarnings: true
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    inputs:
+      SourceFolder: Scripts\
+      Contents: '**_PUBLISH_LOCAL.sql'
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+  - task: PowerShell@2
+    displayName: 'View Publish Files'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $publishfiles = ls -name $(Build.ArtifactStagingDirectory)/*_PUBLISH_LOCAL.sql
+        foreach ($file in $publishfiles) {
+        write-host "start of $file"
+        cat $(Build.ArtifactStagingDirectory)/$file
+        write-host "end of $file"
+        }
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
+...

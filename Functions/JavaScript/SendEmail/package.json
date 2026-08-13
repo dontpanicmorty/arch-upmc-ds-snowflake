@@ -1,0 +1,16 @@
+{
+  "name": "hp-ds-emailer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "npm run --prefix .. deploy",
+    "start": "npm run --prefix .. start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nodemailer": "^6.9.1"
+  }
+}

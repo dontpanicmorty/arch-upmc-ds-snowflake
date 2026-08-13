@@ -1,0 +1,225 @@
+CREATE OR REPLACE VIEW QUALITY.CCD_PROCEDURES_ATHENA_VW(
+	FILENAME,
+	SECTION_TITLE,
+	MRN,
+	TEMPLATE_ID_EXTENSION,
+	TEMPLATE_ID_ROOT,
+	TEMPLATE_ID_ROOT_2,
+	TEMPLATE_ID_EXTENSION_3,
+	TEMPLATE_ID_ROOT_3,
+	TEMPLATE_ID_ROOT_4,
+	PROCEDURE_SECTION_CODE,
+	PROCEDURE_SECTION_CODE_SYSTEM,
+	SECTION_CODE_SYSTEM_NAME,
+	PROCEDURE_SECTION_CODE_DISPLAY_NAME,
+	ENTRY_TYPE_CODE,
+	PROCEDURE_CLASS_CODE,
+	PROCEDURE_MOOD_CODE,
+	PROCEDURE_TEMPLATE_ROOT_1,
+	PROCEDURE_TEMPLATE_EXTENSION_2,
+	PROCEDURE_TEMPLATE_ROOT_2,
+	PROCEDURE_ROOT_3,
+	PROCEDURE_EXTENSION_4,
+	PROCEDURE_ROOT_4,
+	ENTRY_ID_EXTENSION,
+	ID_ASSIGN_AUTHORITY_NAME_1,
+	ENTRY_ID_EXTENSION_1,
+	ID_ASSIGN_AUTHORITY_ROOT_1,
+	ID_ASSIGN_AUTHORITY_NAME_2,
+	ID_ASSIGN_AUTHORITY_EXTENSION_2,
+	ID_ASSIGN_AUTHORITY_ROOT_2,
+	PROCEDURE_CODE,
+	PROCEDURE_CODE_SYSTEM,
+	PROCEDURE_CODE_SYSTEM_NAME,
+	PROCEDURE_ORIGINAL_TEXT,
+	PROCEDURE_TEXT_REFERENCE_VALUE,
+	PROCEDURE_STATUS_CODE,
+	PROCEDURE_DATE,
+	PVID,
+	PVID_OID,
+	DOCTOR_FACILITY,
+	DOCTOR_FACILITY_OID,
+	NPI,
+	NPI_OID,
+	FEDERAL_TAX_ID,
+	FEDERAL_TAX_ID_OID,
+	STREET_ADDRESS,
+	STREET_ADDRESS_2,
+	CITY,
+	STATE,
+	POSTAL_CODE,
+	PHONE_USE,
+	PHONE_NUMBER,
+	PHONE_USE_2,
+	PHONE_NUMBER_2,
+	ASSIGNED_PERSON,
+	XML_ROW_NUM,
+	TS_LAST_MODIFY,
+	SCAN_TIME
+) AS
+WITH IDENTIFIERS
+AS (
+     SELECT
+          X.FILENAME
+         ,X.SECTION_TITLE
+         ,X.MRN AS MRN
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id'),'@extension')::STRING AS ENTRY_ID_EXTENSION
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = '1000-36286-8679 Providers by PVID' THEN ID.VALUE:"@extension"::VARCHAR ELSE NULL END) AS PVID
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = '1000-36286-8679 Providers by PVID' THEN ID.VALUE:"@root"::VARCHAR ELSE NULL END) AS PVID_OID
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = '1000-36286-8679 Providers by DoctorFacility' 
+                    THEN ID.VALUE:"@extension"::VARCHAR ELSE NULL END) AS DOCTOR_FACILITY
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = '1000-36286-8679 Providers by DoctorFacility' 
+                    THEN ID.VALUE:"@root"::VARCHAR ELSE NULL END) AS DOCTOR_FACILITY_OID                    
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = 'US National Provider Identifiers' THEN ID.VALUE:"@extension"::VARCHAR ELSE NULL END) AS NPI
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = 'US National Provider Identifiers' THEN ID.VALUE:"@root"::VARCHAR ELSE NULL END) AS NPI_OID         
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = 'Federal Tax Identifier' THEN ID.VALUE:"@extension"::VARCHAR ELSE NULL END) AS FEDERAL_TAX_ID
+         ,MAX(CASE WHEN ID.VALUE:"@assigningAuthorityName"::VARCHAR = 'Federal Tax Identifier' THEN ID.VALUE:"@root"::VARCHAR ELSE NULL END) AS FEDERAL_TAX_ID_OID
+     FROM QUALITY.SECTION_XML X
+             ,LATERAL FLATTEN(X.xml) SECTION     
+             ,LATERAL FLATTEN(SECTION.VALUE:"$"::ARRAY) ENTRY
+             ,LATERAL FLATTEN(ENTRY.VALUE:"$"::ARRAY) FLAT_PROCEDURE
+             ,LATERAL FLATTEN(FLAT_PROCEDURE.VALUE:"$"::ARRAY) PERFORMER
+             ,LATERAL FLATTEN(PERFORMER.VALUE:"$"::ARRAY) ASSIGNED_ENTITY
+             ,LATERAL FLATTEN(ASSIGNED_ENTITY.VALUE:"$"::ARRAY) ID
+     WHERE X.SECTION_TITLE = 'HISTORY OF PROCEDURES'
+           AND GET(SECTION.VALUE, '@') = 'section'
+           AND GET(ENTRY.VALUE, '@') = 'entry'
+           AND GET(FLAT_PROCEDURE.VALUE, '@') = 'procedure'
+           AND GET(PERFORMER.VALUE, '@') = 'performer'
+           AND GET(ASSIGNED_ENTITY.VALUE, '@') = 'assignedEntity'
+           AND GET(ID.VALUE, '@') = 'id'
+     --and FILENAME = '25126358.xml'
+     GROUP BY X.FILENAME
+             ,X.SECTION_TITLE
+             ,X.MRN
+             ,ENTRY_ID_EXTENSION
+     ORDER BY ENTRY_ID_EXTENSION
+),
+MAIN AS (
+     SELECT
+          X.FILENAME
+         ,X.SECTION_TITLE
+         ,X.MRN AS MRN
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId'),'@extension')::STRING AS TEMPLATE_ID_EXTENSION          
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId'),'@root')::STRING AS TEMPLATE_ID_ROOT         
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId',1),'@root')::STRING AS TEMPLATE_ID_ROOT_2         
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId',2),'@extension')::STRING AS TEMPLATE_ID_EXTENSION_3          
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId',2),'@root')::STRING AS TEMPLATE_ID_ROOT_3
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'templateId',3),'@root')::STRING AS TEMPLATE_ID_ROOT_4
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@code')::STRING AS PROCEDURE_SECTION_CODE 
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@codeSystem')::STRING AS PROCEDURE_SECTION_CODE_SYSTEM         
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@codeSystemName')::STRING AS SECTION_CODE_SYSTEM_NAME
+         ,GET(XMLGET(XMLGET(X.XML,'section'),'code'),'@displayName')::STRING AS PROCEDURE_SECTION_CODE_DISPLAY_NAME         
+         ,GET(ENTRY.VALUE,'@typeCode')::STRING AS ENTRY_TYPE_CODE 
+         ,GET(XMLGET(ENTRY.VALUE,'procedure'),'@classCode')::STRING AS PROCEDURE_CLASS_CODE
+         ,GET(XMLGET(ENTRY.VALUE,'procedure'),'@moodCode')::STRING AS PROCEDURE_MOOD_CODE         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'templateId'),'@root')::STRING AS PROCEDURE_TEMPLATE_ROOT_1         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'templateId',1),'@extension')::STRING AS PROCEDURE_TEMPLATE_EXTENSION_2         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'templateId',1),'@root')::STRING AS PROCEDURE_TEMPLATE_ROOT_2
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'templateId',2),'@root')::STRING AS PROCEDURE_ROOT_3
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'templateId',3),'@extension')::STRING AS PROCEDURE_EXTENSION_4         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'templateId',3),'@root')::STRING AS PROCEDURE_ROOT_4         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id'),'@extension')::STRING AS ENTRY_ID_EXTENSION
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id'),'@assigningAuthorityName')::STRING AS ID_ASSIGN_AUTHORITY_NAME_1
+         -- ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id'),'@extension')::STRING AS ID_ASSIGN_AUTHORITY_EXTENSION_1
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id'),'@root')::STRING AS ID_ASSIGN_AUTHORITY_ROOT_1         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id',1),'@assigningAuthorityName')::STRING AS ID_ASSIGN_AUTHORITY_NAME_2
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id',1),'@extension')::STRING AS ID_ASSIGN_AUTHORITY_EXTENSION_2         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'id',1),'@root')::STRING AS ID_ASSIGN_AUTHORITY_ROOT_2
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'code'),'@code')::STRING AS PROCEDURE_CODE         
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'code'),'@codeSystem')::STRING AS PROCEDURE_CODE_SYSTEM
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'code'),'@codeSystemName')::STRING AS PROCEDURE_CODE_SYSTEM_NAME
+         ,XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'code'),'originalText'):"$"::STRING AS PROCEDURE_ORIGINAL_TEXT
+         ,GET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'text'),'reference'),'@value')::STRING AS PROCEDURE_TEXT_REFERENCE_VALUE
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'statusCode'),'@code')::STRING AS PROCEDURE_STATUS_CODE
+         ,GET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'effectiveTime'),'@value')::STRING AS PROCEDURE_DATE
+         ,XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'addr'),'streetAddressLine'):"$"::STRING AS STREET_ADDRESS
+         ,XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'addr'),'streetAddressLine',1):"$"::STRING AS STREET_ADDRESS_2
+         ,XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'addr'),'city'):"$"::STRING AS CITY
+         ,XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'addr'),'state'):"$"::STRING AS STATE
+         ,XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'addr'),'postalCode'):"$"::STRING AS POSTAL_CODE
+         ,GET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'telecom'),'@use')::STRING AS PHONE_USE
+         ,GET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'telecom'),'@value')::STRING AS PHONE_NUMBER         
+         ,GET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'telecom',1),'@use')::STRING AS PHONE_USE_2
+         ,GET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'telecom',1),'@value')::STRING AS PHONE_NUMBER_2         
+         ,CONCAT(
+               NVL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'assignedPerson'),'name'),'family'):"$"::STRING,''), ', ' ,
+               NVL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'assignedPerson'),'name'),'given'):"$"::STRING,''), ' ' ,
+               NVL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'assignedPerson'),'name'),'given',1):"$"::STRING,''), ' ' ,
+               NVL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(ENTRY.VALUE,'procedure'),'performer'),'assignedEntity'),'assignedPerson'),'name'),'suffix'):"$"::STRING,''), ' '
+          ) AS ASSIGNED_PERSON
+         ,ROW_NUM AS XML_ROW_NUM
+         ,TS_LAST_MODIFY
+	     ,SCAN_TIME
+     FROM QUALITY.SECTION_XML X
+             ,LATERAL FLATTEN(X.xml) SECTION     
+             ,LATERAL FLATTEN(SECTION.VALUE:"$"::ARRAY) ENTRY
+     WHERE X.SECTION_TITLE = 'HISTORY OF PROCEDURES'
+           AND GET(SECTION.VALUE, '@') = 'section'
+           AND GET(ENTRY.VALUE, '@') = 'entry'
+ )
+SELECT 
+      M.FILENAME
+     ,M.SECTION_TITLE
+     ,M.MRN 
+     ,M.TEMPLATE_ID_EXTENSION
+     ,M.TEMPLATE_ID_ROOT
+     ,M.TEMPLATE_ID_ROOT_2
+     ,M.TEMPLATE_ID_EXTENSION_3
+     ,M.TEMPLATE_ID_ROOT_3
+     ,M.TEMPLATE_ID_ROOT_4
+     ,M.PROCEDURE_SECTION_CODE
+     ,M.PROCEDURE_SECTION_CODE_SYSTEM
+     ,M.SECTION_CODE_SYSTEM_NAME
+     ,M.PROCEDURE_SECTION_CODE_DISPLAY_NAME
+     ,M.ENTRY_TYPE_CODE
+     ,M.PROCEDURE_CLASS_CODE
+     ,M.PROCEDURE_MOOD_CODE
+     ,M.PROCEDURE_TEMPLATE_ROOT_1
+     ,M.PROCEDURE_TEMPLATE_EXTENSION_2
+     ,M.PROCEDURE_TEMPLATE_ROOT_2
+     ,M.PROCEDURE_ROOT_3
+     ,M.PROCEDURE_EXTENSION_4
+     ,M.PROCEDURE_ROOT_4
+     ,M.ENTRY_ID_EXTENSION
+     ,M.ID_ASSIGN_AUTHORITY_NAME_1
+	 ,ID.ENTRY_ID_EXTENSION
+     --,M.ID_ASSIGN_AUTHORITY_EXTENSION_1
+     ,M.ID_ASSIGN_AUTHORITY_ROOT_1
+     ,M.ID_ASSIGN_AUTHORITY_NAME_2
+     ,M.ID_ASSIGN_AUTHORITY_EXTENSION_2
+     ,M.ID_ASSIGN_AUTHORITY_ROOT_2
+     ,M.PROCEDURE_CODE
+     ,M.PROCEDURE_CODE_SYSTEM
+     ,M.PROCEDURE_CODE_SYSTEM_NAME
+     ,M.PROCEDURE_ORIGINAL_TEXT
+     ,M.PROCEDURE_TEXT_REFERENCE_VALUE
+     ,M.PROCEDURE_STATUS_CODE
+     ,M.PROCEDURE_DATE
+     ,ID.PVID
+     ,ID.PVID_OID
+     ,ID.DOCTOR_FACILITY
+     ,ID.DOCTOR_FACILITY_OID
+     ,ID.NPI
+     ,ID.NPI_OID
+     ,ID.FEDERAL_TAX_ID
+     ,ID.FEDERAL_TAX_ID_OID
+     ,M.STREET_ADDRESS
+     ,M.STREET_ADDRESS_2
+     ,M.CITY
+     ,M.STATE
+     ,M.POSTAL_CODE
+     ,M.PHONE_USE
+     ,M.PHONE_NUMBER
+     ,M.PHONE_USE_2
+     ,M.PHONE_NUMBER_2
+     ,M.ASSIGNED_PERSON
+     ,M.XML_ROW_NUM
+     ,M.TS_LAST_MODIFY
+     ,M.SCAN_TIME
+FROM MAIN M
+LEFT OUTER JOIN IDENTIFIERS ID
+     ON M.FILENAME = ID.FILENAME
+    AND M.SECTION_TITLE = ID.SECTION_TITLE
+    AND M.MRN = ID.MRN
+    AND M.ENTRY_ID_EXTENSION = ID.ENTRY_ID_EXTENSION;

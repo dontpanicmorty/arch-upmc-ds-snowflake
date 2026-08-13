@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.ZC_IP_CP_IGO_160
+AS
+SELECT
+ IP_CP_IGO_160_C
+, NAME
+, TITLE
+, ABBR
+, INTERNAL_ID
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__ZC_IP_CP_IGO_160;
+!set variable_substitution=false;

@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE EDW_RPT.REVENUE_PROCEDURE
+(
+REVENUE_PROCEDURE_KEY            NUMBER,
+REVENUE_CODE                    VARCHAR,
+REVENUE_DESC                    VARCHAR,
+LOAD_DATE                 TIMESTAMP_NTZ,
+UPDATE_DATE               TIMESTAMP_NTZ,
+REVENUE_TYPE                    VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

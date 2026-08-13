@@ -1,0 +1,173 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_PLACE_OF_SERVICE()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_PLACE_OF_SERVICE`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_PLACE_OF_SERVICE AS tgt
+USING (
+        SELECT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,PLACE_OF_SERVICE_CODE
+        ,PLACE_OF_SERVICE_DESC
+        ,SERVICE_TYPE_CODE
+        ,SERVICE_TYPE_DESC
+        ,LOCATION_CODE
+        ,LOCATION_DESC
+        FROM STAGEDATA.DIM_PLACE_OF_SERVICE_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,PLACE_OF_SERVICE_CODE
+        ,PLACE_OF_SERVICE_DESC
+        ,SERVICE_TYPE_CODE
+        ,SERVICE_TYPE_DESC
+        ,LOCATION_CODE
+        ,LOCATION_DESC
+        FROM DIMDATA.DIM_PLACE_OF_SERVICE
+    ) AS src
+ON (tgt.DIM_TPA_HIERARCHY_KEY = src.DIM_TPA_HIERARCHY_KEY
+AND tgt.PLACE_OF_SERVICE_CODE = src.PLACE_OF_SERVICE_CODE
+AND tgt.SERVICE_TYPE_CODE = src.SERVICE_TYPE_CODE
+AND tgt.LOCATION_CODE = src.LOCATION_CODE)
+
+WHEN MATCHED 
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.PLACE_OF_SERVICE_DESC = src.PLACE_OF_SERVICE_DESC,
+    tgt.SERVICE_TYPE_DESC = src.SERVICE_TYPE_DESC,
+    tgt.LOCATION_DESC = src.LOCATION_DESC
+
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_PLACE_OF_SERVICE_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,PLACE_OF_SERVICE_CODE
+        ,PLACE_OF_SERVICE_DESC
+        ,SERVICE_TYPE_CODE
+        ,SERVICE_TYPE_DESC
+        ,LOCATION_CODE
+        ,LOCATION_DESC
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DIM_PLACE_OF_SERVICE_KEY), 1000) FROM DIMDATA.DIM_PLACE_OF_SERVICE) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DIM_TPA_HIERARCHY_KEY
+        ,src.PLACE_OF_SERVICE_CODE
+        ,src.PLACE_OF_SERVICE_DESC
+        ,src.SERVICE_TYPE_CODE
+        ,src.SERVICE_TYPE_DESC
+        ,src.LOCATION_CODE
+        ,src.LOCATION_DESC
+    )
+;`;
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_PLACE_OF_SERVICE
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_PLACE_OF_SERVICE_KEY IN
+(
+    SELECT
+    DIM_PLACE_OF_SERVICE.DIM_PLACE_OF_SERVICE_KEY
+    FROM DIMDATA.DIM_PLACE_OF_SERVICE
+        LEFT OUTER JOIN 
+            (SELECT DISTINCT
+            DIM_TPA_HIERARCHY_KEY
+            ,PLACE_OF_SERVICE_CODE
+            ,SERVICE_TYPE_CODE
+            ,LOCATION_CODE
+            FROM STAGEDATA.DIM_PLACE_OF_SERVICE_SELECT_VW
+            ) STAGE_DATA
+        ON (STAGE_DATA.DIM_TPA_HIERARCHY_KEY = DIM_PLACE_OF_SERVICE.DIM_TPA_HIERARCHY_KEY
+        AND STAGE_DATA.PLACE_OF_SERVICE_CODE = DIM_PLACE_OF_SERVICE.PLACE_OF_SERVICE_CODE
+        AND STAGE_DATA.SERVICE_TYPE_CODE = DIM_PLACE_OF_SERVICE.SERVICE_TYPE_CODE
+        AND STAGE_DATA.LOCATION_CODE = DIM_PLACE_OF_SERVICE.LOCATION_CODE)
+    WHERE STAGE_DATA.PLACE_OF_SERVICE_CODE IS NULL
+    AND DIM_PLACE_OF_SERVICE.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_PLACE_OF_SERVICE.DIM_PLACE_OF_SERVICE_KEY > 999
+);
+`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

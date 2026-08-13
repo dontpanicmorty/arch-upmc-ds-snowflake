@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE FDBDATA.RETCMED0_ETC_MEDID (
+	MEDID NUMERIC(8, 0) NOT NULL,
+	ETC_ID NUMERIC(8, 0) NOT NULL,
+	ETC_COMMON_USE_IND VARCHAR(1) NULL,
+	ETC_DEFAULT_USE_IND VARCHAR(1) NULL,
+	CONSTRAINT PK_RETCMED0_ETC_MEDID PRIMARY KEY (MEDID, ETC_ID)
+)
+COMMENT = 'Links a name-based drug identifier to a therapeutic classification and provides the attributes of that association. '
+;

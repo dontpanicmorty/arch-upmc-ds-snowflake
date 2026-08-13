@@ -1,0 +1,38 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CLIENT_INSURANCE_MEDICARE
+(
+ID                                              INT,
+CLIENT_ID                                       INT,
+CREATED_DATE                          TIMESTAMP_NTZ,
+UPDATED_DATE                          TIMESTAMP_NTZ,
+NUMBER                                      VARCHAR,
+ENROLLMENT_DATE                       TIMESTAMP_NTZ,
+ENROLLMENT_REASON                           VARCHAR,
+ENROLLMENT_TYPE                             VARCHAR,
+TERMINATION_DATE                      TIMESTAMP_NTZ,
+PLAN_NAME                                   VARCHAR,
+LOB                                         VARCHAR,
+IPA                                         VARCHAR,
+LPO                                         VARCHAR,
+SERVICE_AREA                                VARCHAR,
+PRODUCT_TYPE_ID                                 INT,
+PLAN_ID                                     VARCHAR,
+COB_ID                                          INT,
+MEDICARE_SEQUENTIAL_MEMBER_NUMBER           VARCHAR,
+WAIVER                                          INT,
+BENEFIT                                         INT,
+ALTERNATE_MEMBER_NUMBER                     VARCHAR,
+SPAN_ID                                     VARCHAR,
+SUBSCRIBER_ID                               VARCHAR,
+MARKET                                      VARCHAR,
+FRG                                         VARCHAR,
+RATE_CODE                                   VARCHAR,
+SYSRULES_DISABLE_FLAG                           INT,
+MERGE_ID                                    VARCHAR,
+GROUP_ID                                    VARCHAR,
+GROUP_NAME                                  VARCHAR,
+SUBGROUP                                    VARCHAR,
+FORMULARY_ID                                    INT,
+TERMINATION_REASON_ID                           INT
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

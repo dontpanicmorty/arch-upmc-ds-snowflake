@@ -1,0 +1,9 @@
+CREATE OR REPLACE FUNCTION EXTRACTDATA.FXN_STRING_ARRAY_SORT(a varchar)
+RETURNS array
+LANGUAGE JAVASCRIPT
+AS
+$$
+A = A ? JSON.parse(A) : [];
+return A.sort()
+$$
+;

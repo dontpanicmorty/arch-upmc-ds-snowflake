@@ -1,0 +1,111 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_BUILD_DEFAULT_DIM_KEYS(BUILD_NBR VARCHAR, BATCH_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+
+//hard-coded query to generate the list of tables we need to check and the validation SQL to go along with them. 
+//Not all tables should have defaults hence the exclusion list at the end
+sqlCommand = `SELECT TABLE_SCHEMA, TABLE_NAME, CONCAT('SELECT COUNT(*) FROM DIMDATA.',TABLE_NAME,' WHERE ',TABLE_NAME,'_KEY < 4') AS COUNT_QUERY
+FROM "INFORMATION_SCHEMA"."TABLES"
+WHERE TABLE_SCHEMA = 'DIMDATA' AND TABLE_NAME LIKE 'DIM_%' AND TABLE_TYPE = 'BASE TABLE'
+AND TABLE_NAME NOT IN ('DIM_MEMBER_ADDRESS'
+,'DIM_MEMBER_COMMUNICATION'
+,'DIM_MEMBER_COMMUNICATION_PREFERENCE'
+,'DIM_MEMBER_IDENTIFIER'
+,'DIM_PROVIDER_CERTIFICATION'
+,'DIM_PROVIDER_IDENTIFIER'
+,'DIM_DRG')`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+
+try 
+{
+    //*****************************************************************************
+    //loop through all of the objects we need to check
+    //*****************************************************************************
+    while(resultSet.next()){
+        var schemaName = resultSet.getColumnValue(1);
+        var tableName = resultSet.getColumnValue(2);
+        var sqlQuery = resultSet.getColumnValue(3);
+
+        var sfStatementTableCount = snowflake.createStatement({sqlText: sqlQuery});
+        var resultSetTableCount = sfStatementTableCount.execute();
+        resultSetTableCount.next();
+        var tableCountValue = resultSetTableCount.getColumnValue(1);
+
+        //only insert a record if the default values are missing
+        if(tableCountValue === 0) {
+            var sqlCountInsert = `INSERT INTO LOGDATA.BUILD_VALIDATION_RESULT 
+                (SCHEMA_NAME, TABLE_NAME, BUILD_NBR, BATCH_ID, VALIDATION_PROCEDURE_NAME, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR) 
+                VALUES ('${schemaName}','${tableName}','${BUILD_NBR}','${BATCH_ID}','${procedureName}', ${tableCountValue}, 2)`;
+            snowflake.execute({sqlText: sqlCountInsert});
+            }
+
+        }
+    //*****************************************************************************
+    // End the validation step
+    //*****************************************************************************
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

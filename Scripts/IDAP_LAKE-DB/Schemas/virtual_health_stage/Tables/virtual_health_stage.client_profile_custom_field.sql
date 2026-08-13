@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CLIENT_PROFILE_CUSTOM_FIELD
+(
+ID                         INT,
+CLIENT_ID                  INT,
+CUSTOM_FIELD_ALIAS     VARCHAR,
+VALUE                  VARCHAR
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

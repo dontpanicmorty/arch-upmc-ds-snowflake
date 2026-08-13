@@ -1,0 +1,41 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_BRIDGE_FACILITY_ACCREDITATION_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command = "";
+sql_command += "MERGE INTO DIMDATA.BRIDGE_FACILITY_ACCREDITATION AS T";
+sql_command += " USING INFA.BRIDGE_FACILITY_ACCREDITATION AS S";
+sql_command += " ON (T.BRIDGE_FACILITY_ACCREDITATION_KEY=S.BRIDGE_FACILITY_ACCREDITATION_KEY)";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'D' THEN DELETE";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'U' THEN UPDATE";
+sql_command += " SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT, T.INSERT_DATETIME=S.INSERT_DATETIME, T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME, T.IS_LOGICAL_DELETE_FLAG = S.IS_LOGICAL_DELETE_FLAG, T.DIM_PROVIDER_KEY = S.DIM_PROVIDER_KEY, T.DIM_FACILITY_ACCREDITATION_KEY = S.DIM_FACILITY_ACCREDITATION_KEY";
+sql_command += " WHEN NOT MATCHED THEN INSERT";
+sql_command += " (T.BRIDGE_FACILITY_ACCREDITATION_KEY, T.MD5_VALUE_TEXT, T.INSERT_DATETIME, T.LAST_UPDATED_DATETIME, T.IS_LOGICAL_DELETE_FLAG, T.DIM_PROVIDER_KEY, T.DIM_FACILITY_ACCREDITATION_KEY)";
+sql_command += " VALUES";
+sql_command += " (S.BRIDGE_FACILITY_ACCREDITATION_KEY, S.MD5_VALUE_TEXT, S.INSERT_DATETIME, S.LAST_UPDATED_DATETIME, S.IS_LOGICAL_DELETE_FLAG, S.DIM_PROVIDER_KEY, S.DIM_FACILITY_ACCREDITATION_KEY);";
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;
+
+

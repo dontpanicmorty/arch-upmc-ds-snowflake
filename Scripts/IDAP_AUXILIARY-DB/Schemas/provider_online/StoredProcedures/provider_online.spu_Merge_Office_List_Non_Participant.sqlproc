@@ -1,0 +1,115 @@
+CREATE OR REPLACE PROCEDURE PROVIDER_ONLINE.SPU_MERGE_OFFICE_LIST_NON_PARTICIPANT()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = "OFFICE_LIST_NON_PARTICIPANT";
+var sqlLogCommand = "", result = "", statement = "";
+
+// Create Insert Overwrite command
+var sqlCommand = `
+MERGE INTO PROVIDER_ONLINE.OFFICE_LIST_NON_PARTICIPANT TGT 
+USING (SELECT 
+        a.ID,
+        a.OFFICE_ID_LIST,
+        a.LOAD_DATE,
+        CASE 
+            WHEN b.ID IS NULL THEN 'N' 
+            WHEN a.OFFICE_ID_LIST=b.OFFICE_ID_LIST THEN 'N' 
+            WHEN a.OFFICE_ID_LIST!=b.OFFICE_ID_LIST THEN 'Y'
+        end as OFFICE_ID_CHANGE_INDICATOR 
+        FROM
+        (
+            --get everything from the incoming build
+            SELECT 
+                ID,
+                LOAD_DATE,
+                LISTAGG(DISTINCT OFFICE_ID, ',')
+                    WITHIN GROUP (ORDER BY OFFICE_ID) as OFFICE_ID_LIST
+            FROM PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT 
+            GROUP BY
+                ID,
+                LOAD_DATE
+        ) a
+    LEFT JOIN 
+        (SELECT
+            ID,
+            OFFICE_ID_LIST,
+            LAST_UPDATED_DATETIME
+        FROM PROVIDER_ONLINE.OFFICE_LIST_NON_PARTICIPANT
+        ) b
+        ON a.ID=b.ID
+        WHERE a.LOAD_DATE > (IFNULL(b.LAST_UPDATED_DATETIME, '1/1/1900')) --NEEDED FOR WHEN TARGET IS EMPTY
+    ) AS SRC
+ON SRC.ID=TGT.ID
+WHEN MATCHED
+THEN UPDATE
+    SET TGT.OFFICE_ID_LIST = SRC.OFFICE_ID_LIST,
+        TGT.OFFICE_ID_CHANGE_INDICATOR = SRC.OFFICE_ID_CHANGE_INDICATOR,
+        TGT.LAST_UPDATED_DATETIME = SRC.LOAD_DATE
+WHEN NOT MATCHED THEN INSERT
+    (TGT.ID,
+     TGT.OFFICE_ID_CHANGE_INDICATOR,
+     TGT.INSERT_DATETIME,
+     TGT.LAST_UPDATED_DATETIME,
+     TGT.OFFICE_ID_LIST)
+    VALUES
+    (SRC.ID,
+     SRC.OFFICE_ID_CHANGE_INDICATOR,
+     SRC.LOAD_DATE,
+     SRC.LOAD_DATE,
+     SRC.OFFICE_ID_LIST);`;
+
+try
+{
+    //Execute SQL Command
+    statement = snowflake.createStatement({ sqlText: sqlCommand });
+    let sqlResult = statement.execute();
+    sqlResult.next();
+    let affectedNum = sqlResult.getNumRowsAffected();
+    result += targetTableName + " succeeded and affected " + affectedNum + " rows " + "\n";
+    let endTime = new Date().toISOString();
+
+    //Log results to table
+      sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+          (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+          VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [targetTableName, "TABLE", startTime, endTime, statement.getNumRowsInserted(), statement.getNumRowsUpdated(), statement.getNumRowsDeleted(), result, statement.getSqlText()]
+          }
+      );
+    
+
+}
+catch (err)
+{
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed'
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message, stack]
+        }
+    );
+    throw message;
+}
+return result;
+$$
+;

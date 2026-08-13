@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_SHARED.SERVICE_TYPE_LKP
+AS
+SELECT
+SPECIALTY,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_SHARED.SERVICE_TYPE_LKP;
+!set variable_substitution=false;

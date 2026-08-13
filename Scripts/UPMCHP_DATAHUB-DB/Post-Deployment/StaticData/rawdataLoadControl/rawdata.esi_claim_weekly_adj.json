@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "ESI",
+  "targetTableName": "RAWDATA.ESI_CLAIM_WEEKLY_ADJ",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/esi/pmd_weekly_adj/",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_ESI_FILE_FORMAT",
+  "sourceFilePattern": "claim/esi/pmd_weekly_adj/\\\\d{4}/\\\\d{2}/\\\\d{2}/(?i)F14_BILL_ADJ_FILE_PMD.*.txt",
+  "sourceFileDelimitedColumnCount": 1,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

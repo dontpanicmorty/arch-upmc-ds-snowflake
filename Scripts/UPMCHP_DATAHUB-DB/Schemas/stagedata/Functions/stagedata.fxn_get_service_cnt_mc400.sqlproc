@@ -1,0 +1,60 @@
+CREATE OR REPLACE FUNCTION STAGEDATA.FXN_GET_SERVICE_CNT_MC400(DATA_SOURCE_NAME VARCHAR, PROCEDURE_CODE VARCHAR, PROCEDURE_QTY DOUBLE)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+
+AS
+$$
+
+if (!PROCEDURE_CODE) return 0;
+const procCode = PROCEDURE_CODE.toString();
+
+
+const lastChar = procCode.substring(procCode.length - 1);
+
+if (lastChar === 'T'){
+    if(Math.abs(PROCEDURE_QTY) > 50) {
+    return PROCEDURE_QTY > 0 ? 1 : -1;
+    }
+    return PROCEDURE_QTY;
+}
+
+if (isNaN(lastChar) || lastChar.trim() === ''){
+    return 0;
+}
+
+if (procCode >= '00100' && procCode <= '01999'){
+    return PROCEDURE_QTY > 0 ? 1 : -1;
+
+}
+
+// Check if code falls within any valid range
+const isValidRange =
+    (procCode >= '00100' && procCode <= '01999') ||
+    (procCode >= '10000' && procCode <= '19499') ||
+    (procCode >= '20000' && procCode <= '29999') ||
+    (procCode >= '30000' && procCode <= '32999') ||
+    (procCode >= '33010' && procCode <= '39599') ||
+    (procCode >= '40490' && procCode <= '49999') ||
+    (procCode >= '50010' && procCode <= '53899') ||
+    (procCode >= '54000' && procCode <= '59899') ||
+    (procCode >= '60000' && procCode <= '60699') ||
+    (procCode >= '61000' && procCode <= '64999') ||
+    (procCode >= '65091' && procCode <= '69990') ||
+    (procCode >= '70010' && procCode <= '79999') ||
+    (procCode >= '80048' && procCode <= '89399') ||
+    (procCode >= '90000' && procCode <= '99199') ||
+    (procCode >= '99201' && procCode <= '99499') ||
+    (procCode >= 'D0000' && procCode <= 'D9999') ||
+    (procCode >= 'G0000' && procCode <= 'G9999') ||
+    (procCode >= 'T1000' && procCode <= 'T9999') ||
+    (procCode >= 'W0000' && procCode <= 'W9999');
+
+if (!isValidRange) return 0;
+
+if (Math.abs(PROCEDURE_QTY) > 50) {
+    return PROCEDURE_QTY > 0 ? 1 : -1;
+}
+
+return PROCEDURE_QTY;
+
+$$;

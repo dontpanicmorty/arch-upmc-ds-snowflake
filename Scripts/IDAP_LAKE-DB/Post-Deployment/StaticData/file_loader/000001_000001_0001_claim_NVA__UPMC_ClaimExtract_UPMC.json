@@ -1,0 +1,266 @@
+{
+  "outputSchema": "CLAIM",
+  "outputTable": "NVA_PAID_CLAIM_EXTRACT",
+  "hasHeader": true,
+  "hasTrailer": true,
+  "fileType": "delimited",
+  "headerFormat": "NVA_PAID_CLAIM_EXTRACT_FILE_FORMAT_HEADER",
+  "fileFormat": "NVA_PAID_CLAIM_EXTRACT_FILE_FORMAT",
+  "truncReload": false,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "ClaimNo",
+          "outputField": "CLAIM_NO"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "ClaimSeqNo",
+          "outputField": "CLAIM_SEQ_NO"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "ClaimType",
+          "outputField": "CLAIM_TYPE"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "Group",
+          "outputField": "GROUP_NBR"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "MemberID",
+          "outputField": "MEMBER_ID"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "RelCode",
+          "outputField": "REL_CODE"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "LastName",
+          "outputField": "LAST_NAME"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "FirstName",
+          "outputField": "FIRST_NAME"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "DOB",
+          "outputField": "DOB"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "Sex",
+          "outputField": "SEX"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "Trantype",
+          "outputField": "TRAN_TYPE"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "TranDesc",
+          "outputField": "TRAN_DESC"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "DOS",
+          "outputField": "DOS"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "TotalChargeAmt",
+          "outputField": "TOTAL_CHARGE_AMT"
+        },
+        {
+          "columnOrder": 15,
+          "inputField": "PaidAmt",
+          "outputField": "PAID_AMT"
+        },
+        {
+          "columnOrder": 16,
+          "inputField": "PaidDate",
+          "outputField": "PAID_DATE"
+        },
+        {
+          "columnOrder": 17,
+          "inputField": "ReceivedDate",
+          "outputField": "RECEIVED_DATE"
+        },
+        {
+          "columnOrder": 18,
+          "inputField": "Copay",
+          "outputField": "COPAY"
+        },
+        {
+          "columnOrder": 19,
+          "inputField": "ChargeAmt",
+          "outputField": "CHARGE_AMT"
+        },
+        {
+          "columnOrder": 20,
+          "inputField": "Units",
+          "outputField": "UNITS"
+        },
+        {
+          "columnOrder": 21,
+          "inputField": "ProcedureCode",
+          "outputField": "PROCEDURE_CODE"
+        },
+        {
+          "columnOrder": 22,
+          "inputField": "Mod1",
+          "outputField": "MOD_1"
+        },
+        {
+          "columnOrder": 23,
+          "inputField": "Diag1",
+          "outputField": "DIAG_1"
+        },
+        {
+          "columnOrder": 24,
+          "inputField": "Diag2",
+          "outputField": "DIAG_2"
+        },
+        {
+          "columnOrder": 25,
+          "inputField": "Diag3",
+          "outputField": "DIAG_3"
+        },
+        {
+          "columnOrder": 26,
+          "inputField": "AuthCode",
+          "outputField": "AUTH_CODE"
+        },
+        {
+          "columnOrder": 27,
+          "inputField": "POS",
+          "outputField": "POS"
+        },
+        {
+          "columnOrder": 28,
+          "inputField": "RendProvID",
+          "outputField": "REND_PROV_ID"
+        },
+        {
+          "columnOrder": 29,
+          "inputField": "RendProvName",
+          "outputField": "REND_PROV_NAME"
+        },
+        {
+          "columnOrder": 30,
+          "inputField": "RendProvNPI",
+          "outputField": "REND_PROV_NPI"
+        },
+        {
+          "columnOrder": 31,
+          "inputField": "BillProvID",
+          "outputField": "BILL_PROV_ID"
+        },
+        {
+          "columnOrder": 32,
+          "inputField": "BillProvName",
+          "outputField": "BILL_PROV_NAME"
+        },
+        {
+          "columnOrder": 33,
+          "inputField": "BillProvNPI",
+          "outputField": "BILL_PROV_NPI"
+        },
+        {
+          "columnOrder": 34,
+          "inputField": "ICD_TYPE",
+          "outputField": "ICD_TYPE"
+        },
+        {
+          "columnOrder": 35,
+          "inputField": "DepCode",
+          "outputField": "DEP_CODE"
+        },
+        {
+          "columnOrder": 36,
+          "inputField": "PlanCode",
+          "outputField": "PLAN_CODE"
+        },
+        {
+          "columnOrder": 37,
+          "inputField": "Non-CoveredAmt",
+          "outputField": "NON_COVERED_AMT"
+        },
+        {
+          "columnOrder": 38,
+          "inputField": "ReasonCd1",
+          "outputField": "REASON_CD_1"
+        },
+        {
+          "columnOrder": 39,
+          "inputField": "ReasonSuf1",
+          "outputField": "REASON_SUF_1"
+        },
+        {
+          "columnOrder": 40,
+          "inputField": "ReasonCd2",
+          "outputField": "REASON_CD_2"
+        },
+        {
+          "columnOrder": 41,
+          "inputField": "ReasonSuf2",
+          "outputField": "REASON_SUF_2"
+        },
+        {
+          "columnOrder": 42,
+          "inputField": "AllowedAmt",
+          "outputField": "ALLOWED_AMT"
+        },
+        {
+          "columnOrder": 43,
+          "inputField": "COBamt",
+          "outputField": "COB_AMT"
+        },
+        {
+          "columnOrder": 44,
+          "inputField": "BillProvLoc",
+          "outputField": "BILL_PROVIDER_LOC"
+        },
+        {
+          "columnOrder": 45,
+          "inputField": "BillProvPhone",
+          "outputField": "BILL_PROV_PHONE"
+        },
+        {
+          "columnOrder": 46,
+          "inputField": "BillProvAddr1",
+          "outputField": "BILL_PROV_ADDR_1"
+        },
+        {
+          "columnOrder": 47,
+          "inputField": "BillProvAddr2",
+          "outputField": "BILL_PROV_ADDR_2"
+        },
+        {
+          "columnOrder": 48,
+          "inputField": "BillProvCity",
+          "outputField": "BILL_PROV_CITY"
+        },
+        {
+          "columnOrder": 49,
+          "inputField": "BillProvState",
+          "outputField": "BILL_PROV_STATE"
+        },
+        {
+          "columnOrder": 50,
+          "inputField": "BillProvZip",
+          "outputField": "BILL_PROV_ZIP"
+        }
+      ]
+    }
+  }
+}

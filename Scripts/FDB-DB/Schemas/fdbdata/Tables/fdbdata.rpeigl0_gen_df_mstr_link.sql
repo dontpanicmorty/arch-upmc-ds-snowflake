@@ -1,0 +1,8 @@
+CREATE OR REPLACE TABLE FDBDATA.RPEIGL0_GEN_DF_MSTR_LINK (
+	DOSAGE_FORM_ID NUMERIC(8, 0) NOT NULL,
+	GCDF VARCHAR(2) NOT NULL,
+	PREFERRED_DOSAGE_FORM_IND NUMERIC(1, 0) NOT NULL,
+	CONSTRAINT PK_RPEIGL0_GEN_DF_MSTR_LINK PRIMARY KEY (DOSAGE_FORM_ID, GCDF)
+)
+COMMENT = 'Relates dosage forms in the Dosage Form Master Table to dosage forms in the Dosage Form Description Table of the Clinical Formulation Identifier (GCN_SEQNO).'
+;

@@ -1,0 +1,21 @@
+CREATE OR REPLACE TABLE NETWORK.BPL_RIDER_NETWORK_CROSSWALK (
+BPL_RIDER_NETWORK_CROSSWALK_KEY NUMBER(38,0) NOT NULL AUTOINCREMENT ORDER,
+INSERT_DATETIME TIMESTAMP_TZ(9) NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+FILENAME VARCHAR,
+BPL_ID VARCHAR,
+BPL_NAME VARCHAR,
+EFF_DATE DATE,
+TERM_DATE DATE,
+FORM_ID VARCHAR,
+PHCY_NET VARCHAR,
+MARKET_SEG VARCHAR,
+TPA_CLIENT_ID VARCHAR,
+TPA_ID VARCHAR,
+TPA_DIV_ID VARCHAR,
+constraint UK_BPL_RIDER_NETWORK_CROSSWALK unique (TPA_CLIENT_ID,TPA_ID,TPA_DIV_ID,BPL_ID,BPL_NAME,EFF_DATE,TERM_DATE),
+constraint PK_BPL_RIDER_NETWORK_CROSSWALK primary key (BPL_RIDER_NETWORK_CROSSWALK_KEY)
+)
+COMMENT='The BPL Rider Network crosswalk is a Pharmacy Operations supplied file that details the corresponding ESI BPLs 
+& UPMC Rx Rider codes in relation to their Drug Formulary IDs, Pharmacy Network status, Market Segment within the Network, Drug, 
+Rx Claims, and Membership for the Health Plan.
+The columns BPL_ID, BPL_NAME, and EFF_DATE create a unique record as the natural key.';

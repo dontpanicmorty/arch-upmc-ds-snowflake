@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.PAYABLE
+AS
+SELECT
+PAYABLE_KEY,
+PAYABLE_NBR,
+CHECK_NBR,
+LOAD_DATE,
+UPDATE_DATE
+FROM &{IDW_LAKE}.EDW_RPT.PAYABLE;
+!set variable_substitution=false;

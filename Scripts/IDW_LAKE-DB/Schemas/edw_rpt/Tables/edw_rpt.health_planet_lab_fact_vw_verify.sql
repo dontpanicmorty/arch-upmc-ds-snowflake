@@ -1,0 +1,20 @@
+CREATE OR REPLACE TABLE EDW_RPT.HEALTH_PLANET_LAB_FACT_VW_VERIFY
+(
+PANEL_NAME                  VARCHAR,
+MEMBER_NBR                  VARCHAR,
+SERVICE_DATE          TIMESTAMP_NTZ,
+PROVIDER_KEY                 NUMBER,
+PROVIDER_NAME               VARCHAR,
+TEST_CODE                   VARCHAR,
+TEST_NAME                   VARCHAR,
+RESULT_VALUE                VARCHAR,
+RESULT_RANGE                VARCHAR,
+RESULT_RANGE_LOW       NUMBER(10,4),
+RESULT_RANGE_HIGH      NUMBER(10,4),
+RESULT_UNITS                VARCHAR,
+LOAD_DATE             TIMESTAMP_NTZ,
+UPDATE_DATE           TIMESTAMP_NTZ,
+SOURCE                      VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

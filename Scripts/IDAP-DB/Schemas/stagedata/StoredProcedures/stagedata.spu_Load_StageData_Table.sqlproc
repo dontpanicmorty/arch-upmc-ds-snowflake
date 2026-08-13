@@ -1,0 +1,105 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_STAGEDATA_TABLE(SCHEMA_NAME VARCHAR, TABLE_NAME VARCHAR, FILE_PATH VARCHAR, FILE_NAME VARCHAR, JSON_PATH VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = SCHEMA_NAME+"."+TABLE_NAME;
+
+var sqlMergeCommand =
+`MERGE INTO ${targetTableName} tgt
+USING (
+    SELECT 
+    $1:envelope:headers:uri::string AS URI,
+    $1${JSON_PATH} AS JSON_DATA
+    FROM @STAGEDATA.SNOWFLAKEDATA_MARKLOGIC
+        (FILE_FORMAT => STAGEDATA.ML_JSON_FORMAT, PATTERN => '${FILE_PATH}(${FILE_NAME}).*\.gz')
+    ) src
+ON (src.URI = tgt.URI)
+
+WHEN MATCHED AND 
+    tgt.JSON_DATA <> src.JSON_DATA
+
+THEN UPDATE
+    SET tgt.JSON_DATA = src.JSON_DATA
+    ,tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+
+WHEN NOT MATCHED
+    THEN INSERT
+        (
+            ${TABLE_NAME}_KEY,
+            URI, 
+            JSON_DATA, 
+            INSERT_DATETIME, 
+            LAST_UPDATED_DATETIME
+        )
+    VALUES
+        (
+            (SELECT IFNULL(MAX(${TABLE_NAME}_KEY), 0) FROM ${targetTableName}) + ROW_NUMBER() OVER (ORDER BY 1),
+            src.URI, 
+            src.JSON_DATA, 
+            CURRENT_TIMESTAMP(), 
+            CURRENT_TIMESTAMP()
+        )
+;`;
+
+var sqlMergeDeletedDocumentCommand = 'CALL STAGEDATA.SPU_LOAD_STAGEDATA_TABLE_DELETED_DOCUMENT();'
+;
+
+try
+{
+
+    if(targetTableName == 'STAGEDATA.DELETED_DOCUMENT') {
+        var sfStatement = snowflake.createStatement({sqlText: sqlMergeDeletedDocumentCommand});
+        sfStatement.execute();
+        var result = "Succeeded";
+    }
+
+    else {
+
+        //Execute Merge Command
+        var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+        sfStatement.execute();
+        var endTime = new Date().toISOString();
+        var result = "Succeeded";
+
+        //Log results to table
+        var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+            VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+        snowflake.execute
+        (
+            {
+            sqlText: sqlLogCommand,
+            binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+            }
+        );
+
+    }
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

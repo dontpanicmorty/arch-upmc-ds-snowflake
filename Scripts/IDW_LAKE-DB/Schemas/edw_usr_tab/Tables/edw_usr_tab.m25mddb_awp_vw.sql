@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE EDW_USR_TAB.M25MDDB_AWP_VW
+(
+NDC_UPC_HRI                       VARCHAR,
+ID_NBR_FORMAT_CODE                VARCHAR,
+RECORD_CODE                       VARCHAR,
+TRANSACTION_CODE                  VARCHAR,
+AWP_INDICATOR_CODE                VARCHAR,
+AWP_PACKAGE_PRICE            NUMBER(13,2),
+AWP_UNIT_PRICE               NUMBER(16,5),
+EFFECTIVE_DATE                    VARCHAR,
+OLDER_AWP_PACKAGE_PRICE      NUMBER(13,2),
+OLDER_AWP_UNIT_PRICE         NUMBER(16,5),
+OLDER_AWP_EFFECTIVE_DATE          VARCHAR,
+RESERVE                           VARCHAR,
+LAST_CHANGE_DATE                  VARCHAR
+)
+COMMENT='Created for EDW_USR_TAB Migration'
+;

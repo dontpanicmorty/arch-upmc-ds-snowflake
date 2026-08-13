@@ -1,0 +1,157 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_HUBDATA(DATA_SOURCE_NAME VARCHAR, DATA_DOMAIN_NAME VARCHAR, RUN_FK_CHECK_FLAG BOOLEAN DEFAULT TRUE) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+COMMENT = 'This a developer procedure to test load the hub for a given data source or data domain combination'
+EXECUTE AS CALLER
+AS
+$$
+var startTime = new Date().toISOString();
+
+try
+{
+    //Check the data source name
+    if (DATA_SOURCE_NAME)
+    {
+        sqlCommand = `SELECT 1 FROM UTIL.DATAHUB_LOAD_CONTROL WHERE DATA_SOURCE_NAME = :1;`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [DATA_SOURCE_NAME]});
+        resultSet = sfStatement.execute();
+        if (!resultSet.next())
+        {
+            //throw {code: "-1", message: "Data Source Not Found In Control Table", stackTraceTxt: new Error().stack, state: "00000"};
+            throw {code: "-1", message: "Data Source: "+DATA_SOURCE_NAME+" ,Not Found In Control Table", state: "", Trace: null};
+        }
+    }
+    
+    //Check the data domain
+    if (DATA_DOMAIN_NAME)
+    {
+        if(DATA_SOURCE_NAME)
+            {
+                sqlCommand = `SELECT 1 FROM UTIL.DATAHUB_LOAD_CONTROL WHERE DATA_SOURCE_NAME = :1 AND DATA_DOMAIN_NAME = :2;`;
+                sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [DATA_SOURCE_NAME, DATA_DOMAIN_NAME]});
+                resultSet = sfStatement.execute();
+                if (!resultSet.next())
+                {
+                    throw {code: "-2", message: "Data Source / Data Domain combination: "+DATA_SOURCE_NAME+"|"+DATA_DOMAIN_NAME+"  ,Not Found In Control Table", state: "", Trace: null};
+                }
+            }
+        else
+        {
+            sqlCommand = `SELECT 1 FROM UTIL.DATAHUB_LOAD_CONTROL WHERE DATA_DOMAIN_NAME = :1;`;
+            sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [DATA_DOMAIN_NAME]});
+            resultSet = sfStatement.execute();
+            if (!resultSet.next())
+            {
+                throw {code: "-3", message: "Data Domain: "+DATA_DOMAIN_NAME+"  ,Not Found In Control Table", state: "", Trace: null};
+            }
+        }
+    }
+
+    //Get the current user
+    sqlCommand=`SELECT SUBSTRING(CURRENT_USER(), 1, POSITION('@' IN CURRENT_USER())-1);`;
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    resultSet = sfStatement.execute();
+
+    resultSet.next();
+    var jobId = resultSet.getColumnValue(1)+"_"+startTime;
+
+    //Create Job Record
+    sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID(:1,'HUBDATA.SPU_LOAD_HUBDATA');`;
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId]});     
+    sfStatement.execute();
+
+    //get list of procs to call
+    if (DATA_SOURCE_NAME && !DATA_DOMAIN_NAME) //by dataSource
+    {
+        sqlCommand = 
+        `SELECT PROCEDURE_NAME, SOURCE_VIEW_NAME
+        ,CASE TYPE_CODE
+            WHEN 'LKP' THEN 1
+            WHEN 'HUB' THEN 2
+            WHEN 'SAT' THEN 3
+            WHEN 'LNK' THEN 4
+            WHEN 'REF' THEN 5
+            ELSE 6
+        END AS RUN_ORDER
+        FROM UTIL.DATAHUB_LOAD_CONTROL
+        WHERE IS_ACTIVE = TRUE
+        AND DATA_SOURCE_NAME = :1
+        ORDER BY RUN_ORDER
+        ;`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [DATA_SOURCE_NAME]});
+        resultSet = sfStatement.execute();
+    }
+    if (DATA_SOURCE_NAME && DATA_DOMAIN_NAME) //by dataSource and dataDomain
+        {
+            sqlCommand = 
+            `SELECT PROCEDURE_NAME, SOURCE_VIEW_NAME
+            ,CASE TYPE_CODE
+                WHEN 'LKP' THEN 1
+                WHEN 'HUB' THEN 2
+                WHEN 'SAT' THEN 3
+                WHEN 'LNK' THEN 4
+                WHEN 'REF' THEN 5
+                ELSE 6
+            END AS RUN_ORDER
+            FROM UTIL.DATAHUB_LOAD_CONTROL
+            WHERE IS_ACTIVE = TRUE
+            AND DATA_SOURCE_NAME = :1
+            AND DATA_DOMAIN_NAME = :2
+            ORDER BY RUN_ORDER
+            ;`;
+            sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [DATA_SOURCE_NAME, DATA_DOMAIN_NAME]});
+            resultSet = sfStatement.execute();
+        }
+    if (!DATA_SOURCE_NAME && DATA_DOMAIN_NAME)  //by dataDomain
+        {
+            sqlCommand = 
+            `SELECT PROCEDURE_NAME, SOURCE_VIEW_NAME
+            ,CASE TYPE_CODE
+                WHEN 'LKP' THEN 1
+                WHEN 'HUB' THEN 2
+                WHEN 'SAT' THEN 3
+                WHEN 'LNK' THEN 4
+                WHEN 'REF' THEN 5
+                ELSE 6
+            END AS RUN_ORDER
+            FROM UTIL.DATAHUB_LOAD_CONTROL
+            WHERE IS_ACTIVE = TRUE
+            AND DATA_DOMAIN_NAME = :1
+            ORDER BY RUN_ORDER
+            ;`;
+            sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [DATA_DOMAIN_NAME]});
+            resultSet = sfStatement.execute();
+        }
+
+    //loop over results and call procs
+    while (resultSet.next())
+        {
+            sqlCommand = `CALL `+resultSet.PROCEDURE_NAME+`(:1,:2);`;
+            sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId, resultSet.SOURCE_VIEW_NAME]});
+            sfStatement.execute();
+        }
+
+    //End Job Record
+    sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID_ENDTIME(:1);`;
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId]});     
+    sfStatement.execute();
+
+    //call FK Validation
+    if (RUN_FK_CHECK_FLAG)
+    {
+        sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK_BULK(:1,'HUBDATA');`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId]});     
+        sfStatement.execute();
+    }
+
+    return 'Done!'
+}
+catch (err)
+{
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+    throw result;
+}
+$$
+;

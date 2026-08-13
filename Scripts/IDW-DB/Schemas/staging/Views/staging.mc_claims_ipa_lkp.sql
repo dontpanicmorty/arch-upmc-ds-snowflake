@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.MC_CLAIMS_IPA_LKP
+AS
+SELECT
+AMISYS_CLAIM_NBR,
+IPA,
+PROVIDER_STATUS_CODE
+FROM &{IDW_LAKE}.STAGING.MC_CLAIMS_IPA_LKP;
+!set variable_substitution=false;

@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE FDBDATA.RIMKHIE0_SIG_FREQ_INT_EVENT (
+	FREQ_INT_ID NUMERIC(8, 0) NOT NULL,
+	HL7_FI_EVENT_CD VARCHAR(10) NOT NULL,
+	HL7_FI_EVENT_SN NUMERIC(8, 0) NOT NULL,
+	LINK_ADD_DT VARCHAR(8) NOT NULL,
+	HL7_FI_LOW_EVENT_OFFSET_TIME NUMERIC(9, 3) NULL,
+	HL7_FI_LOW_EVENT_OFFSET_UOM VARCHAR(50) NULL,
+	HL7_FI_HIGH_EVENT_OFFSET_TIME NUMERIC(9, 3) NULL,
+	HL7_FI_HIGH_EVENT_OFFSET_UOM VARCHAR(50) NULL,
+	LINK_INACTIVE_DT VARCHAR(8) NULL,
+	CONSTRAINT PK_RIMKHIE0_SIG_FREQ_INT_EVENT PRIMARY KEY (FREQ_INT_ID, HL7_FI_EVENT_CD, HL7_FI_EVENT_SN, LINK_ADD_DT)
+)
+COMMENT = 'Relates First Databank (FDB) frequency and interval concepts to HL7 concepts when the instructions are related to a specific event (for example, at bedtime or after meals) and not a specific time period or interval. Links are created and maintained editorially.'
+;

@@ -1,0 +1,259 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_LNK_OCF_MEMBER(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.LNK_OCF_MEMBER`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.LNK_OCF_MEMBER_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand = 
+`    
+MERGE INTO HUBDATA.LNK_OCF_MEMBER TGT
+USING (
+    SELECT DISTINCT
+        LNK_OCF_MEMBER_HKEY,
+        HUB_MARKETING_OCF_HKEY,
+        HUB_MEMBER_HKEY,
+        MOCF_DATA_SOURCE_NAME,
+        MOCF_RECORD_SOURCE,
+        MOCF_PRODUCT_CODE,
+        MOCF_CUSTOMER,
+        MOCF_IMB,
+        MOCF_COMMUNICATION_ID,
+        MOCF_JOB_ID,
+        MOCF_SEQUENCE_NBR,
+        MOCF_QUANTITY,
+        M_TPA_CLIENT_ID,
+        M_TPA_DIV_ID,
+        M_TPA_ID,
+        M_DATA_SOURCE_NAME,
+        M_MEMBER_NBR
+    FROM ${SOURCE_VIEW_NAME}
+) SRC
+ON (TGT.LNK_OCF_MEMBER_HKEY = SRC.LNK_OCF_MEMBER_HKEY)  
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        LNK_OCF_MEMBER_HKEY,
+        HUB_MARKETING_OCF_HKEY,
+        HUB_MEMBER_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+	    ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        MOCF_DATA_SOURCE_NAME,
+        MOCF_RECORD_SOURCE,
+        MOCF_PRODUCT_CODE,
+        MOCF_CUSTOMER,
+        MOCF_IMB,
+        MOCF_COMMUNICATION_ID,
+        MOCF_JOB_ID,
+        MOCF_SEQUENCE_NBR,
+        MOCF_QUANTITY,
+        M_TPA_CLIENT_ID,
+        M_TPA_DIV_ID,
+        M_TPA_ID,
+        M_DATA_SOURCE_NAME,
+        M_MEMBER_NBR
+    )
+VALUES 
+    (
+        SRC.LNK_OCF_MEMBER_HKEY,
+        SRC.HUB_MARKETING_OCF_HKEY,
+        SRC.HUB_MEMBER_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+        SRC.MOCF_DATA_SOURCE_NAME,
+        SRC.MOCF_RECORD_SOURCE,
+        SRC.MOCF_PRODUCT_CODE,
+        SRC.MOCF_CUSTOMER,
+        SRC.MOCF_IMB,
+        SRC.MOCF_COMMUNICATION_ID,
+        SRC.MOCF_JOB_ID,
+        SRC.MOCF_SEQUENCE_NBR,
+        SRC.MOCF_QUANTITY,
+        SRC.M_TPA_CLIENT_ID,
+        SRC.M_TPA_DIV_ID,
+        SRC.M_TPA_ID,
+        SRC.M_DATA_SOURCE_NAME,
+        SRC.M_MEMBER_NBR
+    ) 
+    
+    ;`;
+
+// Create update statement to be executed.
+var sqlUpdateCommand=
+`
+UPDATE HUBDATA.LNK_OCF_MEMBER TGT SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+    , IS_CURRENT_ROW_FLAG = FALSE
+WHERE (LNK_OCF_MEMBER_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+    SELECT LNK_OCF_MEMBER_HKEY, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            LNK_OCF_MEMBER.LNK_OCF_MEMBER_HKEY,
+            LNK_OCF_MEMBER.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY LNK_OCF_MEMBER.LNK_OCF_MEMBER_HKEY ORDER BY LNK_OCF_MEMBER.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.LNK_OCF_MEMBER
+            JOIN STAGEDATA.LNK_OCF_MEMBER_TMP
+                ON (LNK_OCF_MEMBER_TMP.LNK_OCF_MEMBER_HKEY = LNK_OCF_MEMBER.LNK_OCF_MEMBER_HKEY)
+        WHERE LNK_OCF_MEMBER.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+)
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.LNK_OCF_MEMBER
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (LNK_OCF_MEMBER_HKEY, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    LNK_OCF_MEMBER.LNK_OCF_MEMBER_HKEY,
+    LNK_OCF_MEMBER.ROW_EFFECTIVE_DATETIME
+    FROM HUBDATA.LNK_OCF_MEMBER
+        LEFT OUTER JOIN STAGEDATA.LNK_OCF_MEMBER_TMP
+            ON (LNK_OCF_MEMBER_TMP.LNK_OCF_MEMBER_HKEY = LNK_OCF_MEMBER.LNK_OCF_MEMBER_HKEY)
+    WHERE LNK_OCF_MEMBER.IS_CURRENT_ROW_FLAG = TRUE
+    AND LNK_OCF_MEMBER_TMP.LNK_OCF_MEMBER_HKEY IS NULL
+    AND LNK_OCF_MEMBER.MOCF_DATA_SOURCE_NAME IN (SELECT DISTINCT MOCF_DATA_SOURCE_NAME FROM STAGEDATA.LNK_OCF_MEMBER_TMP)
+
+)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlLogCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // Execute the Update Command
+    var startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+    
+    // Execute the Delete Command
+    var startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

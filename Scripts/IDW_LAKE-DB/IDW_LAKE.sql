@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS IDW_LAKE 
+COMMENT = 'IDW LAKE production database'
+;

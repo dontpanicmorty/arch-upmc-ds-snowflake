@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+
+
+CREATE OR REPLACE TABLE RAWDATA.BPL_RIDER_NETWORK_CROSSWALK
+LIKE &{IDAP_LAKE}.NETWORK.BPL_RIDER_NETWORK_CROSSWALK
+;
+
+
+!set variable_substitution=false;

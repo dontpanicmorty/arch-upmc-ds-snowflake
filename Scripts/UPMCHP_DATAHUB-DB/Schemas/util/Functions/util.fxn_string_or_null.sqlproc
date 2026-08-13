@@ -1,0 +1,13 @@
+CREATE OR REPLACE FUNCTION UTIL.FXN_STRING_OR_NULL(INPUT STRING)
+	RETURNS STRING
+	LANGUAGE JAVASCRIPT
+AS
+$$
+  if (INPUT && INPUT.length > 0) {
+    return INPUT;
+  } else {
+    return null;
+  }
+$$;
+
+

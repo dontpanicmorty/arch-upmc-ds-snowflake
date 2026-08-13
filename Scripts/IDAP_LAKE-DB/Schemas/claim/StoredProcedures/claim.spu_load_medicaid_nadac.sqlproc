@@ -1,0 +1,215 @@
+CREATE OR REPLACE PROCEDURE CLAIM.SPU_LOAD_MEDICAID_NADAC(RUN_ID VARCHAR, FILENAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+var run_id = RUN_ID;
+var paramFilename = FILENAME;
+var processStep = "CLAIM.STAGE_MEDICAID_NADAC";
+
+var sql_truncate = `TRUNCATE TABLE CLAIM.STAGE_MEDICAID_NADAC;`;
+
+var sql_copyInto = `COPY INTO CLAIM.STAGE_MEDICAID_NADAC
+(
+     NDC_DESCRIPTION
+    ,NDC 
+    ,NADAC_PER_UNIT
+    ,EFFECTIVE_DATE 
+    ,PRICING_UNIT 
+    ,PHARMACY_TYPE_INDICATOR 
+    ,OTC
+    ,EXPLANATION_CODE 
+    ,CLASSIFICATION_FOR_RATE_SETTING 
+    ,CORRESPONDING_GENERIC_DRUG_NADAC_PER_UNIT 
+    ,CORRESPONDING_GENERIC_DRUG_EFFECTIVE_DATE 
+    ,AS_OF_DATE
+    ,SOURCE_FILE_NAME
+    ,LOAD_DATETIME
+)
+FROM
+(SELECT 
+    $1::VARCHAR NDC_DESCRIPTION
+    ,$2::VARCHAR NDC 
+    ,$3::FLOAT NADAC_PER_UNIT
+    ,$4::DATE EFFECTIVE_DATE 
+    ,$5::VARCHAR PRICING_UNIT 
+    ,$6::VARCHAR PHARMACY_TYPE_INDICATOR 
+    ,$7::VARCHAR OTC
+    ,$8::VARCHAR EXPLANATION_CODE 
+    ,$9::VARCHAR CLASSIFICATION_FOR_RATE_SETTING 
+    ,$10::FLOAT CORRESPONDING_GENERIC_DRUG_NADAC_PER_UNIT 
+    ,$11::DATE CORRESPONDING_GENERIC_DRUG_EFFECTIVE_DATE 
+    ,$12::DATE AS_OF_DATE
+    ,:1 SOURCE_FILE_NAME
+    ,CURRENT_TIMESTAMP() LOAD_DATETIME
+FROM 
+    @CLAIM.PHARMACY_NADAC_STAGE/`;
+    
+//must create the path dynamically as a string. var binding doesn't work here
+sql_copyInto = sql_copyInto + paramFilename + ` (FILE_FORMAT => 'CLAIM.PHARMACY_NADAC_CSV_FILE_FORMAT') );`
+;
+
+var stagedRowCountSQL = `SELECT COUNT(*) as stage_cnt FROM CLAIM.STAGE_NADAC_PRICING_VW;`;
+
+var adf_control_key = `SPU_LOAD_MEDICAID_NADAC`;
+
+var logQuery = `INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY(
+RUN_ID
+,ADF_CONTROL_KEY
+,NAME
+,TYPE
+,START_TIME
+,END_TIME
+,INSERT_COUNT
+,RESULT_TEXT
+,SQL_STATEMENT
+,ERROR_CODE
+,ERROR_STATE
+,ERROR_MESSAGE
+,ERROR_STACK_TRACE_TEXT
+)
+VALUES(
+:1
+,:2
+,:3
+,:4
+,:5::timestamp_ltz
+,:6::timestamp_ltz
+,:7
+,:8
+,:9
+,:10
+,:11
+,:12
+,:13
+);
+`;
+
+var deleteDestinationSQL = `
+DELETE FROM CLAIM.PHARMACY_NADAC_PRICING_HISTORY 
+    WHERE NADAC_YEAR IN (SELECT DISTINCT NADAC_YEAR FROM CLAIM.STAGE_NADAC_PRICING_VW);
+`;
+
+var insertDestinationSQL = `
+INSERT INTO CLAIM.PHARMACY_NADAC_PRICING_HISTORY
+(
+    NDC_DESCRIPTION 
+    ,NDC 
+    ,NADAC_PER_UNIT 
+    ,EFFECTIVE_DATE 
+    ,PRICING_UNIT 
+    ,PHARMACY_TYPE_INDICATOR 
+    ,OTC 
+    ,EXPLANATION_CODE 
+    ,CLASSIFICATION_FOR_RATE_SETTING 
+    ,CORRESPONDING_GENERIC_DRUG_NADAC_PER_UNIT 
+    ,CORRESPONDING_GENERIC_DRUG_EFFECTIVE_DATE 
+    ,AS_OF_DATE 
+    ,NADAC_YEAR 
+    ,ROW_EFFECTIVE_DATE 
+    ,ROW_EXPIRATION_DATE 
+    ,LOAD_DATETIME     
+    ,SOURCE_FILE_NAME 
+)
+SELECT
+    NDC_DESCRIPTION 
+    ,NDC 
+    ,NADAC_PER_UNIT 
+    ,EFFECTIVE_DATE 
+    ,PRICING_UNIT 
+    ,PHARMACY_TYPE_INDICATOR 
+    ,OTC 
+    ,EXPLANATION_CODE 
+    ,CLASSIFICATION_FOR_RATE_SETTING 
+    ,CORRESPONDING_GENERIC_DRUG_NADAC_PER_UNIT 
+    ,CORRESPONDING_GENERIC_DRUG_EFFECTIVE_DATE 
+    ,AS_OF_DATE 
+    ,NADAC_YEAR 
+    ,ROW_EFFECTIVE_DATE 
+    ,ROW_EXPIRATION_DATE 
+    ,LOAD_DATETIME     
+    ,SOURCE_FILE_NAME 
+FROM CLAIM.STAGE_NADAC_PRICING_VW;
+`;
+
+var nextSQL = "";
+
+var startTime = new Date().toISOString();
+var endTime = new Date().toISOString();
+
+try
+{	
+	nextSQL = sql_truncate;
+	
+	snowflake.execute({sqlText: sql_truncate});
+	
+	nextSQL = sql_copyInto;
+	
+	var stmt = snowflake.createStatement({
+        sqlText: sql_copyInto,
+        binds:[paramFilename]
+    });
+	
+	var result = stmt.execute();
+	
+	nextSQL = logQuery;
+	
+	endTime = new Date().toISOString();
+
+	snowflake.execute({
+		sqlText: logQuery,
+		binds:[run_id, adf_control_key, processStep, "TABLE", startTime, endTime, stmt.getNumRowsInserted(), "SUCCEEDED", nextSQL, "", "", "", ""]
+	});
+
+    startTime = new Date().toISOString();
+    processStep = "CLAIM.PHARMACY_NADAC_PRICING_HISTORY";
+
+    nextSQL = stagedRowCountSQL;
+
+    result = snowflake.execute({sqlText: stagedRowCountSQL});
+
+    result.next();
+    var row_count = result.getColumnValue(1);
+
+    if(row_count > 1000)
+    {
+        nextSQL = deleteDestinationSQL;
+        
+        snowflake.execute({sqlText: deleteDestinationSQL});
+        
+        nextSQL = insertDestinationSQL;
+        
+        snowflake.execute({sqlText: insertDestinationSQL});    
+        
+        nextSQL = logQuery;
+        
+        endTime = new Date().toISOString();
+        
+        snowflake.execute({
+            sqlText: logQuery,
+            binds:[run_id, adf_control_key, processStep, "TABLE", startTime, endTime, stmt.getNumRowsInserted(), "SUCCEEDED", nextSQL, "", "", "", ""]
+        });
+        
+        return "SUCCEEDED";
+    }
+    else
+    {
+        return "Skipped - No Rows";
+    }
+}
+catch(err)
+{
+	endTime = new Date().toISOString();
+	
+	snowflake.execute ({
+		sqlText: logQuery,
+		binds:[run_id, adf_control_key, processStep, "TABLE", startTime, endTime, -1, "FAILED", nextSQL, err.code, err.state, err.message, err.stackTraceTxt]
+	});
+
+    throw err;
+
+    return "FAILED";
+}
+
+$$;

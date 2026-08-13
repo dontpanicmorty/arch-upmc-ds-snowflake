@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_CAUTI
+(
+HOS                   VARCHAR,
+UNIT                  VARCHAR,
+EVENT_DATE      TIMESTAMP_NTZ,
+EVENT                 VARCHAR,
+DEVICE_DAYS            NUMBER(33,5),
+INFECTION             VARCHAR
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

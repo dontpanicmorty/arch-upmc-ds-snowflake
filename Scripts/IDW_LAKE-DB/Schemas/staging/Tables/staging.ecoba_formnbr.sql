@@ -1,0 +1,6 @@
+CREATE OR REPLACE TABLE STAGING.ECOBA_FORMNBR
+(
+    FORMNBR_KEY     number NOT NULL,
+    FORMNBR         varchar,
+    ECOBA_CLAIM_NBR varchar
+);

@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.HCPCS_CODES
+(
+ID                             INT,
+HCPCS_CODE                 VARCHAR,
+REC                            INT,
+TITLE                      VARCHAR,
+DESCRIPTION_LONG           VARCHAR,
+SOURCE                     VARCHAR,
+START_DATE           TIMESTAMP_NTZ,
+END_DATE             TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

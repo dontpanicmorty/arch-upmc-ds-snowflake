@@ -1,0 +1,15 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.DIM_TIME
+AS
+SELECT
+TIMESK,
+TIME,
+HR,
+MILITARYHOUR,
+MIN,
+SEC,
+AMPM,
+STANDARDTIME,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_RPT.DIM_TIME;
+!set variable_substitution=false;

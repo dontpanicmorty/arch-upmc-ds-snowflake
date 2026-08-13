@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.COMMON_LTSS_AUTHORIZATION_ATTACHMENT
+(
+ID                             INT,
+AUTHORIZATION_ID               INT,
+FILENAME                   VARCHAR,
+TITLE                      VARCHAR,
+CREATED_DATE         TIMESTAMP_NTZ,
+UPDATED_DATE         TIMESTAMP_NTZ,
+OWNER_ID                       INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

@@ -1,0 +1,11 @@
+
+
+CREATE OR REPLACE VIEW DWOAO.CustomerMaster
+AS
+SELECT A.* from cdc_merge.dbo.CustomerMaster A
+INNER JOIN cdc_merge.dbo.TPACustomer B ON B.ID = A.TPARowID
+WHERE B.TPACLIENT='000001' AND B.TPADIVISION='0001' AND B.TPAIDOFCLIENT='000001' 
+
+
+
+;

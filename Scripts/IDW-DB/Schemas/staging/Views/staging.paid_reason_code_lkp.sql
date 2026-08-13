@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.PAID_REASON_CODE_LKP
+AS
+SELECT
+CODE,
+LOAD_DATE
+FROM &{IDW_LAKE}.STAGING.PAID_REASON_CODE_LKP;
+!set variable_substitution=false;

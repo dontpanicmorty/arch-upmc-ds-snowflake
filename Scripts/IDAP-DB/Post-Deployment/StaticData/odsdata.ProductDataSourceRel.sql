@@ -1,0 +1,132 @@
+CREATE OR REPLACE TEMPORARY TABLE
+	ODSDATA.TMP_PRODUCT_DATA_SOURCE_REL (
+		PRODUCT_DATA_SOURCE_REL_KEY NUMBER(38,0) AUTOINCREMENT START 1 INCREMENT 1 NOT NULL,
+		DATA_SOURCE_KEY NUMBER(38,0) NOT NULL,
+		PRODUCT_KEY NUMBER(38,0) NOT NULL,
+		PRODUCT_SOURCE_NAME VARCHAR NOT NULL,
+		LAST_UPDATED_DATETIME TIMESTAMP_TZ(9) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		TPA_HIERARCHY_KEY NUMBER(38,0) NOT NULL,
+		CONSTRAINT FK_PRODUCT_DATA_SOURCE_REL_DATA_SOURCE FOREIGN KEY (DATA_SOURCE_KEY) REFERENCES ODSDATA.DATA_SOURCE (DATA_SOURCE_KEY),
+		CONSTRAINT FK_PRODUCT_DATA_SOURCE_REL_PRODUCT FOREIGN KEY (PRODUCT_KEY) REFERENCES ODSDATA.PRODUCT (PRODUCT_KEY),
+		CONSTRAINT FK_PRODUCT_DATA_SOURCE_REL_TPA_HIERARCHY FOREIGN KEY (TPA_HIERARCHY_KEY) REFERENCES ODSDATA.TPA_HIERARCHY (TPA_HIERARCHY_KEY),
+		CONSTRAINT PK_PRODUCT_DATA_SOURCE_REL PRIMARY KEY (PRODUCT_DATA_SOURCE_REL_KEY),
+		CONSTRAINT UK_PRODUCT_DATA_SOURCE_REL UNIQUE (DATA_SOURCE_KEY, PRODUCT_KEY, PRODUCT_SOURCE_NAME, TPA_HIERARCHY_KEY)
+	)COMMENT='Relates source Product values to standard values in Product'
+;
+
+INSERT INTO ODSDATA.TMP_PRODUCT_DATA_SOURCE_REL
+(DATA_SOURCE_KEY, PRODUCT_KEY, PRODUCT_SOURCE_NAME, TPA_HIERARCHY_KEY)
+VALUES
+(1, 1, 'AdultBasic HMO', 1),
+(1, 2, 'Childrens Health Insurance Program', 1),
+(1, 3, 'Community HealthChoices', 1),
+(1, 4, 'HB CM (EAPOS)', 1),
+(1, 5, 'Healthy PA', 1),
+(1, 6, 'HMO-R', 1),
+(1, 7, 'HMO/Point of Service', 1),
+(1, 8, 'HP PP (ASO)', 1),
+(1, 9, 'Inside Advantage for Individuals', 1),
+(1, 10, 'MA Product', 1),
+(1, 11, 'Medicare HMO Product', 1),
+(1, 12, 'Medicare Individual Product', 1),
+(1, 13, 'Medicare PPO Product', 1),
+(1, 14, 'Medicare PSP 1', 1),
+(1, 15, 'Medicare PSP 2/Tower', 1),
+(1, 16, 'Medicare Select Product', 1),
+(1, 17, 'Medicare SNP Institutional', 1),
+(1, 18, 'Medicare SNP SMI', 1),
+(1, 19, 'Medicare Specialty Plan', 1),
+(1, 20, 'MyCare Advantage HMO', 1),
+(1, 21, 'MyCare Advantage PPO/EPO', 1),
+(1, 22, 'Partner Network', 1),
+(1, 23, 'PPO Product', 1),
+(1, 24, 'Select', 1),
+(1, 25, 'Tower Health Commercial', 1),
+(1, 26, 'UPMC for Community Living SNP60+', 1),
+(1, 67, 'Medicare PSP 3/Excela', 1),
+(1, 68, 'UPMC Employees Advantage Network', 1),
+(1, 69, 'Pitt Employees Advantage Network', 1),
+(1, 70, 'UPMC Inside Advantage Network', 1),
+(1, 77, 'Tower Employees Network', 1),
+(1, 86, 'Total Advantage', 1),
+(1, 98, 'Medicare Pitt Retirees', 1),
+(1, 99, 'Federal Employee Health Benefit', 1),
+(2, 28, 'UPMC Vision Care', 1),
+(2, 29, 'UPMC Vision Care Medicare', 1),
+(2, 30, 'UPMC Vision Care Non-U135', 1),
+(2, 78, 'UPMC Vision Care Commercial Discount Network', 1),
+(2, 96, 'UPMC Western Maryland Employees', 1),
+(2, 97, 'HCMS Employees', 1),
+(5, 2, 'CHIP', 1),
+(5, 57, 'BHS', 1),
+(5, 58, 'LIFE', 1),
+(5, 59, 'SNP', 1),
+(5, 60, 'C-SNP', 1),
+(5, 61, 'LIFE-OP', 1),
+(5, 62, 'HP-PCO', 1),
+(5, 63, 'PART', 1),
+(5, 64, 'Value', 1),
+(5, 65, 'ValueSelect', 1),
+(5, 66, 'Premier', 1),
+(5, 95, 'U135', 1),
+(6, 79, 'National Network', 1),
+(6, 80, 'ESI Medicare', 1),
+(6, 81, 'ESI Medicaid', 1),
+(6, 94, 'Preferred Value Network', 1),
+(6, 104, 'UPMC Essential Pharmacy Network', 1),
+(7, 82, 'UPMC Community HealthChoices', 1),
+(7, 83, 'UPMC for Kids (CHIP)', 1),
+(7, 84, 'UPMC for You (Medicaid)', 1),
+(7, 85, 'UPMC for Life (Medicare)', 1),
+(8, 87, 'UPMC Life Dual', 1),
+(8, 88, 'UPMC For Kids', 1),
+(8, 89, 'UPMC For You', 1),
+(8, 90, 'UPMC For Life Options', 1),
+(8, 91, 'UPMC For Life', 1),
+(8, 92, 'UPMC CHC', 1),
+(8, 93, 'UPMC FEHB', 1),
+(9, 102, 'Cigna PPO', 1);
+
+--Use a minus query to find any diffs and update or insert as needed	 
+MERGE INTO ODSDATA.PRODUCT_DATA_SOURCE_REL AS TGT
+USING (SELECT DATA_SOURCE_KEY, PRODUCT_KEY, PRODUCT_SOURCE_NAME, TPA_HIERARCHY_KEY
+	FROM ODSDATA.TMP_PRODUCT_DATA_SOURCE_REL
+	MINUS 
+	SELECT DATA_SOURCE_KEY, PRODUCT_KEY, PRODUCT_SOURCE_NAME, TPA_HIERARCHY_KEY
+	FROM ODSDATA.PRODUCT_DATA_SOURCE_REL
+	) AS SRC
+ON TGT.DATA_SOURCE_KEY = SRC.DATA_SOURCE_KEY
+AND TGT.PRODUCT_KEY = SRC.PRODUCT_KEY
+AND TGT.TPA_HIERARCHY_KEY = SRC.TPA_HIERARCHY_KEY
+WHEN MATCHED 
+THEN UPDATE
+	SET TGT.PRODUCT_SOURCE_NAME = SRC.PRODUCT_SOURCE_NAME
+	,TGT.TPA_HIERARCHY_KEY = SRC.TPA_HIERARCHY_KEY
+	,TGT.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHEN NOT MATCHED 
+THEN INSERT
+	(DATA_SOURCE_KEY
+	,PRODUCT_KEY
+	,PRODUCT_SOURCE_NAME
+	,TPA_HIERARCHY_KEY
+	)
+VALUES
+	(
+	SRC.DATA_SOURCE_KEY
+	,SRC.PRODUCT_KEY
+	,SRC.PRODUCT_SOURCE_NAME
+	,SRC.TPA_HIERARCHY_KEY
+	);
+	
+--Flip the minus and delete from the target
+DELETE FROM ODSDATA.PRODUCT_DATA_SOURCE_REL TGT
+USING
+(SELECT DATA_SOURCE_KEY, PRODUCT_KEY, PRODUCT_SOURCE_NAME, TPA_HIERARCHY_KEY
+	FROM ODSDATA.PRODUCT_DATA_SOURCE_REL
+	MINUS 
+	SELECT DATA_SOURCE_KEY, PRODUCT_KEY, PRODUCT_SOURCE_NAME, TPA_HIERARCHY_KEY
+	FROM ODSDATA.TMP_PRODUCT_DATA_SOURCE_REL
+	) SRC
+WHERE TGT.DATA_SOURCE_KEY = SRC.DATA_SOURCE_KEY
+AND TGT.PRODUCT_KEY = SRC.PRODUCT_KEY
+AND TGT.TPA_HIERARCHY_KEY = SRC.TPA_HIERARCHY_KEY;

@@ -1,0 +1,33 @@
+CREATE OR REPLACE VIEW DBO.DimProviderSimple_VW
+AS 
+SELECT 	$1:ProviderKey::NUMBER(38, 0) AS ProviderKey, 
+		$1:PROVIDER_ID::NUMBER(38, 0) AS PROVIDER_ID, 
+		$1:ProviderFirstName::VARCHAR AS ProviderFirstName, 
+		$1:ProviderMiddleName::VARCHAR AS ProviderMiddleName, 
+		$1:ProviderLastName::VARCHAR AS ProviderLastName, 
+		$1:ProviderName::VARCHAR AS ProviderName, 
+		$1:ProviderNPI::VARCHAR AS ProviderNPI, 
+		$1:ProviderTypeID::NUMBER(38, 0) AS ProviderTypeID, 
+		$1:ProviderType::VARCHAR AS ProviderType, 
+		$1:ProviderDOB::DATE AS ProviderDOB, 
+		$1:ProviderGender::VARCHAR AS ProviderGender, 
+		$1:ProviderSuspendPlansFlag::BOOLEAN AS ProviderSuspendPlansFlag, 
+		$1:ProviderSuspendPlansDescription::VARCHAR AS ProviderSuspendPlansDescription, 
+		$1:LastLoginDate::DATE AS LastLoginDate, 
+		$1:LastClaimDate::DATE AS LastClaimDate, 
+		$1:VerificationStartDate::DATE AS VerificationStartDate, 
+		$1:CulturalCompetencyCourseFlag::BOOLEAN AS CulturalCompetencyCourseFlag, 
+		$1:ElectronicPrescribingFlag::BOOLEAN AS ElectronicPrescribingFlag, 
+		$1:CredentialingEligibleFlag::BOOLEAN AS CredentialingEligibleFlag, 
+		$1:Email::VARCHAR AS Email, 
+		$1:VoicePhone::VARCHAR AS VoicePhone, 
+		$1:CellPhone::VARCHAR AS CellPhone, 
+		$1:ProviderSSN::VARCHAR AS ProviderSSN, 
+		$1:ProviderNotes::VARCHAR AS ProviderNotes, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimProviderSimple/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

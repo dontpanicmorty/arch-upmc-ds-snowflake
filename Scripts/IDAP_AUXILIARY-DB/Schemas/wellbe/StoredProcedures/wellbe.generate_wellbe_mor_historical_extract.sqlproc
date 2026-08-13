@@ -1,0 +1,247 @@
+CREATE OR REPLACE PROCEDURE WELLBE.GENERATE_WELLBE_MOR_HISTORICAL_EXTRACT()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS '
+    var lookupSQL = `SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_BEG_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_BEG_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL
+SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_CF_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_CF_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL
+SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_D_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_D_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL
+SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_I_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_I_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL
+SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_J_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_J_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL
+SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_K_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_K_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL
+SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_L_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_L_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+UNION ALL SELECT DISTINCT FILE_PREFIX, RECORD_TYPE_CODE, FILE_TYPE, FILE_DATE, FILE_TIME 
+    ,CASE 
+        WHEN RECORD_TYPE_CODE in (''B'',''E'',''G'') THEN ''BEG''
+        WHEN RECORD_TYPE_CODE IN (''C'',''F'') THEN ''CF''
+        ELSE RECORD_TYPE_CODE
+    END as EXTRACT_GROUP
+    ,CONCAT(
+    ''UPMC_WellBe_MOR_''    
+    ,EXTRACT_GROUP
+    ,''.''
+    ,FILE_PREFIX
+    ,''.''
+    ,FILE_TYPE
+    ,''.''
+    ,FILE_DATE
+    ,''.''
+    ,FILE_TIME
+    ,''.csv''
+) as EXTRACT_FILE_NAME
+,''WELLBE.MOR_HCC_M_HISTORICAL_EXTRACT_VW'' AS VIEW_NAME
+FROM WELLBE.MOR_HCC_M_HISTORICAL_EXTRACT_VW
+WHERE FILE_DATE >= ''D240800''
+ORDER BY FILE_PREFIX, FILE_TYPE, FILE_DATE, FILE_TIME, RECORD_TYPE_CODE
+    ;`;
+
+    var lookupStmt = snowflake.createStatement({
+        sqlText: lookupSQL
+    });
+
+try
+{
+    var filesProcessed = 0;
+    var filesToCreate = lookupStmt.execute();
+    
+    while (filesToCreate.next()) 
+    {   
+        var filePrefix = filesToCreate.getColumnValueAsString(''FILE_PREFIX'');
+        var fileTypeName = filesToCreate.getColumnValueAsString(''FILE_TYPE'');
+        var fileDateName = filesToCreate.getColumnValueAsString(''FILE_DATE'');
+        var fileTimeName = filesToCreate.getColumnValueAsString(''FILE_TIME'');
+        var fileName = filesToCreate.getColumnValueAsString(''EXTRACT_FILE_NAME'');   
+        var viewName = filesToCreate.getColumnValueAsString(''VIEW_NAME'');
+
+        var unloadSQL = `COPY INTO @UTIL.SNOWFLAKEDATA_OUTGOING/wellbe/mor/historical/${fileName}
+FROM
+(
+SELECT
+*
+FROM ${viewName}
+WHERE FILE_PREFIX = :1
+    AND FILE_TYPE = :2
+    AND FILE_DATE = :3
+    AND FILE_TIME = :4
+)
+FILE_FORMAT = (FORMAT_NAME = WELLBE.WELLBE_EXTRACT_CSV)
+SINGLE = TRUE
+OVERWRITE = TRUE
+MAX_FILE_SIZE = 128000000
+HEADER = TRUE;
+;`;
+
+        var extractStmt = snowflake.createStatement({
+            sqlText: unloadSQL,
+            binds: [filePrefix,fileTypeName,fileDateName,fileTimeName]
+        });
+       
+        var extractResult = extractStmt.execute();
+                
+        filesProcessed += 1;
+    }
+
+    var retVal = "SUCCEEDED: Processed " + filesProcessed + " files";
+
+    return retVal;
+}
+catch (err)
+{
+    //log code goes here
+    throw err;
+}
+    
+';

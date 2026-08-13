@@ -1,0 +1,38 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_MEMBERS_GH
+(
+HCID                    VARCHAR,
+EMPLOYEE_ID             VARCHAR,
+MEM_MONTH               VARCHAR,
+GENDER                  VARCHAR,
+AGE                      NUMBER(33,5),
+ZIP                     VARCHAR,
+NURSE                    NUMBER(33,5),
+ADI                      NUMBER(33,5),
+MEAN_ADI_APPLIED         NUMBER(33,5),
+VARIABLE_PAY             NUMBER(33,5),
+BONUS_COMMISSION         NUMBER(33,5),
+WEEKEND_SHIFT            NUMBER(33,5),
+DAY_SHIFT_HOURS          NUMBER(33,5),
+EVENING_SHIFT_HOURS      NUMBER(33,5),
+NIGHT_SHIFT_HOURS        NUMBER(33,5),
+WEEKEND_HOURS            NUMBER(33,5),
+ALL_HOURS                NUMBER(33,5),
+OVERTIME                 NUMBER(33,5),
+OVERTIME_HOURS           NUMBER(33,5),
+OVERTIME_EARNS           NUMBER(33,5),
+TUITION_ASSISTANCE       NUMBER(33,5),
+PTO_SOLD                 NUMBER(33,5),
+PTO_BOUGHT               NUMBER(33,5),
+GH_ELIG                  NUMBER(33,5),
+WC_ELIG                  NUMBER(33,5),
+CHNG_JOB                VARCHAR,
+CHNG_LOCATION           VARCHAR,
+CHNG_BOSS               VARCHAR,
+CHNG_EPR                VARCHAR,
+REPRIMAND               VARCHAR,
+EMP_QUIT                VARCHAR,
+EMP_HIRED                NUMBER(33,5),
+EMP_REHIRED              NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

@@ -1,0 +1,26 @@
+CREATE OR REPLACE TABLE EDW_RPT.MA_CLAIM_UNRESOLVED
+(
+MA_CLAIM_UNRESOLVED_KEY            NUMBER,
+CLAIM_NBR                         VARCHAR,
+CLAIM_LINE_NBR                    VARCHAR,
+ADJUSTMENT_SUFFIX_NBR             VARCHAR,
+CHECK_NBR                         VARCHAR,
+PAYMENT_NBR                       VARCHAR,
+LOAD_DATE                   TIMESTAMP_NTZ,
+PATIENT_ACCT_NBR                  VARCHAR,
+SHOCK_CLAIM_IND                   VARCHAR,
+UPDATE_DATE                 TIMESTAMP_NTZ,
+CLAIM_TYPE_CODE                   VARCHAR,
+CLAIM_TYPE_DESC                   VARCHAR,
+AUTHORIZATION_NBR                 VARCHAR,
+CLEAN_CLAIM_IND                   VARCHAR,
+ALT_DOCUMENT_NBR                  VARCHAR,
+AUTHORIZATION_CLASS               VARCHAR,
+AUTHORIZATION_REASON              VARCHAR,
+CLEAN_CLAIM_HEADER_IND            VARCHAR,
+CLAIM_LINE_SEQ                    VARCHAR,
+ADJUSTMENT_SUFFIX_SEQ             VARCHAR,
+CLAIM_SOURCE                      VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

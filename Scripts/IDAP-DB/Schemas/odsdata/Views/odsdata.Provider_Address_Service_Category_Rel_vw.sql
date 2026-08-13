@@ -1,0 +1,12 @@
+CREATE OR REPLACE VIEW ODSDATA.PROVIDER_ADDRESS_SERVICE_CATEGORY_REL_VW
+COMMENT = 'Replicated from Azure SQL DB'
+AS
+SELECT
+ProviderAddressServiceCategoryRel.$1::NUMBER(38,0) AS PROVIDER_ADDRESS_SERVICE_CATEGORY_REL
+,ProviderAddressServiceCategoryRel.$2::NUMBER(38,0) AS PROVIDER_ADDRESS_REL_KEY
+,ProviderAddressServiceCategoryRel.$3::NUMBER(38,0) AS SERVICE_CATEGORY_KEY
+,ProviderAddressServiceCategoryRel.$4::DATETIME AS LAST_UPDATED_DATETIME
+,ProviderAddressServiceCategoryRel.$5::DATETIME AS INSERT_DATETIME
+FROM @ODSDATA.HPDSDATALAKE_IDAPSQL/providerods/ProviderAddressServiceCategoryRel.txt
+(FILE_FORMAT => 'ODSDATA.PROVIDER_ODS_FILE_FORMAT')ProviderAddressServiceCategoryRel
+;

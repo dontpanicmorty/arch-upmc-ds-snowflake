@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW DWOAO.IDCardsPrint AS
+SELECT * FROM CDC_Merge.dbo.IDCardsPrint
+;

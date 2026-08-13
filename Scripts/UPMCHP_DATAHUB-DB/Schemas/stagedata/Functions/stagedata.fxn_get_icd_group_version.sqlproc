@@ -1,0 +1,88 @@
+CREATE OR REPLACE FUNCTION STAGEDATA.FXN_GET_ICD_GROUP_VERSION(DATA_SOURCE_NAME VARCHAR, ICD_VERSION_CODE VARCHAR, ICD_CODE VARCHAR)
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+COMMENT = 'Returns the icdVersion, icdGroup and referenceSetName for a given ICD Code'
+AS
+$$
+
+    const validDataSources = ['MC400Dnt','MC400Upm'];
+    // Validate the data source
+    if (!validDataSources.includes(DATA_SOURCE_NAME))
+        {
+        throw 'Invalid DATA_SOURCE_NAME: '+DATA_SOURCE_NAME;
+        }
+
+    const ICD9 = '9';
+    const ICD10 = '10';
+
+    let icdVersion, referenceSetName, icdGroupCode;
+    
+    //trim and set to null if blank
+    let sourceVersion;
+    if (ICD_VERSION_CODE.trim() === '')
+        sourceVersion = null;
+    else
+        sourceVersion = ICD_VERSION_CODE.trim();
+
+    let sourceICDCode;
+    if (ICD_CODE.trim() === '')
+        sourceICDCode = null;
+    else
+        sourceICDCode = ICD_CODE.trim();
+
+    // empty string expected, other falsy values supported
+    if (!sourceVersion)
+    {
+        icdVersion = ICD9;
+        // if third char is a period, string start at position 0
+        if (sourceICDCode.charCodeAt(2) === 46)
+            referenceSetName = 'icdProcedureCode';
+        else if (sourceICDCode.length === 2)
+            referenceSetName = 'icdProcedureCode';
+        else 
+            referenceSetName = 'icdDiagnosisCode';
+    } 
+    else if (sourceVersion === 'XPC') 
+        {
+            icdVersion = ICD9;
+            referenceSetName = 'icdProcedureCode';
+        }
+        else if (sourceVersion === 'XCM')
+            {
+                icdVersion = ICD9;
+                referenceSetName = 'icdDiagnosisCode';
+            }
+            else if (sourceVersion === 'APC') 
+                {
+                    icdVersion = ICD10;
+                    referenceSetName = 'icdProcedureCode';
+                }
+                else if (sourceVersion === 'ACM')
+                    {
+                        icdVersion = ICD10;
+                        referenceSetName = 'icdDiagnosisCode';
+                    } 
+                    else
+                        {
+                            return null;
+                        }
+
+
+    // determine Group Code
+    if (referenceSetName === 'icdDiagnosisCode')
+    {
+        let decimalIndex = sourceICDCode.indexOf('.');
+        icdGroupCode = sourceICDCode.substr(0, decimalIndex > 0 ? decimalIndex : sourceICDCode.length)
+    }
+
+    if (referenceSetName === 'icdProcedureCode') 
+    {
+        if (icdVersion === '9')
+            icdGroupCode = sourceICDCode.substr(0, 2);
+        else if (icdVersion === '10')
+            icdGroupCode = sourceICDCode.substr(0, 3);
+    }
+ 
+    return {icdVersion, referenceSetName, icdGroupCode};
+$$
+;

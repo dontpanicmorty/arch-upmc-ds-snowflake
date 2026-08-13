@@ -1,0 +1,32 @@
+CREATE OR REPLACE VIEW DBO.DimDomainSource_VW
+AS 
+SELECT 	$1:DomainSourceKey::NUMBER(38, 0) AS DomainSourceKey, 
+		$1:DOMAIN_SOURCE_ID::NUMBER(38, 0) AS DOMAIN_SOURCE_ID, 
+		$1:UserName::VARCHAR AS UserName, 
+		$1:WindowsLogin::VARCHAR AS WindowsLogin, 
+		$1:FirstName::VARCHAR AS FirstName, 
+		$1:LastName::VARCHAR AS LastName, 
+		$1:EntityID::NUMBER(38, 0) AS EntityID, 
+		$1:ParentDomainSourceID::NUMBER(38, 0) AS ParentDomainSourceID, 
+		$1:LoginEntityTypeID::NUMBER(38, 0) AS LoginEntityTypeID, 
+		$1:LoginEntityTypeDescription::VARCHAR AS LoginEntityTypeDescription, 
+		$1:DepartmentID::NUMBER(38, 0) AS DepartmentID, 
+		$1:DepartmentName::VARCHAR AS DepartmentName, 
+		$1:InactiveFlag::BOOLEAN AS InactiveFlag, 
+		$1:LockoutReasonID::NUMBER(38, 0) AS LockoutReasonID, 
+		$1:LockoutReasonDescription::VARCHAR AS LockoutReasonDescription, 
+		$1:LastLoginDate::DATE AS LastLoginDate, 
+		$1:Email::VARCHAR AS Email, 
+		$1:EConsentPersonID::VARCHAR AS EConsentPersonID, 
+		$1:DomainSourceDescription::VARCHAR AS DomainSourceDescription, 
+		$1:LastPasswordChangeDate::TIMESTAMP_NTZ AS LastPasswordChangeDate, 
+		$1:LockoutDate::TIMESTAMP_NTZ AS LockoutDate, 
+		$1:DomainSourceLockoutNote::VARCHAR AS DomainSourceLockoutNote, 
+		$1:CreationDate::TIMESTAMP_NTZ AS CreationDate, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimDomainSource/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW UPMCVH_PROD.EPISODE_ID_QUEUE
+AS
+SELECT
+DATE,
+COUNTER_VALUE
+FROM &{IDAP_LAKE}.VIRTUAL_HEALTH_STAGE.EPISODE_ID_QUEUE;
+!set variable_substitution=false;

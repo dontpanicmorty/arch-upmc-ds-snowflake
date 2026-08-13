@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "NVA",
+  "targetTableName": "RAWDATA.NVA_PAID_CLAIM_EXTRACTS",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/nva",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_CLAIM_NVA_FILE_FORMAT",
+  "sourceFilePattern": "claim\\/nva\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}/\\.*UPMC_ClaimExtract.*.txt(.gz|)",
+  "sourceFileDelimitedColumnCount": 51,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": true
+}

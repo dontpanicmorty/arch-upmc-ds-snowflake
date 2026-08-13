@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_MICROFILMDOCUMENTS 
+LIKE &{CDC_MERGE}.DBO.MICROFILMDOCUMENTS
+;
+
+!set variable_substitution=false;

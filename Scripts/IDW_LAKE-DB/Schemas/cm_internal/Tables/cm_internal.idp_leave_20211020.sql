@@ -1,0 +1,26 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_LEAVE_20211020
+(
+EMPLOYEEID               VARCHAR,
+SSN                      VARCHAR,
+POLICYSTATUS             VARCHAR,
+POLICYNAME               VARCHAR,
+ABSENCETYPE              VARCHAR,
+REASON                   VARCHAR,
+CLOSEDIND                VARCHAR,
+LEAVENO                  VARCHAR,
+STARTDATE          TIMESTAMP_NTZ,
+CLOSUREDATE        TIMESTAMP_NTZ,
+ACTUALRTWDATE      TIMESTAMP_NTZ,
+SVC_DATE                 VARCHAR,
+LOST_TIME                 NUMBER(33,5),
+LOST_TIME_IND            VARCHAR,
+MAXDENY                  VARCHAR,
+FREQUENCY                VARCHAR,
+DURATION                 VARCHAR,
+DIAGNOSIS1               VARCHAR,
+DIAGNOSIS2               VARCHAR,
+SUB_DIAGNOSIS1           VARCHAR,
+SUB_DIAGNOSIS2           VARCHAR
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

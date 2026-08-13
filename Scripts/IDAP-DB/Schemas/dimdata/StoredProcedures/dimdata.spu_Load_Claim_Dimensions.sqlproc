@@ -1,0 +1,622 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_CLAIM_DIMENSIONS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var sqlCommand="";
+
+try 
+{
+
+    //set query_tag for session logging
+    sqlCommand = `CALL UTIL.SPU_SET_QUERY_TAG();`;
+    var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+   //generate a JOB_ID for tracing validations and failures
+   sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID('${procedureName}')`;
+   resultSet = snowflake.execute({sqlText: sqlCommand});
+   resultSet.next();
+   var jobId = resultSet.getColumnValue(1);
+
+
+    //*****************************************************************************
+    //Call Merge Stored Procedures To Load data from STAGEDATA to DIMDATA
+    //*****************************************************************************
+
+    //<raw table name>  (Repeat these calls for all the tables you want to load)
+    //sqlCommand = 'CALL <schema_name>.<procedure name>();';
+    //var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // A control table might be used as this grows.
+    // The order in which these stored procedures are processed is important!!!
+
+    //*****************************************************************************
+    // Stage RAWDATA from source systems
+    //*****************************************************************************
+
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_RAWDATA_SCHEMA(${jobId});`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+    //*****************************************************************************
+    // Load work tables in STAGEDATA schema to result in DIMDATA Dimensions
+    //*****************************************************************************
+
+    // STAGEDATA.TEMP_CLAIM_DETAIL_DEDUPE
+    sqlCommand = `CALL STAGEDATA.SPU_TEMP_CLAIM_DETAIL_DEDUPE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    
+    // STAGEDATA.CLAIM_HEADER_ICD_DIAGNOSIS_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_HEADER_ICD_DIAGNOSIS_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_HEADER_ICD_DIAGNOSIS_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_HEADER_ICD_DIAGNOSIS_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_ICD_DIAGNOSIS
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_ICD_DIAGNOSIS();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_HEADER_ICD_PROCEDURE_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_HEADER_ICD_PROCEDURE_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_HEADER_ICD_PROCEDURE_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_HEADER_ICD_PROCEDURE_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_ICD_PROCEDURE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_ICD_PROCEDURE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_HEADER_RIDER_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_HEADER_RIDER_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_HEADER_RIDER_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_HEADER_RIDER_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_CLAIM_RIDER
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_CLAIM_RIDER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_PROCEDURE_CATEGORY
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_PROCEDURE_CATEGORY();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_PROCEDURE_MODIFIER
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_PROCEDURE_MODIFIER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_DETAIL_ADJUSTMENT_REASON_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_ADJUSTMENT_REASON_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_DETAIL_ADJUSTMENT_REASON_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_ADJUSTMENT_REASON_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_ADJUSTMENT_REASON
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_ADJUSTMENT_REASON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_DETAIL_NOT_COVERED_REASON_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_NOT_COVERED_REASON_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_DETAIL_NOT_COVERED_REASON_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_NOT_COVERED_REASON_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_NOT_COVERED_REASON
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_NOT_COVERED_REASON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.CLAIM_DETAIL_SERVICE_REASON_CODE
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_SERVICE_REASON_CODE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.CLAIM_DETAIL_SERVICE_REASON_CODE_GRP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_CLAIM_DETAIL_SERVICE_REASON_CODE_GRP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // STAGEDATA.GRP_SERVICE_REASON
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_SERVICE_REASON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+    // STAGEDATA.SPU_LOAD_DIM_ENROLLMENT_SPAN_LOOKUP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_DIM_ENROLLMENT_SPAN_LOOKUP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    //***************************************************
+
+
+    //*****************************************************************************
+    // DIMDATA TABLES
+    //*****************************************************************************
+
+    //DIM_DATA_SOURCE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_DATA_SOURCE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_DATA_SOURCE');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_DATA_SOURCE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_CLAIM_HEADER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_CLAIM_HEADER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_HEADER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_HEADER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_CLAIM_DETAIL
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_CLAIM_DETAIL();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_PROVIDER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PROVIDER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER');`;
+    snowflake.execute({sqlText: sqlCommand});  
+
+    //DIM_PROVIDER_IDENTIFIER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PROVIDER_IDENTIFIER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_IDENTIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROVIDER_IDENTIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_CLAIM_PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_CLAIM_PROCEDURE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_REVENUE_PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_REVENUE_PROCEDURE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_REVENUE_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_REVENUE_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_ICD_CATEGORY
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_ICD_CATEGORY();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_ICD_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_ICD_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    //DIM_ICD_DIAGNOSIS
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_ICD_DIAGNOSIS();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_ICD_DIAGNOSIS');`;
+    snowflake.execute({sqlText: sqlCommand});
+    
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_ICD_DIAGNOSIS');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_ICD_PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_ICD_PROCEDURE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_ICD_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_ICD_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_MEMBER_DEMOGRAPHIC
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_MEMBER_DEMOGRAPHIC();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_MEMBER_DEMOGRAPHIC');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_MEMBER_DEMOGRAPHIC');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    //DIM_PLACE_OF_SERVICE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PLACE_OF_SERVICE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PLACE_OF_SERVICE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PLACE_OF_SERVICE');`;
+    snowflake.execute({sqlText: sqlCommand});  
+
+    //DIM_PROCEDURE_CATEGORY
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PROCEDURE_CATEGORY();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROCEDURE_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROCEDURE_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_PROCEDURE_MODIFIER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PROCEDURE_MODIFIER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROCEDURE_MODIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROCEDURE_MODIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_PROCESSING_REASON
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_PROCESSING_REASON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_PROCESSING_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_PROCESSING_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_NOT_COVERED_REASON
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_NOT_COVERED_REASON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_NOT_COVERED_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_NOT_COVERED_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_DIAGNOSIS_RELATED_GROUP
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_DIAGNOSIS_RELATED_GROUP();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_RIDER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_RIDER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_RIDER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_RIDER');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    //DIM_CLAIM_AUTHORIZATION
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_CLAIM_AUTHORIZATION();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_AUTHORIZATION');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_AUTHORIZATION');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //DIM_CLAIM_AUTHORIZATION_DETAIL
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_CLAIM_AUTHORIZATION_DETAIL();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_CLAIM_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+ 
+    //BRIDGE_ICD_DIAGNOSIS_CATEGORY
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_BRIDGE_ICD_DIAGNOSIS_CATEGORY();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.BRIDGE_ICD_DIAGNOSIS_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.BRIDGE_ICD_DIAGNOSIS_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //BRIDGE_ICD_PROCEDURE_CATEGORY
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_BRIDGE_ICD_PROCEDURE_CATEGORY();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.BRIDGE_ICD_PROCEDURE_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.BRIDGE_ICD_PROCEDURE_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand}); 
+
+    //GRP_ADJUSTMENT_REASON
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_ADJUSTMENT_REASON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_ADJUSTMENT_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_ADJUSTMENT_REASON');`;
+//    snowflake.execute({sqlText: sqlCommand}); 
+
+    //GRP_ICD_DIAGNOSIS
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_ICD_DIAGNOSIS();`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_ICD_DIAGNOSIS');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//  sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_ICD_DIAGNOSIS');`;
+//    snowflake.execute({sqlText: sqlCommand});
+
+    //GRP_ICD_PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_ICD_PROCEDURE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_ICD_PROCEDURE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_ICD_PROCEDURE');`;
+//    snowflake.execute({sqlText: sqlCommand});
+  
+    //GRP_NOT_COVERED_REASON
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_NOT_COVERED_REASON();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_NOT_COVERED_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_ICD_PROCEDURE');`;
+//    snowflake.execute({sqlText: sqlCommand});
+  
+    //GRP_SERVICE_REASON
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_SERVICE_REASON();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_SERVICE_REASON');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_NOT_COVERED_REASON');`;
+//    snowflake.execute({sqlText: sqlCommand});
+
+    //GRP_PROCEDURE_CATEGORY
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_PROCEDURE_CATEGORY();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_PROCEDURE_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_PROCEDURE_CATEGORY');`;
+//    snowflake.execute({sqlText: sqlCommand});  
+    
+    //GRP_PROCEDURE_MODIFIER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_PROCEDURE_MODIFIER();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_PROCEDURE_MODIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated  
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_PROCEDURE_MODIFIER');`;
+//    snowflake.execute({sqlText: sqlCommand});  
+  
+    //GRP_CLAIM_RIDER
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_CLAIM_RIDER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_CLAIM_RIDER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+// This cannot be run on a group table.  the PK value is intentionally duplicated
+//    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_CLAIM_RIDER');`;
+//    snowflake.execute({sqlText: sqlCommand});
+  
+    //GRP_ICD_DIAGNOSIS_FLAT
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_ICD_DIAGNOSIS_FLAT();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_ICD_DIAGNOSIS_FLAT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_ICD_DIAGNOSIS_FLAT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //GRP_PROCEDURE_MODIFIER_FLAT
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_GRP_PROCEDURE_MODIFIER_FLAT();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});   
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.GRP_PROCEDURE_MODIFIER_FLAT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.GRP_PROCEDURE_MODIFIER_FLAT');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+/***********************************************************************************
+************************ Load staging for fact table build *************************
+************************************************************************************/
+    
+    //DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP();`;
+    snowflake.execute({sqlText: sqlCommand});   
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_LOOKUP');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //STAGEDATA.SPU_LOAD_GRP_LOOKUP_TABLES  (Dup check are in this procedure)
+    sqlCommand = `CALL STAGEDATA.SPU_LOAD_GRP_LOOKUP_TABLES(${jobId});`;
+    snowflake.execute({sqlText: sqlCommand});   
+
+
+/***********************************************************************************
+******************************** Load Fact Table ***********************************
+************************************************************************************/
+
+    //FACT_CLAIM_LINE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_FACT_CLAIM_LINE();`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.FACT_CLAIM_LINE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.FACT_CLAIM_LINE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK(${jobId}, 'DIMDATA.FACT_CLAIM_LINE');`;
+    snowflake.execute({sqlText: sqlCommand});
+ 
+    sqlCommand = `CALL LOGDATA.SPU_UNKNOWN_FOREIGN_KEY_CHECK (${jobId}, 'DIMDATA.FACT_CLAIM_LINE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //FACT_CLAIM_AUTHORIZATION_DETAIL
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_FACT_CLAIM_AUTHORIZATION_DETAIL();`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.FACT_CLAIM_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.FACT_CLAIM_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK(${jobId}, 'DIMDATA.FACT_CLAIM_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+ 
+    sqlCommand = `CALL LOGDATA.SPU_UNKNOWN_FOREIGN_KEY_CHECK (${jobId}, 'DIMDATA.FACT_CLAIM_AUTHORIZATION_DETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+    //*****************************************************************************
+    // End calls to merge procedures
+    //*****************************************************************************
+   
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID_ENDTIME(${jobId});`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

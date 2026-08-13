@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.PRIOR_AUTHORIZATION_DIAGNOSIS
+(
+ID                                  INT,
+AUTHORIZATION_ID                    INT,
+LEVEL                               INT,
+ICD_CODE                        VARCHAR,
+ICD_NAME                        VARCHAR,
+CREATED_DATE              TIMESTAMP_NTZ,
+UPDATED_DATE              TIMESTAMP_NTZ,
+SYSRULES_DISABLE_FLAG               INT
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

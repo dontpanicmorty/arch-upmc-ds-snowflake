@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_ALTERNATEADDRESSHEADER 
+LIKE &{CDC_MERGE}.DBO.ALTERNATEADDRESSHEADER
+;
+
+!set variable_substitution=false;

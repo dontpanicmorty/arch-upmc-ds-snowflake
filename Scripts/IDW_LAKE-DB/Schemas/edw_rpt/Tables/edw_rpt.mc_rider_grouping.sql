@@ -1,0 +1,8 @@
+CREATE OR REPLACE TABLE EDW_RPT.MC_RIDER_GROUPING
+(
+MC_MEMBER_MONTH_KEY            NUMBER,
+RIDER_KEY                      NUMBER,
+LOAD_DATE               TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

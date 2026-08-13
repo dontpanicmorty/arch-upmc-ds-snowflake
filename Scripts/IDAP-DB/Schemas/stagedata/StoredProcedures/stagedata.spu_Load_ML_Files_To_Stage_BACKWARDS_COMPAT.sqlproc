@@ -1,0 +1,13 @@
+
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_ML_FILES_TO_STAGE()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// Override calls to the original no-param stored procedure to the three-param 
+// one, since Snowflake stores them as two separate sprocs
+let sqlText = `CALL UTIL.SPU_LOAD_ML_FILES_TO_STAGE('', '', '');`;
+return snowflake.execute({sqlText});
+$$
+;

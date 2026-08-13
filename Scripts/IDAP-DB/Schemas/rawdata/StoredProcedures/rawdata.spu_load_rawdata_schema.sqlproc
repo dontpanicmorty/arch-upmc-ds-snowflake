@@ -1,0 +1,338 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_RAWDATA_SCHEMA(JOB_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var sqlCommand="";
+
+try 
+{
+
+    // A control table might be used as this grows.
+    // The order in which these stored procedures are processed is important!!!
+
+    //*****************************************************************************
+    // Load work tables in RAWDATA schema to result in STAGEDATA FIXES
+    //*****************************************************************************
+
+    // RAWDATA.MC400_DWOAO_CLAIMS
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_MC400_DWOAO_CLAIMS();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_CLAIMS');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_CLAIMS');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+    // RAWDATA.MC400_DWOAO_CLAIMSDETAIL
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_MC400_DWOAO_CLAIMSDETAIL();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_CLAIMSDETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_CLAIMSDETAIL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.MC400_DWOAO_APPERMANENTPAYMENT
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_MC400_DWOAO_APPERMANENTPAYMENT();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APPERMANENTPAYMENT');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APPERMANENTPAYMENT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.MC400_DWOAO_APPERMANENTPAYMENT_GL
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_MC400_DWOAO_APPERMANENTPAYMENT_GL();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APPERMANENTPAYMENT_GL');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APPERMANENTPAYMENT_GL');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.MC400_DWOAO_APWORK
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_MC400_DWOAO_APWORK();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APWORK');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APWORK');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.MC400_DWOAO_APWORK_GL
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_MC400_DWOAO_APWORK_GL();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APWORK_GL');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.MC400_DWOAO_APWORK_GL');`;
+    snowflake.execute({sqlText: sqlCommand});   
+
+    // RAWDATA.DATAHUB_CLAIM_HEADER_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_HEADER_BASE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_HEADER_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_HEADER_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DETAIL_BASE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_MEMBER_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_MEMBER_DETAIL_BASE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_MEMBER_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_MEMBER_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_DETAIL_ADJUSTMENT_REASON_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DETAIL_ADJUSTMENT_REASON_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_ADJUSTMENT_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_ADJUSTMENT_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_DETAIL_NOT_COVERED_REASON_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DETAIL_NOT_COVERED_REASON_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_NOT_COVERED_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_NOT_COVERED_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_DETAIL_PROCESSING_REASON_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DETAIL_PROCESSING_REASON_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_PROCESSING_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_PROCESSING_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+ 
+    // RAWDATA.DATAHUB_CLAIM_DETAIL_SERVICE_REASON_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DETAIL_SERVICE_REASON_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DETAIL_SERVICE_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}', 'RAWDATA.DATAHUB_CLAIM_DETAIL_SERVICE_REASON_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_HEADER_ICD_DIAGNOSIS_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_HEADER_ICD_DIAGNOSIS_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_HEADER_ICD_DIAGNOSIS_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_HEADER_ICD_DIAGNOSIS_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_HEADER_ICD_PROCEDURE_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_HEADER_ICD_PROCEDURE_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_HEADER_ICD_PROCEDURE_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_HEADER_ICD_PROCEDURE_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+    
+    // RAWDATA.DATAHUB_RIDER_CODES
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_RIDER_CODES();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_RIDER_CODES');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_RIDER_CODES');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_PROVIDER_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_PROVIDER_DETAIL_BASE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_PROVIDER_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_PROVIDER_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_PROVIDER_IDENTIFIER
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_PROVIDER_IDENTIFIER();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_PROVIDER_IDENTIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_PROVIDER_IDENTIFIER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_AUTHORIZATION_BASE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_REFDATA_CLAIM_ICD_DIAGNOSIS_CATEGORY
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_REFDATA_CLAIM_ICD_DIAGNOSIS_CATEGORY();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_CLAIM_ICD_DIAGNOSIS_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_CLAIM_ICD_DIAGNOSIS_CATEGORY');`;
+    snowflake.execute({sqlText: sqlCommand});
+    
+    // RAWDATA.DATAHUB_CLAIM_DIAGNSOSIS_RELATED_GROUP
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_CLAIM_DIAGNOSIS_RELATED_GROUP();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DIAGNOSIS_RELATED_GROUP');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_CLAIM_DIAGNOSIS_RELATED_GROUP');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    // RAWDATA.DATAHUB_REFDATA_CLAIM_PROCEDURE_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_REFDATA_CLAIM_PROCEDURE_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_CLAIM_PROCEDURE_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_CLAIM_PROCEDURE_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+    
+    // RAWDATA.DATAHUB_REFDATA_CLAIM_REVENUE_CODE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_REFDATA_CLAIM_REVENUE_CODE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_CLAIM_REVENUE_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_CLAIM_REVENUE_CODE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+     // RAWDATA.DATAHUB_REFDATA_DATA_SOURCE
+    sqlCommand = `CALL RAWDATA.SPU_LOAD_DATAHUB_REFDATA_DATA_SOURCE();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_DATA_SOURCE');`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${JOB_ID}, 'RAWDATA.DATAHUB_REFDATA_DATA_SOURCE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+//******************************************************************************************************************************/    
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

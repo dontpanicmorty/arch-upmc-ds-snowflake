@@ -1,0 +1,8 @@
+CREATE OR REPLACE TABLE FDBDATA.RLBLRID3_LBLR_DESC (
+	LBLRID VARCHAR(6) NOT NULL,
+	MFG VARCHAR(15) NULL,
+	LBLRIND VARCHAR(1) NULL,
+	CONSTRAINT PK_RLBLRID3_LBLR_DESC PRIMARY KEY (LBLRID)
+)
+COMMENT = 'Relates the Labeler Identifier to its text description and provides attributes of that association.'
+;

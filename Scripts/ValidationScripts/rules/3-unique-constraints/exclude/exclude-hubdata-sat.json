@@ -1,0 +1,7 @@
+{
+  "CATALOG_PATTERN": "%",
+  "SCHEMA_PATTERN": "HUBDATA",
+  "OBJECT_PATTERN": "SAT_%",
+  "TEST_INDEX": 3,
+  "INCLUDE": 0
+}

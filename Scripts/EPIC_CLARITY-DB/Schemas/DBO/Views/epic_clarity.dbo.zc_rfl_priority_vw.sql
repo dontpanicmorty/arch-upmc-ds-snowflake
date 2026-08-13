@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.ZC_RFL_PRIORITY
+AS
+SELECT
+ PRIORITY_C
+, NAME
+, TITLE
+, ABBR
+, INTERNAL_ID
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__ZC_RFL_PRIORITY;
+!set variable_substitution=false;

@@ -1,0 +1,39 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_DIM_PLAN_SEGMENT_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command = "";
+sql_command += "MERGE INTO DIMDATA.DIM_PLAN_SEGMENT AS T";
+sql_command += " USING INFA.DIM_PLAN_SEGMENT AS S";
+sql_command += " ON (T.DIM_PLAN_SEGMENT_KEY=S.DIM_PLAN_SEGMENT_KEY)";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'D' THEN DELETE";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'U' THEN UPDATE";
+sql_command += " SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT, T.INSERT_DATETIME=S.INSERT_DATETIME, T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME, T.TPA_CLIENT_ID = S.TPA_CLIENT_ID, T.TPA_ID = S.TPA_ID, T.TPA_DIV_ID = S.TPA_DIV_ID, T.PLAN_CODE = S.PLAN_CODE, T.SEGMENT_ID = S.SEGMENT_ID , T.SEGMENT_DESCRIPTION = S.SEGMENT_DESCRIPTION , T.EFFECTIVE_START_DATE = S.EFFECTIVE_START_DATE, T.EFFECTIVE_END_DATE = S.EFFECTIVE_END_DATE , T.ACTIVE_IND = S.ACTIVE_IND, T.COPAY = S.COPAY, T.COINSURANCE = S.COINSURANCE, T.MENTAL_HEALTH = S.MENTAL_HEALTH, T.MENTAL_HEALTH_LIMIT = S.MENTAL_HEALTH_LIMIT, T.OTHER_BENEFITS = S.OTHER_BENEFITS, T.OUT_OF_NETWORK = S.OUT_OF_NETWORK ";
+sql_command += " WHEN NOT MATCHED THEN INSERT";
+sql_command += " (T.DIM_PLAN_SEGMENT_KEY, T.MD5_VALUE_TEXT, T.INSERT_DATETIME, T.LAST_UPDATED_DATETIME, T.TPA_CLIENT_ID, T.TPA_ID, T.TPA_DIV_ID, T.PLAN_CODE, T.SEGMENT_ID , T.SEGMENT_DESCRIPTION , T.EFFECTIVE_START_DATE, T.EFFECTIVE_END_DATE , T.ACTIVE_IND, T.COPAY, T.COINSURANCE, T.MENTAL_HEALTH, T.MENTAL_HEALTH_LIMIT, T.OTHER_BENEFITS, T.OUT_OF_NETWORK )";
+sql_command += " VALUES";
+sql_command += " (S.DIM_PLAN_SEGMENT_KEY, S.MD5_VALUE_TEXT, S.INSERT_DATETIME, S.LAST_UPDATED_DATETIME, S.TPA_CLIENT_ID, S.TPA_ID, S.TPA_DIV_ID, S.PLAN_CODE,S.SEGMENT_ID , S.SEGMENT_DESCRIPTION , S.EFFECTIVE_START_DATE, S.EFFECTIVE_END_DATE , S.ACTIVE_IND, S.COPAY, S.COINSURANCE, S.MENTAL_HEALTH, S.MENTAL_HEALTH_LIMIT, S.OTHER_BENEFITS, S.OUT_OF_NETWORK )";
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;

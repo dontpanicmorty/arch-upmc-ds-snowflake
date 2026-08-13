@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE EDW_RPT.ZIP_COUNTY
+(
+ZIP_CODE              VARCHAR,
+CITY                  VARCHAR,
+COUNTY                VARCHAR,
+COUNTY_FIPS           VARCHAR,
+STATE                 VARCHAR,
+LOAD_DATE       TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

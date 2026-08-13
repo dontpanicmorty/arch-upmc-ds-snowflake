@@ -1,0 +1,152 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL`;
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+AS
+SELECT * FROM STAGEDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL AS tgt
+USING (
+        SELECT DISTINCT
+        DIM_CLAIM_DETAIL_KEY,
+        DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+        FROM STAGEDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+    MINUS
+        SELECT
+        DIM_CLAIM_DETAIL_KEY,
+        DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+        FROM DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+    ) AS src
+ON (tgt.DIM_CLAIM_DETAIL_KEY = src.DIM_CLAIM_DETAIL_KEY
+AND tgt.DIM_CLAIM_AUTHORIZATION_DETAIL_KEY = src.DIM_CLAIM_AUTHORIZATION_DETAIL_KEY)
+
+WHEN NOT MATCHED
+
+THEN INSERT
+    (
+        BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIM_CLAIM_DETAIL_KEY
+        ,DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+    )
+VALUES
+    (
+        (SELECT IFNULL(MAX(BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL_KEY), 1000) FROM DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DIM_CLAIM_DETAIL_KEY
+        ,src.DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+    )
+;`;
+
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE (DIM_CLAIM_DETAIL_KEY, DIM_CLAIM_AUTHORIZATION_DETAIL_KEY) IN
+(
+    SELECT BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL.DIM_CLAIM_DETAIL_KEY,
+    BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL.DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+    FROM DIMDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+        LEFT OUTER JOIN 
+            (SELECT DIM_CLAIM_DETAIL_KEY, DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+            FROM STAGEDATA.BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL
+            ) STAGE_DATA
+        ON (BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL.DIM_CLAIM_DETAIL_KEY = STAGE_DATA.DIM_CLAIM_DETAIL_KEY
+        AND BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL.DIM_CLAIM_AUTHORIZATION_DETAIL_KEY = STAGE_DATA.DIM_CLAIM_AUTHORIZATION_DETAIL_KEY
+        )
+    WHERE (STAGE_DATA.DIM_CLAIM_DETAIL_KEY IS NULL
+    AND BRIDGE_CLAIM_DETAIL_AUTHORIZATION_DETAIL.IS_LOGICAL_DELETE_FLAG = FALSE
+    )
+)
+;`;
+
+
+try 
+{
+    //Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+
+     //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

@@ -1,0 +1,66 @@
+{
+  "outputSchema": "NETWORK",
+  "outputTable": "LOB_PLAN_TYPE",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "LOB_PLAN_TYPE_FILE_FORMAT_HEADER",
+  "fileFormat": "LOB_PLAN_TYPE_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "CLIENT_ID",
+          "outputField": "TPA_CLIENT_ID"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "TPA_ID",
+          "outputField": "TPA_ID"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "TPA_DIV",
+          "outputField": "TPA_DIV_ID"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "LINE_OF_BUSINESS_CODE",
+          "outputField": "LINE_OF_BUSINESS_CODE"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "PLAN_TYPE",
+          "outputField": "PLAN_TYPE"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "PLAN_TYPE_DESC",
+          "outputField": "PLAN_TYPE_DESC"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "PLAN_TYPE_SOURCE",
+          "outputField": "PLAN_TYPE_SOURCE"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "PROGRAM_CODE",
+          "outputField": "PROGRAM_CODE"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "PROGRAM_DESC",
+          "outputField": "PROGRAM_DESC"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "LOAD_DATE",
+          "outputField": "LOAD_DATE"
+        }
+      ]
+    }
+  }
+}

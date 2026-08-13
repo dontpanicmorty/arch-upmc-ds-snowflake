@@ -1,0 +1,11 @@
+CREATE OR REPLACE FUNCTION UTIL.FXN_STRING_TO_NUMBER(INPUT STRING)
+  RETURNS FLOAT
+  LANGUAGE JAVASCRIPT
+AS
+$$
+  if (INPUT && INPUT.length > 0) {
+    return Number(INPUT);
+  } else {
+    return null;
+  }
+$$;

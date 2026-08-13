@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE MARKETING.OFFICE
+(
+PROVIDER_OFFICE_KEY             NUMBER,
+ADDRESS_KEY                     NUMBER,
+OFFICE_ID                      VARCHAR,
+OFFICE_NAME                    VARCHAR,
+CONTACT_NAME                   VARCHAR,
+CONTACT_EMAIL                  VARCHAR,
+PCMH_STATUS                    VARCHAR,
+SHARED_SAVING_STATUS           VARCHAR,
+LOAD_DATE                TIMESTAMP_NTZ,
+UPDATE_DATE              TIMESTAMP_NTZ
+)
+COMMENT='Created for MARKETING Migration'
+;

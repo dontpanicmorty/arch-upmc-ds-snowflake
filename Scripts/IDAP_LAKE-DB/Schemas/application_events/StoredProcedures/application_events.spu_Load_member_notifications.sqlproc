@@ -1,0 +1,228 @@
+CREATE OR REPLACE PROCEDURE APPLICATION_EVENTS.SPU_LOAD_MEMBER_NOTIFICATIONS(
+  "YEAR" VARCHAR,
+  "MONTH" VARCHAR,
+  "DAY"   VARCHAR,
+  "HOUR"  VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var result = "";
+const procName  = 'SPU_LOAD_MEMBER_NOTIFICATIONS';
+const startTime = new Date();
+let insertCount = 0, updateCount = 0, deleteCount = 0;
+
+let currentSqlCommand = '';
+let currentStatement = null;
+
+try {
+
+    const targetTableName = 'APPLICATION_EVENTS.MEMBER_NOTIFICATIONS';
+
+    const basePrefix = '.*notifications/member';
+    const extPattern = '\\.json(\\.gz)?$';
+
+    currentSqlCommand = `SELECT COALESCE(MAX(LOAD_DATETIME), TO_TIMESTAMP('2010-01-01')) FROM ${targetTableName}`;
+    currentStatement = snowflake.createStatement({ sqlText: currentSqlCommand });
+    var lastLoadResult = currentStatement.execute();
+    lastLoadResult.next();
+    var lastLoadDate = new Date(lastLoadResult.getColumnValue(1));
+
+    var today = new Date();
+
+    var datePaths = [];
+    
+    var datePaths = [];
+    for (var d = new Date(lastLoadDate); d <= today; d.setHours(d.getHours() + 1)) {
+        var yyyy = d.getFullYear();
+        var mm   = ("0" + (d.getMonth() + 1)).slice(-2);
+        var dd   = ("0" + d.getDate()).slice(-2);
+        var hh   = ("0" + d.getHours()).slice(-2);
+
+        datePaths.push(yyyy + "/" + mm + "/" + dd + "/" + hh);
+    }
+
+    var totalFiles = 0;
+    var totalRows = 0;
+
+    for (var i = 0; i < datePaths.length; i++) {
+
+        let filePattern = `${basePrefix}/${datePaths[i]}/[^/]+${extPattern}`;
+
+        currentSqlCommand = `COPY INTO APPLICATION_EVENTS.MEMBER_NOTIFICATIONS
+          ( FILENAME
+          , FILE_ROW_NUMBER
+          , LOAD_DATETIME
+          , EVENT_ENQUEUED_UTC_TIME
+          , EVENT_PROCESSED_UTC_TIME
+          , OPERATION
+          , PARTITION_ID
+          , TABLE_NAME
+          , JSON_DATA )
+        FROM (
+          SELECT
+            METADATA$FILENAME AS FILENAME,
+            METADATA$FILE_ROW_NUMBER,
+            CURRENT_TIMESTAMP(),
+            COALESCE(
+                TRY_TO_TIMESTAMP_TZ($1:EventEnqueuedUtcTime::STRING),
+                TRY_TO_TIMESTAMP_TZ($1:EventTime::STRING),
+                CURRENT_TIMESTAMP()
+            ),
+            COALESCE(
+                TRY_TO_TIMESTAMP_TZ($1:EventProcessedUtcTime::STRING),
+                TRY_TO_TIMESTAMP_TZ($1:EventTime::STRING),
+                CURRENT_TIMESTAMP()
+            ),
+            COALESCE($1:Operation::STRING, 'UNKNOWN'),
+            COALESCE($1:PartitionId::STRING, 'N/A'),
+            COALESCE($1:TableName::STRING, 'MEMBER_NOTIFICATIONS'),
+            $1
+          FROM @APPLICATION_EVENTS.SNOWFLAKEDATA_CONSUMERTECH_MEMBER_NOTIFICATIONS
+          (
+            FILE_FORMAT => APPLICATION_EVENTS.MEMBER_NOTIFICATIONS_FILE_FORMAT,
+            PATTERN     => '${filePattern}'
+          )
+        );`;
+
+        currentStatement = snowflake.createStatement({ sqlText: currentSqlCommand });
+        var resultSet = currentStatement.execute();
+
+        totalFiles += resultSet.getRowCount();
+        totalRows  += (resultSet.getNumRowsAffected() || 0);
+    }
+
+    insertCount = totalRows;
+
+    result += procName + " Succeeded";
+
+    let endTime = new Date();
+
+    let logSql = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (
+             NAME
+            ,TYPE
+            ,START_TIME
+            ,END_TIME
+            ,INSERT_COUNT
+            ,UPDATE_COUNT
+            ,DELETE_COUNT
+            ,RESULT_TEXT
+            ,SQL_STATEMENT
+            ,ERROR_CODE
+            ,ERROR_STATE
+            ,ERROR_MESSAGE
+            ,ERROR_STACK_TRACE_TEXT
+        )
+        VALUES (
+             :1
+            ,:2
+            ,:3::timestamp_ltz
+            ,:4::timestamp_ltz
+            ,:5
+            ,:6
+            ,:7
+            ,:8
+            ,:9
+            ,NULL
+            ,NULL
+            ,NULL
+            ,NULL
+        );
+    `;
+
+    snowflake.execute({
+        sqlText: logSql,
+        binds: [
+            procName,
+            'PROCEDURE',
+            startTime.toISOString(),
+            endTime.toISOString(),
+            insertCount || 0,
+            updateCount || 0,
+            deleteCount || 0,
+            result,
+            currentSqlCommand
+        ]
+    });
+
+} catch (err) {
+
+    let endTime = new Date();
+
+    result = procName + " Failed";
+
+    let errorCode = err.code || '';
+    let errorState = err.state || '';
+    let errorMessage = err.message || '';
+    let errorStack = err.stackTraceTxt || err.stack || '';
+
+    let failedSql = currentSqlCommand || '';
+
+    if (!failedSql && currentStatement && currentStatement.getSqlText) {
+        failedSql = currentStatement.getSqlText();
+    }
+
+    if (!failedSql) {
+        failedSql = 'SQL statement not available';
+    }
+
+    let failLogSql = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (
+             NAME
+            ,TYPE
+            ,START_TIME
+            ,END_TIME
+            ,INSERT_COUNT
+            ,UPDATE_COUNT
+            ,DELETE_COUNT
+            ,RESULT_TEXT
+            ,SQL_STATEMENT
+            ,ERROR_CODE
+            ,ERROR_STATE
+            ,ERROR_MESSAGE
+            ,ERROR_STACK_TRACE_TEXT
+        )
+        VALUES (
+             :1
+            ,:2
+            ,:3::timestamp_ltz
+            ,:4::timestamp_ltz
+            ,:5
+            ,:6
+            ,:7
+            ,:8
+            ,:9
+            ,:10
+            ,:11
+            ,:12
+            ,:13
+        );
+    `;
+
+    snowflake.execute({
+        sqlText: failLogSql,
+        binds: [
+            procName,
+            'PROCEDURE',
+            startTime.toISOString(),
+            endTime.toISOString(),
+            insertCount || 0,
+            updateCount || 0,
+            deleteCount || 0,
+            result,
+            failedSql,
+            errorCode.toString(),
+            errorState.toString(),
+            errorMessage.toString(),
+            errorStack.toString()
+        ]
+    });
+
+    return result;
+}
+
+return result;
+$$;

@@ -1,0 +1,12 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_USR_TAB.OIM_HEADER
+AS
+SELECT
+SSN,
+LAST_NAME,
+FIRST_NAME,
+MIDDLE_NAME,
+DOB,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_USR_TAB.OIM_HEADER;
+!set variable_substitution=false;

@@ -1,0 +1,618 @@
+SET MY_QUERY_TAG = CONCAT(IFNULL(current_database(),''),'.',IFNULL(current_schema(),''),'  -- LoadFullExtract.sql');
+ALTER SESSION SET QUERY_TAG = $MY_QUERY_TAG;
+
+TRUNCATE TABLE DIMDATA.BRIDGE_FACILITY_ACCREDITATION;
+COPY INTO DIMDATA.BRIDGE_FACILITY_ACCREDITATION
+FROM '@SNOWFLAKEDATA_IDAPDATA/BridgeFacilityAccreditation.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.BRIDGE_PRACTITIONER_EDUCATION ;
+COPY INTO DIMDATA.BRIDGE_PRACTITIONER_EDUCATION
+FROM '@SNOWFLAKEDATA_IDAPDATA/BridgePractitionerEducation.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+	
+TRUNCATE TABLE DIMDATA.BRIDGE_PROVIDER_AFFILIATION ;
+COPY INTO DIMDATA.BRIDGE_PROVIDER_AFFILIATION
+FROM '@SNOWFLAKEDATA_IDAPDATA/BridgeProviderAffiliation.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.BRIDGE_PROVIDER_LANGUAGE ;
+COPY INTO DIMDATA.BRIDGE_PROVIDER_LANGUAGE
+FROM '@SNOWFLAKEDATA_IDAPDATA/BridgeProviderLanguage.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.BRIDGE_PROVIDER_SPECIALTY ;
+COPY INTO DIMDATA.BRIDGE_PROVIDER_SPECIALTY
+FROM '@SNOWFLAKEDATA_IDAPDATA/BridgeProviderSpecialty.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.DIM_DATE_DAY ;
+COPY INTO DIMDATA.DIM_DATE_DAY
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimDateDay.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_ELIGIBILITY_TYPE ;
+COPY INTO DIMDATA.DIM_ELIGIBILITY_TYPE
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimEligibilityType.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_ENROLLMENT_SPAN;
+COPY INTO DIMDATA.DIM_ENROLLMENT_SPAN
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimEnrollmentSpan.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_FACILITY_ACCREDITATION ;
+COPY INTO DIMDATA.DIM_FACILITY_ACCREDITATION
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimFacilityAccreditation.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.DIM_GL_DISTRIBUTION ;
+COPY INTO DIMDATA.DIM_GL_DISTRIBUTION
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimGLDistribution.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_GROUP ;
+COPY INTO DIMDATA.DIM_GROUP
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimGroup.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_LANGUAGE;
+COPY INTO DIMDATA.DIM_LANGUAGE
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimLanguage.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.DIM_MEMBER;
+COPY INTO DIMDATA.DIM_MEMBER 
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimMember.txt'
+    file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_PLAN_SEGMENT;
+COPY INTO DIMDATA.DIM_PLAN_SEGMENT 
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimPlanSegment.txt'
+    file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+    	
+TRUNCATE TABLE DIMDATA.DIM_MEMBER_ADDRESS;
+COPY INTO DIMDATA.DIM_MEMBER_ADDRESS
+    (
+      Dim_Member_Address_Key
+     ,MD5_Value_Text
+     ,Dim_Member_Key
+     ,Member_Address_Type
+     ,Member_AddressLine1_Text
+     ,Member_AddressLine2_Text
+     ,Member_City_Name
+     ,Member_State_Abbreviation_Name
+     ,Member_Zip_Code_Nbr
+     ,Member_FIPS_Code
+     ,Member_FIPS_State_Code
+	 ,Member_FIPS_County_Code
+     ,Member_CMS_County_Code
+     ,Member_County_Desc
+     ,Member_Latitude_Nbr
+     ,Member_Longitude_Nbr
+     ,Effective_Start_Date
+     ,Effective_End_Date
+     ,Active_Ind
+     ,Valid_Ind
+     ,Congressional_District
+	 ,Verified_AddressLine1_Text
+	 ,Verified_AddressLine2_Text
+     ,Verified_County_Description
+	 ,Verified_Primary_Number
+     ,Verified_Street_Name
+     ,Verified_Street_Predirection
+     ,Verified_Street_Postdirection
+     ,Verified_Street_Suffix
+     ,Verified_Secondary_Number
+     ,Verified_Extra_Secondary_Number
+	 ,Verified_City_Name
+	 ,Verified_State
+	 ,Verified_ZipCode5_Nbr
+	 ,Verified_ZipCode9_Nbr
+	 ,Verified_Precision
+     ,Insert_Datetime
+     ,Last_Updated_Datetime
+    )
+
+FROM (
+    SELECT
+      $1 --DimMemberAddressKey
+     ,$2 --MD5ValueText
+     ,$3 --DimMemberKey
+     ,$4 --MemberAddress_Type
+     ,$5 --MemberAddressLine1Text
+     ,$6 --MemberAddressLine2Text
+     ,$7 --MemberCityName
+     ,$8 --MemberStateAbbreviationName
+     ,$9 --MemberZip_CodeNbr
+     ,$10 --MemberFIPSCode
+	 ,$11 --MemberFIPSStateCode
+	 ,$12 --MemberFIPSCountyCode
+	 ,$13 --MemberCMSCountyCode
+     ,$14 --MemberCountyDesc
+     ,$15 --MemberLatitudeNbr
+     ,$16 --MemberLongitudeNbr
+     ,$17 --EffectiveStartDate
+     ,CASE WHEN $18 = '' THEN NULL ELSE $18 END --EffectiveEndDate
+     ,$19 --ActiveInd
+     ,$20 --ValidInd
+	 ,$21 --CongressionalDistrict
+	 ,$22 --VerifiedAddressLine1Text
+	 ,$23 --VerifiedAddressLine2Text
+	 ,$24 --VerifiedCountyDescription
+	 ,$25 --VerifiedPrimaryNumber
+     ,$26 --VerifiedStreetName
+     ,$27 --VerifiedStreetPredirection
+     ,$28 --VerifiedStreetPostdirection
+     ,$29 --VerifiedStreetSuffix
+     ,$30  --VerifiedSecondaryNumber
+     ,$31 --VerifiedExtraSecondaryNumber
+	 ,$32 --VerifiedCityName
+	 ,$33 --VerifiedState
+	 ,$34 --VerifiedZipCode5Nbr
+	 ,$35 --VerifiedZipCode9Nbr
+	 ,$36 --VerifiedPrecision
+     ,$37 --InsertDatetime
+     ,$38 --LastUpdatedDatetime
+    FROM '@SNOWFLAKEDATA_IDAPDATA/DimMemberAddress.txt'
+        (FILE_FORMAT => IDAP_CSV_FILE_FORMAT_NOTNULL)
+    );
+    
+    
+   
+TRUNCATE TABLE DIMDATA.DIM_MEMBER_COMMUNICATION;
+COPY INTO DIMDATA.DIM_MEMBER_COMMUNICATION
+    (
+        Dim_Member_Communication_Key
+		,MD5_Value_Text
+		,Insert_Datetime
+		,Last_Updated_Datetime
+		,Is_Logical_Delete
+		,Row_Effective_Datetime
+		,Row_Expiration_Datetime
+		,Is_Current_Row_Flag
+		,Dim_Member_Key
+		,Communication_ID
+		,Communication_Name
+		,Communication_Level_Code
+		,Communication_Level_Name
+		,Communication_Category_Name
+		,Communication_Method_Code
+		,Communication_Method_Desc
+		,Communication_Channel_Code
+		,Communication_Channel_Desc
+		,Communication_Status_Code
+		,Communication_Status_Desc
+		,Communication_Start_Date
+		,Communication_End_Date
+		,Communication_Address_Type
+		,Communication_Phone_Type
+		,Communication_Phone_Nbr
+		,Communication_Phone_Extension_Nbr
+		,Communication_Email_Address_Text
+		,Communication_Language_Code
+		,Communication_Language_Name
+		,Communication_Language_Format_Code
+		,Communication_Language_Format_Name
+		,Communication_Corp_Code
+		,Communication_Opt_Out_Ind
+		,Communication_Mobile_Ind
+		,Communication_Electronic_Opt_In_Flag
+		,Communication_MP_Display_Start_Date
+		,Communication_MP_Display_End_Date
+		,Last_Communication_Date
+		,Communication_Snooze_Start_Date
+		,Communication_Snooze_End_Date
+    )
+
+FROM (
+    SELECT
+         $1 --Dim_Member_Communication_Key
+		,$2 --MD5_Value_Text
+		,$3 --Insert_Datetime
+		,$4 --Last_Updated_Datetime
+		,$5 --Is_Logical_Delete
+		,$6 --Row_Effective_Datetime
+		,$7 --Row_Expiration_Datetime
+		,$8 --Is_Current_Row_Flag
+		,$9 --Dim_Member_Key
+		,$10 --Communication_ID
+		,$11 --Communication_Name
+		,$12 --Communication_Level_Code
+		,$13 --Communication_Level_Name
+		,$14 --Communication_Category_Name
+		,$15 --Communication_Method_Code
+		,$16 --Communication_Method_Desc
+		,$17 --Communication_Channel_Code
+		,$18 --Communication_Channel_Desc
+		,$19 --Communication_Status_Code
+		,$20 --Communication_Status_Desc
+		,$21 --Communication_Start_Date
+		,$22 --Communication_End_Date
+		,$23 --Communication_Address_Type
+		,$24 --Communication_Phone_Type
+		,$25 --Communication_Phone_Nbr
+		,$26 --Communication_Phone_Extension_Nbr
+		,$27 --Communication_Email_Address_Text
+		,$28 --Communication_Language_Code
+		,$29 --Communication_Language_Name
+		,$30 --Communication_Language_Format_Code
+		,$31 --Communication_Language_Format_Name
+		,$32 --Communication_Corp_Code
+		,$33 --Communication_Opt_Out_Ind
+		,$34 --Communication_Mobile_Ind
+		,$35 --Communication_Electronic_Opt_In_Flag
+		,CASE WHEN $36='' THEN NULL ELSE $36 END --Communication_MP_Display_Start_Date
+		,CASE WHEN $37='' THEN NULL ELSE $37 END --Communication_MP_Display_End_Date
+		,CASE WHEN $38='' THEN NULL ELSE $38 END --Last_Communication_Date
+		,CASE WHEN $39='' THEN NULL ELSE $39 END --Communication_Snooze_Start_Date
+		,CASE WHEN $40='' THEN NULL ELSE $40 END --Communication_Snooze_End_Date
+    FROM '@SNOWFLAKEDATA_IDAPDATA/DimMemberCommunication.txt'
+        (FILE_FORMAT => IDAP_CSV_FILE_FORMAT_NOTNULL)
+    );
+
+    
+TRUNCATE TABLE DIMDATA.DIM_MEMBER_COMMUNICATION_PREFERENCE;
+COPY INTO DIMDATA.DIM_MEMBER_COMMUNICATION_PREFERENCE
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimMemberCommunicationPreference.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL; 
+
+TRUNCATE TABLE DIMDATA.DIM_MEMBER_IDENTIFIER;
+COPY INTO DIMDATA.DIM_MEMBER_IDENTIFIER
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimMemberIdentifier.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE; 
+
+TRUNCATE TABLE DIMDATA.DIM_OFFICE_HOURS;
+COPY INTO DIMDATA.DIM_OFFICE_HOURS
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimOfficeHours.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL; 
+
+TRUNCATE TABLE DIMDATA.DIM_PLAN;
+COPY INTO DIMDATA.DIM_PLAN
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimPlan.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.DIM_PRACTITIONER_EDUCATION ;
+COPY INTO DIMDATA.DIM_PRACTITIONER_EDUCATION
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimPractitionerEducation.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+DELETE FROM DIMDATA.DIM_PROVIDER WHERE SOURCE_SYSTEM = 'SQLSERVER';
+COPY INTO DIMDATA.DIM_PROVIDER
+    (
+      DIM_PROVIDER_KEY
+      ,MD5_VALUE_TEXT
+      ,INSERT_DATETIME
+      ,LAST_UPDATED_DATETIME
+      ,IS_LOGICAL_DELETE_FLAG
+      ,ROW_EFFECTIVE_DATETIME
+      , ROW_EXPIRATION_DATETIME
+      , IS_CURRENTROW_FLAG
+      , DATA_SOURCE_NAME
+      , PROVIDER_ID
+      , TPA_CLIENT_ID
+      , TPA_ID
+      , TPA_DIVISION_ID
+      , PROVIDER_TYPE_CODE
+      , PROVIDER_TYPE_DESC
+      , PROVIDER_ROLE_TYPE_CODE
+      , PROVIDER_ROLE_TYPE_DESC
+      , PROVIDER_FULL_NAME
+      , PRACTITIONER_LAST_NAME
+      , PRACTITIONER_FIRST_NAME
+      , PRACTITIONER_MIDDLE_NAME
+      , PRACTITIONER_MIDDLE_INITIAL
+      , PRACTITIONER_NAME_SUFFIX
+      , PRACTITIONER_GENDER_CODE
+      , PRACTITIONER_GENDER_NAME
+      , PRACTITIONER_BIRTH_DATE
+      , MEDICAL_GROUP_TIN_NBR
+      , PRACTITIONER_UPIN_NBR
+      , PRACTITIONER_SSN_NBR
+      , PRACTITIONER_DEGREE
+      , PROVIDER_EMAIL_ADDRESS
+      , PROVIDER_WEBSITE_URL
+      , PRIMARY_SPECIALTY_NAME
+      , PRIMARY_PHO_CODE
+      , PRIMARY_PHO_NAME
+      , PRIMARY_PHO_TERMINATION_DATE
+      , SECONDARY_PHO_CODE
+      , SECONDARY_PHO_NAME
+      , SECONDARY_PHO_TERMINATION_DATE
+      , TERTIARY_PHO_CODE
+      , TERTIARY_PHO_NAME
+      , TERTIARY_PHO_TERMINATION_DATE
+      , PROVIDER_START_DATE
+      , FACILITY_INCEPTION_DATE
+      , PROVIDER_ACTIVE_IND
+      , PRACTITIONER_LOCUM_TENENS_IND
+      , INVISIBLE_PROVIDER_IND
+      , TEMPORARY_PROVIDER_IND
+      , PA_MEDICAID_IND
+      , PP_ACA_ENHANCED_PAY_IND
+      , HAS_MALPRACTICE_INSURANCE_IND
+      , OWNERSHIP_STATUS_CODE
+      , OWNERSHIP_STATUS_DESC
+      , SOURCE_SYSTEM
+    )
+FROM (SELECT
+	   $1 --DIM_PROVIDER_KEY
+      ,$2 --MD5_VALUE_TEXT
+      ,$3 --INSERT_DATETIME
+      ,$4 --LAST_UPDATED_DATETIME
+      ,$5 --IS_LOGICAL_DELETE_FLAG
+      ,$6 --ROW_EFFECTIVE_DATETIME
+      ,$7 -- ROW_EXPIRATION_DATETIME
+      ,$8 -- IS_CURRENTROW_FLAG
+      ,$9 -- DATA_SOURCE_NAME
+      ,$10 -- PROVIDER_ID
+      ,$11 -- TPA_CLIENT_ID
+      ,$12 -- TPA_ID
+      ,$13 -- TPA_DIVISION_ID
+      ,$14 -- PROVIDER_TYPE_CODE
+      ,$15 -- PROVIDER_TYPE_DESC
+      ,$16 -- PROVIDER_ROLE_TYPE_CODE
+      ,$17 -- PROVIDER_ROLE_TYPE_DESC
+      ,$18 -- PROVIDER_FULL_NAME
+      ,$19 -- PRACTITIONER_LAST_NAME
+      ,$20 -- PRACTITIONER_FIRST_NAME
+      ,$21 -- PRACTITIONER_MIDDLE_NAME
+      ,$22 -- PRACTITIONER_MIDDLE_INITIAL
+      ,$23 -- PRACTITIONER_NAME_SUFFIX
+      ,$24 -- PRACTITIONER_GENDER_CODE
+      ,$25 -- PRACTITIONER_GENDER_NAME
+      ,CASE WHEN $26 = '' THEN NULL ELSE $26 END-- PRACTITIONER_BIRTH_DATE
+      ,$27 -- MEDICAL_GROUP_TIN_NBR
+      ,$28 -- PRACTITIONER_UPIN_NBR
+      ,$29 -- PRACTITIONER_SSN_NBR
+      ,$30 -- PRACTITIONER_DEGREE
+      ,$31 -- PROVIDER_EMAIL_ADDRESS
+      ,$32 -- PROVIDER_WEBSITE_URL
+      ,$33 -- PRIMARY_SPECIALTY_NAME
+      ,$34 -- PRIMARY_PHO_CODE
+      ,$35 -- PRIMARY_PHO_NAME
+      ,CASE WHEN $36 = '' THEN NULL ELSE $36 END -- PRIMARY_PHO_TERMINATION_DATE
+      ,$37 -- SECONDARY_PHO_CODE
+      ,$38 -- SECONDARY_PHO_NAME
+      ,CASE WHEN $39 = '' THEN NULL ELSE $39 END -- SECONDARY_PHO_TERMINATION_DATE
+      ,$40 -- TERTIARY_PHO_CODE
+      ,$41 -- TERTIARY_PHO_NAME
+      ,CASE WHEN $42 = '' THEN NULL ELSE $42 END -- TERTIARY_PHO_TERMINATION_DATE
+      ,CASE WHEN $43 = '' THEN NULL ELSE $43 END -- PROVIDER_START_DATE
+      ,CASE WHEN $44 = '' THEN NULL ELSE $44 END -- FACILITY_INCEPTION_DATE
+      ,$45 -- PROVIDER_ACTIVE_IND
+      ,$46 -- PRACTITIONER_LOCUM_TENENS_IND
+      ,$47 -- INVISIBLE_PROVIDER_IND
+      ,$48 -- TEMPORARY_PROVIDER_IND
+      ,$49 -- PA_MEDICAID_IND
+      ,$50 -- PP_ACA_ENHANCED_PAY_IND
+      ,$51 -- HAS_MALPRACTICE_INSURANCE_IND
+      ,$52 -- OWNERSHIP_STATUS_CODE
+      ,$53 -- OWNERSHIP_STATUS_DESC
+      ,'SQLSERVER'
+      ,'SQLSERVER'
+	FROM '@SNOWFLAKEDATA_IDAPDATA/DimProvider.txt'
+        (FILE_FORMAT => IDAP_CSV_FILE_FORMAT_NOTNULL)
+    );
+  
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_ADDRESS;
+COPY INTO DIMDATA.DIM_PROVIDER_ADDRESS
+    (
+      DIM_PROVIDER_ADDRESS_KEY
+      ,MD5_VALUE_TEXT
+      ,INSERT_DATETIME
+      ,LAST_UPDATED_DATETIME
+      ,IS_LOGICAL_DELETE_FLAG
+      ,TPA_CLIENT_ID
+      ,TPA_ID
+      ,TPA_DIVISION_ID
+      ,PROVIDER_ADDRESS_TYPE_CODE
+      ,PROVIDER_ADDRESS_TYPE_DESC
+      ,PROVIDER_OFFICE_ID
+      ,PROVIDER_OFFICE_NAME
+      ,PROVIDER_FULL_ADDRESS_FORMATTED
+      ,PROVIDER_ADDRESS_LINE1_TEXT
+      ,PROVIDER_ADDRESS_LINE2_TEXT
+      ,PROVIDER_CITY_NAME
+      ,PROVIDER_STATE_ABBREV_NAME
+      ,PROVIDER_STATE_FULL_NAME
+      ,PROVIDER_COUNTY_NAME
+      ,PROVIDER_COUNTRY_NAME
+      ,PROVIDER_COUNTRY_ISO2
+      ,PROVIDER_COUNTRY_ISO3
+      ,PROVIDER_ZIP_CODE_NBR
+      ,PROVIDER_LATITUDE_NBR
+      ,PROVIDER_LONGITUDE_NBR
+      ,PROVIDER_OFFICE_MANAGER_NAME
+      ,HANDICAP_ACCESS_IND
+      ,TELE_HEALTH_IND
+      ,RECEIVES_MAIL_IND
+	  ,E_PRESCRIBE_IND
+	  ,MA_SUPER_PCP_IND
+	  ,EMR_SYSTEM_NAME
+
+
+    )
+FROM (SELECT
+      $1 --DIM_PROVIDER_ADDRESS_KEY
+      ,$2 --MD5_VALUE_TEXT
+      ,$3 --INSERT_DATETIME
+      ,$4 --LAST_UPDATED_DATETIME
+      ,$5 --IS_LOGICAL_DELETE_FLAG
+      ,$6 --TPA_CLIENT_ID
+      ,$7 --TPA_ID
+      ,$8 --TPA_DIVISION_ID
+      ,$9 --PROVIDER_ADDRESS_TYPE_CODE
+      ,$10 --PROVIDER_ADDRESS_TYPE_DESC
+      ,$11 --PROVIDER_OFFICE_ID
+      ,$12 --PROVIDER_OFFICE_NAME
+      ,$13 --PROVIDER_FULL_ADDRESS_FORMATTED
+      ,$14 --PROVIDER_ADDRESS_LINE1_TEXT
+      ,$15 --PROVIDER_ADDRESS_LINE2_TEXT
+      ,$16 --PROVIDER_CITY_NAME
+      ,$17 --PROVIDER_STATE_ABBREV_NAME
+      ,$18 --PROVIDER_STATE_FULL_NAME
+      ,$19 --PROVIDER_COUNTY_NAME
+      ,$20 --PROVIDER_COUNTRY_NAME
+      ,$21 --PROVIDER_COUNTRY_ISO2
+      ,$22 --PROVIDER_COUNTRY_ISO3
+      ,$23 --PROVIDER_ZIP_CODE_NBR
+      ,CASE WHEN $24 = '' THEN NULL ELSE $24 END --PROVIDER_LATITUDE_NBR
+      ,CASE WHEN $25 = '' THEN NULL ELSE $25 END --PROVIDER_LONGITUDE_NBR
+      ,$26 --PROVIDER_OFFICE_MANAGER_NAME
+      ,$27 --HANDICAP_ACCESS_IND
+      ,$28 --TELE_HEALTH_IND
+      ,$29 --RECEIVES_MAIL_IND
+  	  ,$30 --E_PRESCRIBE_IND
+      ,$31 --MA_SUPER_PCP_IND
+	  ,$32 --EMR_SYSTEM_NAME
+
+    FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderAddress.txt'
+        (FILE_FORMAT => IDAP_CSV_FILE_FORMAT_NOTNULL_QUOTED)
+    )
+    ;--ON_ERROR = CONTINUE;
+    
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_AFFILIATION ;
+COPY INTO DIMDATA.DIM_PROVIDER_AFFILIATION
+    (
+    Dim_Provider_Affiliation_Key,
+	MD5_Value_Text,
+	Insert_Datetime,
+	Last_Updated_Datetime,
+	Is_Logical_Delete_Flag,
+	Affiliation_Type_Code,
+	Affiliation_Type_Desc,
+	Affiliation_Institution_Name,
+	Affiliation_Gateway_Text,
+	Affiliation_Gateway_Type_Code,
+	Affiliation_Gateway_Type_Desc,
+	Affiliated_Dim_Provider_Key
+    )
+FROM (SELECT
+    $1 --Dim_Provider_Affiliation_Key,
+	,$2--MD5_Value_Text,
+	,$3--Insert_Datetime,
+	,$4--Last_Updated_Datetime,
+	,$5--Is_Logical_Delete_Flag,
+	,$6--Affiliation_Type_Code,
+	,$7--Affiliation_Type_Desc,
+	,$8--Affiliation_Institution_Name,
+	,$9--Affiliation_Gateway_Text,
+	,$10--Affiliation_Gateway_Type_Code,
+	,$11--Affiliation_Gateway_Type_Desc,
+	,CASE WHEN $12 = '' THEN NULL ELSE $12 END--Affiliated_Dim_Provider_Key,
+    FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderAffiliation.txt'
+	    (FILE_FORMAT => IDAP_CSV_FILE_FORMAT_NOTNULL)
+     );
+
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CERTIFICATION ;
+COPY INTO DIMDATA.DIM_PROVIDER_CERTIFICATION
+	(
+	DIM_PROVIDER_CERTIFICATION_KEY 
+	,MD5_VALUE_TEXT 
+	,INSERT_DATETIME 
+	,LAST_UPDATED_DATETIME 
+	,IS_LOGICAL_DELETE_FLAG 
+	,DIM_PROVIDER_KEY 
+	,CERTIFICATION_TYPE_DESC 
+	,CERTIFICATION_NAME 
+	,CERTIFICATION_NBR 
+	,CERTIFICATION_STATE_ABBREV_NAME 
+	,CERTIFICATION_STATE_FULL_NAME 
+	,CERTIFICATION_START_DATE 
+	,CERTIFICATION_END_DATE 
+	,RECERTIFICATION_DATE 
+	,CERTIFICATION_VERIFICATION_DATE 
+	,CERTIFICATION_STATUS_CODE 
+	,CERTIFICATION_STATUS_DESC 
+	,CERTIFICATION_ACTIVE_IND 
+	,LIFETIME_CERTIFICATION_IND 
+	)
+FROM (SELECT
+	$1 --DIM_PROVIDER_CERTIFICATION_KEY 
+	,$2 --MD5_VALUE_TEXT 
+	,$3 --INSERT_DATETIME 
+	,$4 --LAST_UPDATED_DATETIME 
+	,$5 --IS_LOGICAL_DELETE_FLAG 
+	,$6 --DIM_PROVIDER_KEY 
+	,$7 --CERTIFICATION_TYPE_DESC 
+	,$8 --CERTIFICATION_NAME 
+	,$9 --CERTIFICATION_NBR 
+	,$10 --CERTIFICATION_STATE_ABBREV_NAME 
+	,$11 --CERTIFICATION_STATE_FULL_NAME 
+	,$12 --CERTIFICATION_START_DATE 
+	,$13 --CERTIFICATION_END_DATE 
+	,CASE WHEN $14 = '' THEN NULL ELSE $14 END --RECERTIFICATION_DATE 
+	,CASE WHEN $15 = '' THEN NULL ELSE $25 END --CERTIFICATION_VERIFICATION_DATE 
+	,$16 --CERTIFICATION_STATUS_CODE 
+	,$17 --CERTIFICATION_STATUS_DESC 
+	,$18 --CERTIFICATION_ACTIVE_IND 
+	,$19 --LIFETIME_CERTIFICATION_IND 
+	FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderCertification.txt'
+		(FILE_FORMAT => IDAP_CSV_FILE_FORMAT_NOTNULL)
+	);
+	
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CONTACT_INFO ;
+COPY INTO DIMDATA.DIM_PROVIDER_CONTACT_INFO
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderContactInfo.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+	
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CONTRACT;
+COPY INTO DIMDATA.DIM_PROVIDER_CONTRACT
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderContract.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CONTRACT_ATTRIBUTE ;
+COPY INTO DIMDATA.DIM_PROVIDER_CONTRACT_ATTRIBUTE
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderContractAttribute.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+	
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_IDENTIFIER ;
+COPY INTO DIMDATA.DIM_PROVIDER_IDENTIFIER
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderIdentifier.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+	
+TRUNCATE TABLE DIMDATA.DIM_PROVIDER_SPECIALTY ;
+COPY INTO DIMDATA.DIM_PROVIDER_SPECIALTY
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimProviderSpecialty.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+	
+TRUNCATE TABLE DIMDATA.DIM_RATE_CELL ;
+COPY INTO DIMDATA.DIM_RATE_CELL
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimRateCell.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE_QUOTED;
+	
+TRUNCATE TABLE DIMDATA.DIM_RIDER ;
+COPY INTO DIMDATA.DIM_RIDER
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimRider.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+	
+TRUNCATE TABLE DIMDATA.DIM_SALES_CHANNEL ;
+COPY INTO DIMDATA.DIM_SALES_CHANNEL 
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimSalesChannel.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+	
+TRUNCATE TABLE DIMDATA.DIM_SUB_GROUP ;
+COPY INTO DIMDATA.DIM_SUB_GROUP 
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimSubGroup.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+	
+TRUNCATE TABLE DIMDATA.DIM_TPA_HIERARCHY ;
+COPY INTO DIMDATA.DIM_TPA_HIERARCHY 
+FROM '@SNOWFLAKEDATA_IDAPDATA/DimTPAHierarchy.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.FACT_ENROLLMENT ;
+COPY INTO DIMDATA.FACT_ENROLLMENT 
+FROM '@SNOWFLAKEDATA_IDAPDATA/FactEnrollment.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NULLABLE;
+
+TRUNCATE TABLE DIMDATA.FACT_PROVIDER_CONTRACT ;
+COPY INTO DIMDATA.FACT_PROVIDER_CONTRACT 
+FROM '@SNOWFLAKEDATA_IDAPDATA/FactProviderContract.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL;
+
+TRUNCATE TABLE DIMDATA.PROVIDER_SPECIALTY_GROUPING ;
+COPY INTO DIMDATA.PROVIDER_SPECIALTY_GROUPING 
+FROM '@SNOWFLAKEDATA_IDAPDATA/ProviderSpecialtyGrouping.txt'
+	file_format = IDAP_CSV_FILE_FORMAT_NOTNULL_QUOTED;

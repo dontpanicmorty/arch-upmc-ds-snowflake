@@ -1,0 +1,7 @@
+CREATE OR REPLACE TABLE FDBDATA.RTMNCG0_TM_NDC_CNFSN_GRP (
+	NDC VARCHAR(11) NOT NULL,
+	TM_GROUP_ID NUMERIC(5, 0) NOT NULL,
+	CONSTRAINT PK_RTMNCG0_TM_NDC_CNFSN_GRP PRIMARY KEY (NDC, TM_GROUP_ID)
+)
+COMMENT = 'Links Packaged Products (NDCs) to drug names that are frequently confused with one another.'
+;

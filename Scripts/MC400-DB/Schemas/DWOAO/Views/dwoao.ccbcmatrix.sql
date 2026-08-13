@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW DWOAO.CCBCMatrix
+AS
+SELECT * from cdc_merge.dbo.CCBCMatrix;

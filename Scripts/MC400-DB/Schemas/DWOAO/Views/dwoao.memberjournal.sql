@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW DWOAO.MemberJournal AS 
+SELECT * FROM CDC_Merge.dbo.MemberJournal WHERE TPADIVISION !='0002';
+;

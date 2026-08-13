@@ -1,0 +1,100 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_MERGE_ALLOWED_AMOUNTS_FROM_STAGEDATA ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let resultSet, result;
+
+/* Create MERGE statement to be run */
+let sqlText = `MERGE INTO EXTRACTDATA.ALLOWED_AMOUNTS AS tgt
+USING (
+  SELECT OUT_OF_NETWORK_BASE_KEY, TAX_ID_NBR, TAX_ID_TYPE_CODE, PLACE_OF_SERVICE_CODES, BILLING_CLASS_NAME
+  FROM STAGEDATA.ALLOWED_AMOUNTS_SELECT_VW
+) AS src
+ON (
+  tgt.OUT_OF_NETWORK_BASE_KEY = src.OUT_OF_NETWORK_BASE_KEY
+  AND tgt.TAX_ID_NBR = src.TAX_ID_NBR
+  AND tgt.TAX_ID_TYPE_CODE = src.TAX_ID_TYPE_CODE
+  AND tgt.PLACE_OF_SERVICE_CODES = src.PLACE_OF_SERVICE_CODES
+  AND tgt.BILLING_CLASS_NAME = src.BILLING_CLASS_NAME
+)
+
+WHEN NOT MATCHED THEN
+INSERT 
+    (OUT_OF_NETWORK_BASE_KEY, TAX_ID_NBR, TAX_ID_TYPE_CODE, PLACE_OF_SERVICE_CODES, BILLING_CLASS_NAME)
+VALUES
+    (src.OUT_OF_NETWORK_BASE_KEY, src.TAX_ID_NBR, src.TAX_ID_TYPE_CODE, PLACE_OF_SERVICE_CODES, BILLING_CLASS_NAME)
+;`;
+
+try 
+{
+    /*Execute INSERT OVERRIDE Command */
+    const sfStatement = snowflake.createStatement({sqlText});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    result = 'Successful';
+    
+    const endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,INSERT_COUNT
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${resultSet.getColumnValueAsString("number of rows inserted")}',
+      '${result}',
+      '${sqlText}'
+    )`;
+    snowflake.execute({sqlText});
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    
+    result = 'Failed';
+    let endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+        ,ERROR_CODE
+        ,ERROR_STATE
+        ,ERROR_MESSAGE
+        ,ERROR_STACK_TRACE_TEXT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${result}',
+      '${sqlText}',
+      '${code}',
+      '${state}',
+      '${message}',
+      '${stack}'
+    )`;
+    snowflake.execute({sqlText});
+    throw err;
+}
+return result;
+
+$$;

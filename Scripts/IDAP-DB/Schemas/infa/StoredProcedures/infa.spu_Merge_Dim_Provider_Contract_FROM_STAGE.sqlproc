@@ -1,0 +1,102 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_DIM_PROVIDER_CONTRACT_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command =
+`MERGE INTO DIMDATA.DIM_PROVIDER_CONTRACT AS T
+USING INFA.DIM_PROVIDER_CONTRACT AS S
+    ON (T.DIM_PROVIDER_CONTRACT_KEY=S.DIM_PROVIDER_CONTRACT_KEY)
+
+WHEN MATCHED AND S.CONVERT_IND = 'D'
+    THEN DELETE
+WHEN MATCHED AND S.CONVERT_IND = 'U'
+    THEN UPDATE
+    SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT
+    , T.INSERT_DATETIME=S.INSERT_DATETIME
+    , T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME
+    , T.IS_LOGICAL_DELETE_FLAG = S.IS_LOGICAL_DELETE_FLAG
+    , T.DATA_SOURCE_CODE = S.DATA_SOURCE_CODE
+    , T.DATA_SOURCE_NAME = S.DATA_SOURCE_NAME
+    , T.TPA_CLIENT_ID = S.TPA_CLIENT_ID
+    , T.TPA_ID = S.TPA_ID
+    , T.TPA_DIV_ID = S.TPA_DIV_ID
+    , T.PRODUCT_CODE = S.PRODUCT_CODE
+    , T.PRODUCT_NAME = S.PRODUCT_NAME
+    , T.PRODUCT_TYPE_CODE = S.PRODUCT_TYPE_CODE
+    , T.PRODUCT_TYPE_NAME = S.PRODUCT_TYPE_NAME
+    , T.CONTRACT_MODEL_TEXT = S.CONTRACT_MODEL_TEXT
+    , T.RESTRICTION_MIN_AGE = S.RESTRICTION_MIN_AGE
+    , T.RESTRICTION_MAX_AGE = S.RESTRICTION_MAX_AGE
+    , T.RESTRICTION_GENDER_CODE = S.RESTRICTION_GENDER_CODE
+    , T.RESTRICTION_GENDER_NAME = S.RESTRICTION_GENDER_NAME
+    , T.SPECIAL_RESTRICTION_DESC = S.SPECIAL_RESTRICTION_DESC
+    , T.EXISTING_PATIENTS_ONLY_IND = S.EXISTING_PATIENTS_ONLY_IND
+
+WHEN NOT MATCHED THEN INSERT
+    (T.DIM_PROVIDER_CONTRACT_KEY
+    , T.MD5_VALUE_TEXT
+    , T.INSERT_DATETIME
+    , T.LAST_UPDATED_DATETIME
+    , T.IS_LOGICAL_DELETE_FLAG
+    , T.DATA_SOURCE_CODE
+    , T.DATA_SOURCE_NAME
+    , T.TPA_CLIENT_ID
+    , T.TPA_ID
+    , T.TPA_DIV_ID
+    , T.PRODUCT_CODE
+    , T.PRODUCT_NAME
+    , T.PRODUCT_TYPE_CODE
+    , T.PRODUCT_TYPE_NAME
+    , T.CONTRACT_MODEL_TEXT
+    , T.RESTRICTION_MIN_AGE
+    , T.RESTRICTION_MAX_AGE
+    , T.RESTRICTION_GENDER_CODE
+    , T.RESTRICTION_GENDER_NAME
+    , T.SPECIAL_RESTRICTION_DESC
+    , T.EXISTING_PATIENTS_ONLY_IND)
+VALUES
+    (S.DIM_PROVIDER_CONTRACT_KEY
+    , S.MD5_VALUE_TEXT
+    , S.INSERT_DATETIME
+    , S.LAST_UPDATED_DATETIME
+    , S.IS_LOGICAL_DELETE_FLAG
+    , S.DATA_SOURCE_CODE
+    , S.DATA_SOURCE_NAME
+    , S.TPA_CLIENT_ID
+    , S.TPA_ID, S.TPA_DIV_ID
+    , S.PRODUCT_CODE
+    , S.PRODUCT_NAME
+    , S.PRODUCT_TYPE_CODE
+    , S.PRODUCT_TYPE_NAME
+    , S.CONTRACT_MODEL_TEXT
+    , S.RESTRICTION_MIN_AGE
+    , S.RESTRICTION_MAX_AGE
+    , S.RESTRICTION_GENDER_CODE
+    , S.RESTRICTION_GENDER_NAME
+    , S.SPECIAL_RESTRICTION_DESC
+    , S.EXISTING_PATIENTS_ONLY_IND)
+;`;
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;

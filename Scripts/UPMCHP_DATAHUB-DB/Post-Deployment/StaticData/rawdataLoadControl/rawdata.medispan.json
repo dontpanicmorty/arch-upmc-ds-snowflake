@@ -1,0 +1,16 @@
+{
+    "isActive": true,
+    "isCloneFlag": false,
+    "isCopyIntoFlag": true,
+    "dataDomain": "claim",
+    "dataSourceName": "MEDISPAN",
+    "targetTableName": "RAWDATA.MEDISPAN",
+    "sourceCloneTableName": null,
+    "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+    "sourceFilePath": "/drug/medispan/",
+    "sourceFileFormatName": "RAWDATA.IDAPLAKE_MEDISPAN_FILE_FORMAT",
+    "sourceFilePattern": "drug/medispan/\\\\d{4}/\\\\d{2}/\\\\d{2}/(?i).*drug-MediSpanMasterDrugDatabase__mddb.*",
+    "sourceFileDelimitedColumnCount": 1,
+    "sourceFileFixedWidthMapping": null,
+    "validateDataFlag": false
+  }

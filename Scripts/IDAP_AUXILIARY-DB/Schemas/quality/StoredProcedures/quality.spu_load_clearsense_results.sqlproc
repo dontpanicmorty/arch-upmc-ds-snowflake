@@ -1,0 +1,464 @@
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_LOAD_CLEARSENSE_RESULTS("RUN_ID" VARCHAR(16777216), "DATA_FLOW_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load QUALITY.CCD_RESULTS from XML_SECTION'
+EXECUTE AS OWNER
+AS '
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_LOAD_CLEARSENSE_RESULTS";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = ''Y'' AND DATA_FLOW_NAME = :1 AND STEP_PROCEDURE_NAME = :2
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,null
+    ,''Starting''
+    )
+`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Succeeded''
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Error''
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_RESULTS - START
+//-----------------------------------------
+
+
+    var sqlLogCommand = `
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+
+
+    var sqlDeleteResultsCommand = ` 
+DELETE FROM QUALITY.CCD_RESULTS WHERE MRN IN ( SELECT DISTINCT MRN FROM QUALITY.SECTION_XML ); 
+`;
+
+
+    var sqlInsertCcdResultsCommand = `
+INSERT INTO QUALITY.CCD_RESULTS (
+     SECTION_TITLE,
+     FILENAME,
+     MRN,
+     TEMPLATE_ID_ROOT_A,
+     TEMPLATE_ID_EXTENSION_A,
+     TEMPLATE_ID_ROOT_B,
+     TEMPLATE_ID_ROOT_C,
+     TEMPLATE_ID_EXTENSION_C,
+     TEMPLATE_ID_ROOT_D,
+     SECTION_TYPE_CODE,
+     SECTION_NAME,
+     SECTION_CODE_SYSTEM,
+     SECTION_CODE_SYSTEM_NAME,
+     ENTRY_TYPE_CODE,
+     ORGANIZER_CLASS_CODE,
+     ORGANIZER_MOOD_CODE,
+     ENTRY_TEMPLATE_EXT,
+     ENTRY_TEMPLATE_ROOT_A,
+     ENTRY_TEMPLATE_ROOT_B,
+     ORGANIZER_ID_ROOT,
+     ORGANIZER_ID_EXT,
+     ENTRY_CODE,
+     ENTRY_NAME,
+     ENTRY_CODE_SYSTEM,
+     ENTRY_CODE_SYSTEM_NAME,
+     ENTRY_STATUS_CODE,
+     AUTHOR_TEMPLATE_ID_ROOT,
+     AUTHOR_TIME,
+     AUTHOR_ID_ROOT,
+     AUTHOR_ID_EXT,
+     AUTHOR_CODE_NULL,
+     AUTHOR_CODE,
+     AUTHOR_CODE_NAME,
+     AUTHOR_CODE_SYSTEM,
+     AUTHOR_CODE_SYSTEM_NAME,
+     ASSIGNED_PERSON_NAME,
+     ORGANIZATION_CLASS_CODE,
+     ORGANIZATION_ROOT,
+     ORGANIZATION_ID_EXT,
+     ORGANIZATION_NAME,
+     ORGANIZATION_TELECOM_NULL,
+     ORGANIZATION_TELECOM_USE,
+     ORGANIZATION_TELEPHONE_NUM,
+     ORGANIZATION_ADDR_USE,
+     ORGANIZATION_STREET_ADDRESS,
+     ORGANIZATION_CITY,
+     ORGANIZATION_STATE,
+     ORGANIZATION_ZIP_CODE,
+     ORGANIZATION_COUNTRY,
+     OBSERVATION_CLASS_CODE,
+     OBSERVATION_MOOD_CODE,
+     OBSERVATION_TEMPLATE_ROOT,
+     OBSERVATION_TEMPLATE_EXT,
+     OBSERVATION_ID_ROOT,
+     OBSERVATION_ID_EXT,
+     OBSERVATION_CODE,
+     OBSERVATION_NAME,
+     OBSERVATION_CODE_SYSTEM,
+     OBSERVATION_SYSTEM_NAME,
+     OBS_XLATE_CODE,
+     OBS_XLATE_DISP_NAME,
+     OBS_XLATE_CODE_SYSTEM,
+     OBS_XLATE_CODE_SYSTEM_NAME,
+     OBSERVATION_STATUS_CODE,
+     OBSERVATION_TIME,
+     OBSERVATION_VALUE_TYPE,
+     OBSERVATION_VALUE,
+     OBSERVATION_UNIT,
+     OBSERVATION_INTERPRET_CODE,
+     OBSERVATION_INTERPRET_CODE_SYSTEM,
+     OBSERVATION_TEMPLATE_ID_ROOT,
+     OBSERVATION_AUTHOR_TIME,
+     OBSERVATION_AUTHOR_ID_ROOT,
+     OBSERVATION_AUTHOR_ID_EXT,
+     OBSERVATION_AUTHOR_CODE,
+     OBSERVATION_AUTHOR_CODE_NAME,
+     OBSERVATION_AUTHOR_CODE_SYSTEM_NAME,
+     OBSERVATION_ASSIGNED_PERSON,
+     ENTRY_ER_TYPE_CODE,
+     ENTRY_ER_INVERSION_IND,
+     ACT_CLASS_CODE,
+     ACT_MOOD_CODE,
+     ACT_TEMPLATE_ID,
+     ACT_CODE,
+     ACT_CODE_NAME,
+     ACT_CODE_SYSTEM,
+     ACT_CODE_SYSTEM_NAME,
+     ACT_REFERENCE_VALUE,
+     REFERENCE_VALUE,
+     REFERENCE_VALUE_LOW,
+     REFERENCE_VALUE_HIGH,
+     XML_DATA_ROW_NUM,
+     XML_DATA_TS_LAST_MODIFY,
+     XML_DATA_SCAN_TIME,
+     F_INDEX,
+     ORG_INDEX,
+     INSERT_DATETIME
+)
+SELECT
+     SECTION_TITLE,
+     FILENAME,
+     MRN,
+     TEMPLATE_ID_ROOT_A,
+     TEMPLATE_ID_EXTENSION_A,
+     TEMPLATE_ID_ROOT_B,
+     TEMPLATE_ID_ROOT_C,
+     TEMPLATE_ID_EXTENSION_C,
+     TEMPLATE_ID_ROOT_D,
+     SECTION_TYPE_CODE,
+     SECTION_NAME,
+     SECTION_CODE_SYSTEM,
+     SECTION_CODE_SYSTEM_NAME,
+     ENTRY_TYPE_CODE,
+     ORGANIZER_CLASS_CODE,
+     ORGANIZER_MOOD_CODE,
+     ENTRY_TEMPLATE_EXT,
+     ENTRY_TEMPLATE_ROOT_A,
+     ENTRY_TEMPLATE_ROOT_B,
+     ORGANIZER_ID_ROOT,
+     ORGANIZER_ID_EXT,
+     ENTRY_CODE,
+     ENTRY_NAME,
+     ENTRY_CODE_SYSTEM,
+     ENTRY_CODE_SYSTEM_NAME,
+     ENTRY_STATUS_CODE,
+     AUTHOR_TEMPLATE_ID_ROOT,
+     AUTHOR_TIME,
+     AUTHOR_ID_ROOT,
+     AUTHOR_ID_EXT,
+     AUTHOR_CODE_NULL,
+     AUTHOR_CODE,
+     AUTHOR_CODE_NAME,
+     AUTHOR_CODE_SYSTEM,
+     AUTHOR_CODE_SYSTEM_NAME,
+     ASSIGNED_PERSON_NAME,
+     ORGANIZATION_CLASS_CODE,
+     ORGANIZATION_ROOT,
+     ORGANIZATION_ID_EXT,
+     ORGANIZATION_NAME,
+     ORGANIZATION_TELECOM_NULL,
+     ORGANIZATION_TELECOM_USE,
+     ORGANIZATION_TELEPHONE_NUM,
+     ORGANIZATION_ADDR_USE,
+     ORGANIZATION_STREET_ADDRESS,
+     ORGANIZATION_CITY,
+     ORGANIZATION_STATE,
+     ORGANIZATION_ZIP_CODE,
+     ORGANIZATION_COUNTRY,
+     OBSERVATION_CLASS_CODE,
+     OBSERVATION_MOOD_CODE,
+     OBSERVATION_TEMPLATE_ROOT,
+     OBSERVATION_TEMPLATE_EXT,
+     OBSERVATION_ID_ROOT,
+     OBSERVATION_ID_EXT,
+     OBSERVATION_CODE,
+     OBSERVATION_NAME,
+     OBSERVATION_CODE_SYSTEM,
+     OBSERVATION_SYSTEM_NAME,
+     OBS_XLATE_CODE,
+     OBS_XLATE_DISP_NAME,
+     OBS_XLATE_CODE_SYSTEM,
+     OBS_XLATE_CODE_SYSTEM_NAME,
+     OBSERVATION_STATUS_CODE,
+     OBSERVATION_TIME,
+     OBSERVATION_VALUE_TYPE,
+     OBSERVATION_VALUE,
+     OBSERVATION_UNIT,
+     OBSERVATION_INTERPRET_CODE,
+     OBSERVATION_INTERPRET_CODE_SYSTEM,
+     OBSERVATION_TEMPLATE_ID_ROOT,
+     OBSERVATION_AUTHOR_TIME,
+     OBSERVATION_AUTHOR_ID_ROOT,
+     OBSERVATION_AUTHOR_ID_EXT,
+     OBSERVATION_AUTHOR_CODE,
+     OBSERVATION_AUTHOR_CODE_NAME,
+     OBSERVATION_AUTHOR_CODE_SYSTEM_NAME,
+     OBSERVATION_ASSIGNED_PERSON,
+     ENTRY_ER_TYPE_CODE,
+     ENTRY_ER_INVERSION_IND,
+     ACT_CLASS_CODE,
+     ACT_MOOD_CODE,
+     ACT_TEMPLATE_ID,
+     ACT_CODE,
+     ACT_CODE_NAME,
+     ACT_CODE_SYSTEM,
+     ACT_CODE_SYSTEM_NAME,
+     ACT_REFERENCE_VALUE,
+     REFERENCE_VALUE,
+     REFERENCE_VALUE_LOW,
+     REFERENCE_VALUE_HIGH,
+     XML_DATA_ROW_NUM,
+     XML_DATA_TS_LAST_MODIFY,
+     XML_DATA_SCAN_TIME,
+     F_INDEX,
+     ORG_INDEX,
+     CURRENT_TIMESTAMP()
+FROM QUALITY.CCD_RESULTS_VW;
+`;
+
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_RESULTS - END
+//-----------------------------------------
+
+
+
+
+    try
+    {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME,stepProcedureName]
+        });        
+
+        // check and handle for empty response
+        if(!lookupSet.next())
+        {     
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString(''DATA_DOMAIN_NAME'');    
+        stepOrderNumber = lookupSet.getColumnValue(''STEP_ORDER_NUMBER'');
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+
+
+
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//--------------------------------------- 
+    
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteResultsCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log record deletion stats to LOGDATA.TABLE_LOAD_HISTORY
+    var sqlLogCommandDel = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT,RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);
+`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommandDel,
+        binds: [RUN_ID, "QUALITY.CCD_RESULTS", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(), 
+                sfStatement.getNumRowsDeleted(), 
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+
+
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCcdResultsCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log Insert results to LOGDATA.TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [RUN_ID, "QUALITY.CCD_RESULTS", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(),				
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+
+
+
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+        return "Success";
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }        
+';

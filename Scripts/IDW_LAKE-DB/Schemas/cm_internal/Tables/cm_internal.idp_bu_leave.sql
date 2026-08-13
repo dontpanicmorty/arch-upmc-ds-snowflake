@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_BU_LEAVE
+(
+BU                   VARCHAR,
+DATE_START            NUMBER(33,5),
+DATE_END              NUMBER(33,5),
+EMP_CNT               NUMBER(33,5),
+LEAVE_PROPORTION      NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

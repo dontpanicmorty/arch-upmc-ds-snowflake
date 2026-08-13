@@ -1,0 +1,37 @@
+CREATE OR REPLACE TABLE EDW_RPT.LOINC_TEST
+(
+LOINC_TEST_KEY                      NUMBER,
+LOINC_CODE                         VARCHAR,
+LOINC_DESC                         VARCHAR,
+LOINC_DESC_SHORT                   VARCHAR,
+PROPERTY                           VARCHAR,
+CLASS                              VARCHAR,
+TIME_ASPECT                        VARCHAR,
+SYSTEM                             VARCHAR,
+SCALE_TYPE                         VARCHAR,
+LOAD_DATE                    TIMESTAMP_NTZ,
+UPDATE_DATE                  TIMESTAMP_NTZ,
+METHOD_TYPE                        VARCHAR,
+CHNG_TYPE                          VARCHAR,
+PANEL_TYPE                         VARCHAR,
+CONSUMER_NAME                      VARCHAR,
+CLASS_TYPE                         VARCHAR,
+SPECIES                            VARCHAR,
+SURVEY_QUEST_SRC                   VARCHAR,
+UNITS_REQUIRED                     VARCHAR,
+ORDER_OBS                          VARCHAR,
+CDISC_COMMON_TESTS                 VARCHAR,
+HL7_FIELD_SUBFIELD_ID              VARCHAR,
+EXAMPLE_UNITS                      VARCHAR,
+COMPONENT                          VARCHAR,
+UNITS_AND_RANGE                    VARCHAR,
+DOCUMENT_SECTION                   VARCHAR,
+STATUS_REASON                      VARCHAR,
+COMMON_TEST_RANK                    NUMBER,
+COMMON_ORDER_RANK                   NUMBER,
+COMMON_SI_TEST_RANK                 NUMBER,
+HL7_ATTACHMENT_STRUCTURE           VARCHAR,
+ASSOCIATED_OBSERVATIONS            VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

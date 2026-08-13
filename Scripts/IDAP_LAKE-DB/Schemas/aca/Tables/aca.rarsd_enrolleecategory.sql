@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE ACA.RARSD_ENROLLEECATEGORY
+(
+INSUREDMEMBERIDENTIFIER         VARCHAR,
+RISKADJUSTMENTAGE               VARCHAR,
+APPLICABLERAMODEL               VARCHAR,
+GENDER                          VARCHAR,
+INCLUDEDENROLLEECATEGORY_ID     VARCHAR,
+INCLUDEDRATINGAREA_ID           VARCHAR,
+MEMBERNUMBER                    VARCHAR,
+LOAD_DATE                       VARCHAR,
+HIOS                            VARCHAR,
+YEAR                             NUMBER,
+ENROLLEEAGE                     VARCHAR
+)
+COMMENT='Created for GPSUPPORT Migration'
+;

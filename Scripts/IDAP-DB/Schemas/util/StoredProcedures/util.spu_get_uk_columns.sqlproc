@@ -1,0 +1,36 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_GET_UK_COLUMNS(TABLE_NAME VARCHAR, CONSTRAINT_NAME VARCHAR)
+RETURNS STRING  
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var arrayList = [[]];
+var columnList = [];
+var result = '';
+var itemCnt = 0;
+//get the list of constraints for the table
+var sqlCommand = `SHOW UNIQUE KEYS IN TABLE ${TABLE_NAME};`;
+var sfUKStatement = snowflake.createStatement({sqlText: sqlCommand});
+sfUKStatement.execute();
+
+//get the list of columnd for the constraint
+var sqlCommand = `SELECT * FROM TABLE(RESULT_SCAN(:1)) WHERE "constraint_name" = :2;`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds:[sfUKStatement.getQueryId(), CONSTRAINT_NAME]});
+var resultSet = sfStatement.execute();
+while(resultSet.next())
+{
+   let columnName = resultSet.column_name;
+   let columnPosition = resultSet.key_sequence;
+   arrayList.push([columnName, columnPosition]); 
+} 
+arrayList = arrayList.sort((a, b) => a[1] - b[1]);
+itemCnt = arrayList.length;
+for (let i = 1; i <= itemCnt - 1; i++) 
+{
+    columnList[i-1] = arrayList[i][0];  //only want column name
+}
+
+result = columnList;
+return result;   
+$$
+;

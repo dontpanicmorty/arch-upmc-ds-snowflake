@@ -1,0 +1,246 @@
+CREATE OR REPLACE PROCEDURE CLAIM.SPU_LOAD_GREENBACK_RX_HISTORY()
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+    /**************************************************************
+     * Helpers
+     **************************************************************/
+    function log(msg) {
+        logLines.push(new Date().toISOString() + ' - ' + msg);
+    }
+
+    function bindSafe(v) {
+        return (v === undefined) ? null : v;
+    }
+
+    function getScalar(sqlText) {
+        const stmt = snowflake.createStatement({ sqlText });
+        const rs = stmt.execute();
+        rs.next();
+        return Number(rs.getColumnValue(1));
+    }
+
+    /**************************************************************
+     * Initialization
+     **************************************************************/
+    const startTime = new Date();
+    const logLines = [];
+
+    const loadName = 'CLAIM.GREENBACK_RX_CLAIM_HISTORY';
+    const loadType = 'INSERT';
+
+    let sourceRowCount = 0;
+    let insertedRowCount = 0;
+
+    let resultText = 'SUCCEEDED';
+    let errorCode = null;
+    let errorState = null;
+    let errorMessage = null;
+    let errorStack = null;
+
+    /**************************************************************
+     * SQL
+     **************************************************************/
+    // How many rows are in the incoming incremental file
+    const sourceCountSql = `
+        SELECT COUNT(*) 
+        FROM CLAIM.GREENBACK_RX_CLAIM_FILE
+    `;
+
+    // How many of those rows are from filenames NOT already in history
+    const insertCandidateSql = `
+        SELECT COUNT(*)
+        FROM CLAIM.GREENBACK_RX_CLAIM_FILE SRC
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM CLAIM.GREENBACK_RX_CLAIM_HISTORY H
+            WHERE H.FILENAME = SRC.FILENAME
+        )
+    `;
+
+    // Insert only rows for filenames not yet loaded
+    const insertSql = `
+        INSERT INTO CLAIM.GREENBACK_RX_CLAIM_HISTORY (
+            FILENAME,
+            INSERT_DATETIME,
+            LOADED_FILE_ROW_NUMBER,
+            CLIENT_ID,
+            LOB,
+            ELIGIBILTY_GROUP_ID,
+            PATIENT_ID,
+            PERSON_CODE,
+            PATIENT_FIRST_NAME,
+            PATIENT_LAST_NAME,
+            PATIENT_DATE_OF_BIRTH,
+            TRANSACTION_ID,
+            DATE_OF_SERVICE,
+            RX_NUMBER,
+            FILL_NUMBER,
+            SERVICE_PROVIDER_ID,
+            PRESCRIBER_ID,
+            CLAIM_STATUS,
+            REJECT_CODE1,
+            DATE_PRESCRIPTION_WRITTEN,
+            QUANTITY_DISPENSED,
+            DAYS_SUPPLY,
+            TRANSACTION_ID_CROSS_REFERENCE,
+            PRESCRIPTION_ORIGIN_CODE,
+            DISPENSE_AS_WRITTEN_CODE,
+            PRODUCT_SERVICE_ID,
+            MDDB_MULTISOURCE_CODE,
+            FORMULARY_FLAG,
+            COPAY_TIER_LEVEL_NUMBER,
+            TRANSACTION_TYPE_CODE,
+            INGREDIENT_COST,
+            PATIENT_PAY_AMOUNT,
+            NET_AMOUNT_DUE,
+            GROSS_AMOUNT_DUE,
+            USUAL_AND_CUSTOMARY_CHARGE,
+            DEDUCTIBLE_AMOUNT,
+            HRA_APPLIED_AMOUNT,
+            HRA_FLAG,
+            ADJUDICATION_DATE,
+            ADJUDICATION_TIME,
+            INVOICED_DATE,
+            ESTIMATED_ORIGINAL_COST_PLAN,
+            ESTIMATED_ORIGINAL_COST_MEMBER,
+            PLAN_ID
+        )
+        SELECT
+            FILENAME,
+            INSERT_DATETIME,
+            LOADED_FILE_ROW_NUMBER,
+            CLIENT_ID,
+            LOB,
+            ELIGIBILTY_GROUP_ID,
+            PATIENT_ID,
+            PERSON_CODE,
+            PATIENT_FIRST_NAME,
+            PATIENT_LAST_NAME,
+            PATIENT_DATE_OF_BIRTH,
+            TRANSACTION_ID,
+            DATE_OF_SERVICE,
+            RX_NUMBER,
+            FILL_NUMBER,
+            SERVICE_PROVIDER_ID,
+            PRESCRIBER_ID,
+            CLAIM_STATUS,
+            REJECT_CODE1,
+            DATE_PRESCRIPTION_WRITTEN,
+            QUANTITY_DISPENSED,
+            DAYS_SUPPLY,
+            TRANSACTION_ID_CROSS_REFERENCE,
+            PRESCRIPTION_ORIGIN_CODE,
+            DISPENSE_AS_WRITTEN_CODE,
+            PRODUCT_SERVICE_ID,
+            MDDB_MULTISOURCE_CODE,
+            FORMULARY_FLAG,
+            COPAY_TIER_LEVEL_NUMBER,
+            TRANSACTION_TYPE_CODE,
+            INGREDIENT_COST,
+            PATIENT_PAY_AMOUNT,
+            NET_AMOUNT_DUE,
+            GROSS_AMOUNT_DUE,
+            USUAL_AND_CUSTOMARY_CHARGE,
+            DEDUCTIBLE_AMOUNT,
+            HRA_APPLIED_AMOUNT,
+            HRA_FLAG,
+            ADJUDICATION_DATE,
+            ADJUDICATION_TIME,
+            INVOICED_DATE,
+            ESTIMATED_ORIGINAL_COST_PLAN,
+            ESTIMATED_ORIGINAL_COST_MEMBER,
+            PLAN_ID
+        FROM CLAIM.GREENBACK_RX_CLAIM_FILE SRC
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM CLAIM.GREENBACK_RX_CLAIM_HISTORY H
+            WHERE H.FILENAME = SRC.FILENAME
+        )
+    `;
+
+    /**************************************************************
+     * Execute
+     **************************************************************/
+    try {
+        log('Counting source rows...');
+        sourceRowCount = getScalar(sourceCountSql);
+
+        if (sourceRowCount === 0) {
+            log('No rows in source file. Nothing to do.');
+            insertedRowCount = 0;
+        } else {
+            log('Counting insert candidates (new filenames only)...');
+            insertedRowCount = getScalar(insertCandidateSql);
+
+            if (insertedRowCount === 0) {
+                log('All filenames already loaded. Skipping insert.');
+            } else {
+                log('Inserting new rows...');
+                snowflake.createStatement({ sqlText: insertSql }).execute();
+                log('Inserted rows: ' + insertedRowCount);
+            }
+        }
+
+    } catch (err) {
+        resultText = 'FAILED';
+        errorCode = err.code;
+        errorState = err.state;
+        errorMessage = err.message;
+        errorStack = err.stackTraceTxt;
+        log('ERROR: ' + err.message);
+    }
+
+    const endTime = new Date();
+
+    /**************************************************************
+     * Logging (never fail the load)
+     **************************************************************/
+    try {
+        const logSql = `
+            INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (
+                NAME,
+                TYPE,
+                START_TIME,
+                END_TIME,
+                INSERT_COUNT,
+                UPDATE_COUNT,
+                DELETE_COUNT,
+                RESULT_TEXT,
+                SQL_STATEMENT,
+                ERROR_CODE,
+                ERROR_STATE,
+                ERROR_MESSAGE,
+                ERROR_STACK_TRACE_TEXT
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        snowflake.createStatement({
+            sqlText: logSql,
+            binds: [
+                bindSafe(loadName),
+                bindSafe(loadType),
+                bindSafe(startTime.toISOString()),
+                bindSafe(endTime.toISOString()),
+                bindSafe(insertedRowCount),
+                0,
+                0,
+                bindSafe(resultText),
+                bindSafe(insertSql.replace(/;/g, '')),
+                bindSafe(errorCode),
+                bindSafe(errorState),
+                bindSafe(errorMessage),
+                bindSafe(errorStack)
+            ]
+        }).execute();
+
+        log('Load history written.');
+    } catch (logErr) {
+        log('WARNING: Failed to write load history: ' + logErr.message);
+    }
+
+    return logLines.join('\n');
+$$;

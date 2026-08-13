@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE EDW_RPT.MC_VISION_UNRESOLVED
+(
+MC_VISION_UNRESOLVED_KEY            NUMBER,
+VISION_CLAIM_NBR                   VARCHAR,
+VISION_CLAIM_LINE_NBR              VARCHAR,
+CHECK_NBR                          VARCHAR,
+LOAD_DATE                    TIMESTAMP_NTZ,
+UPDATE_DATE                  TIMESTAMP_NTZ,
+TRANSACTION_TYPE                   VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

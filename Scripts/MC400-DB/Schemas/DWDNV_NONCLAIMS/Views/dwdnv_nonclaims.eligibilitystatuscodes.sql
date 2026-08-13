@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.EligibilityStatusCodes
+AS
+SELECT * FROM CDC_MERGE.DBO.EligibilityStatusCodes 
+;

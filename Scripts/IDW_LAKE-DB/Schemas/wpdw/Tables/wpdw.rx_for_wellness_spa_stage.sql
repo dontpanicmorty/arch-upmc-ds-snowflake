@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE WPDW.RX_FOR_WELLNESS_SPA_STAGE
+(
+MEMBER_NBR                  VARCHAR,
+PAT_NAME                    VARCHAR,
+MEMBER_DOB            TIMESTAMP_NTZ,
+CONTACT_DATE          TIMESTAMP_NTZ,
+ENC_TYPE                    VARCHAR,
+ORDER_DATE            TIMESTAMP_NTZ,
+DESCRIPTION                 VARCHAR,
+AUTH_PROV_NAME              VARCHAR,
+PRODUCT                     VARCHAR,
+ORDER_DATE_YYYYMM           VARCHAR,
+LAST_UPDATED          TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

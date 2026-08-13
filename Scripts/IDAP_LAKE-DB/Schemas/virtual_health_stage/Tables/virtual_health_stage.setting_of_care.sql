@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.SETTING_OF_CARE
+(
+ID                            INT,
+NAME                      VARCHAR,
+CREATED_DATE        TIMESTAMP_NTZ,
+UPDATED_DATE        TIMESTAMP_NTZ,
+LOCKED                        INT,
+IS_DELETED                    INT,
+LAST_UPDATED_BY               INT
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

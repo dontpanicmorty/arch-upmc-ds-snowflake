@@ -1,0 +1,19 @@
+CREATE OR REPLACE VIEW STAGEDATA.DIAGNOSIS_RELATED_GROUP_VW
+AS
+SELECT
+DIAGNOSIS_RELATED_GROUP_KEY
+,URI
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:universalId::string AS UNIVERSAL_ID
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:diagnosisRelatedGroupCode::string AS DIAGNOSIS_RELATED_GROUP_CODE
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:diagnosisRelatedGroupCodeDesc::string AS DIAGNOSIS_RELATED_GROUP_CODE_DESC
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:severityOfIllnessNbr::number AS SEVERITY_OF_ILLNESS_NBR
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:diagnosisRelatedGroupTypeCode::string AS DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:diagnosisRelatedGroupVersionNbr::number AS DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:diagnosisRelatedGroupCategoryName::string AS DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:mdcCode::string AS MDC_CODE
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:mdcDesc::string AS MDC_DESC
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:relativeValueNbr::number AS RELATIVE_VALUE_NBR
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:averageLengthOfStayNbr::number AS AVERAGE_LENGTH_OF_STAY_NBR
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:effectiveStartDate::date AS EFFECTIVE_START_DATE
+,JSON_DATA:envelope:instance:diagnosisRelatedGroup:effectiveEndDate::date AS EFFECTIVE_END_DATE
+FROM STAGEDATA.DIAGNOSIS_RELATED_GROUP;

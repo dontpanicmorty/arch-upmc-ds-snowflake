@@ -1,0 +1,82 @@
+/**
+Stored procedure to copy DWOAO data into a smaller table. Manual lists provided 
+by Ryan Askey; check PBI 336732 in Azure for more details.
+*/
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_INSERT_OVERWRITE_IPA ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+  // Copy data from DWOAO_CONTRACTS into STAGEDATA.IPA
+  sqlText = `INSERT OVERWRITE INTO STAGEDATA.IPA (IPA_CODE)
+    SELECT DISTINCT PROVIDERIPACODE
+    FROM RAWDATA.DWOAO_CONTRACTS
+    WHERE PROVIDERIPACODE IN (
+      '01', '02', '10', '17', '18', '23', '24', '26', '27', '29', '30', '37', 
+      '38', '49', '51', '55', '57', '58', '59', '60', '61', '62', '63', '64', 
+      '66','67', '69', '70', '81', '82', 'P2', 'SH', 'X1', 'KB'
+    );`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+
+  // Logging success
+  var result = "Succeeded";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw new Error(message + ' | ' + stack);
+}
+$$;

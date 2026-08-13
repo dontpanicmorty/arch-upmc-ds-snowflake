@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_HAPU
+(
+HOSPITAL               VARCHAR,
+UNIT                   VARCHAR,
+EVENT_DATE       TIMESTAMP_NTZ,
+PATIENT_DAYS            NUMBER(33,5),
+HAPU                    NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

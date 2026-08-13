@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_SHARED.GCN_SPECIALTY_LKP
+AS
+SELECT
+GCN_CODE,
+LOAD_DATE,
+EXPIRATION_DATE
+FROM &{IDW_LAKE}.EDW_SHARED.GCN_SPECIALTY_LKP;
+!set variable_substitution=false;

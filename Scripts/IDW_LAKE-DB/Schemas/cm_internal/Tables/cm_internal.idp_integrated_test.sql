@@ -1,0 +1,27 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_INTEGRATED_TEST
+(
+HCID                  VARCHAR,
+MEM_MONTH             VARCHAR,
+MED_PAID               NUMBER(33,5),
+RX_PAID                NUMBER(33,5),
+GH_PAID                NUMBER(33,5),
+WC_PAID                NUMBER(33,5),
+STD_PAID               NUMBER(33,5),
+UNPLANNED_PAID         NUMBER(33,5),
+WC_DAYS_EST            NUMBER(33,5),
+STD_DAYS_EST           NUMBER(33,5),
+LEAVE_DAYS_EST         NUMBER(33,5),
+WC_DAYS                NUMBER(33,5),
+STD_DAYS               NUMBER(33,5),
+LEAVE_DAYS             NUMBER(33,5),
+UNPLANNED_DAYS         NUMBER(33,5),
+LOST_DAYS_EST          NUMBER(33,5),
+LOST_DAYS              NUMBER(33,5),
+PROGRAM_PAID           NUMBER(33,5),
+PRODUCTIVITY_PAID      NUMBER(33,5),
+INTEGRATED_COST        NUMBER(33,5),
+HOURLY_RATE            NUMBER(33,5),
+TENURE                 NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

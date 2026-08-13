@@ -1,0 +1,19 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.REFRESH_FILE_MOVER_FROM_SNOWFLAKE_RAW_LOGS()
+  RETURNS STRING
+  LANGUAGE JAVASCRIPT
+  EXECUTE AS OWNER
+AS
+$$
+try {
+    var sql_command = `
+        ALTER EXTERNAL TABLE LOGDATA.FILE_MOVER_FROM_SNOWFLAKE_RAW_LOGS REFRESH
+    `;
+
+    var stmt = snowflake.createStatement({ sqlText: sql_command });
+    stmt.execute();
+
+    return 'External table LOGDATA.FILE_MOVER_FROM_SNOWFLAKE_RAW_LOGS refreshed successfully.';
+} catch (err) {
+    return 'Error refreshing external table: ' + err.message;
+}
+$$;

@@ -1,0 +1,17 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_RX_RETAIL_VS_MAIL
+(
+CORPORATION_ID            VARCHAR,
+GROUP_ID                  VARCHAR,
+DIVISION_ID               VARCHAR,
+PLAN_NBR                  VARCHAR,
+SERVICE_DATE        TIMESTAMP_NTZ,
+PAYMENT_DATE        TIMESTAMP_NTZ,
+MAIL_ORDER                 NUMBER(33,5),
+SPECIALTY                  NUMBER(33,5),
+RETAIL                     NUMBER(33,5),
+MAIL_ORDER_PAID            NUMBER(33,5),
+SPECIALTY_PAID             NUMBER(33,5),
+RETAIL_PAID                NUMBER(33,5)
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

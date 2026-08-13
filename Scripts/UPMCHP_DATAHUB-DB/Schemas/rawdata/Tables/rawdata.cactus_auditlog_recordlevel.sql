@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_AUDITLOG_RECORDLEVEL
+LIKE &{CACTUS}.VISUALCACTUS.AUDITLOG_RECORDLEVEL
+;
+
+!set variable_substitution=false;

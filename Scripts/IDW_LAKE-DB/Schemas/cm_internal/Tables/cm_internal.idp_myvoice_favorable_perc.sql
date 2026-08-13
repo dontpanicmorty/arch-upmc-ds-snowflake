@@ -1,0 +1,17 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_MYVOICE_FAVORABLE_PERC
+(
+YEAR                    NUMBER(33,5),
+AGG_GROUP              VARCHAR,
+CODE                   VARCHAR,
+DESCR                  VARCHAR,
+N                       NUMBER(33,5),
+ALL_QUESTIONS           NUMBER(33,5),
+MYBU_SCORE              NUMBER(33,5),
+MYCOWORKERS_SCORE       NUMBER(33,5),
+MYDEPT_SCORE            NUMBER(33,5),
+MYSUPERVISOR_SCORE      NUMBER(33,5),
+MYWORK_SCORE            NUMBER(33,5),
+UPMC_SCORE              NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

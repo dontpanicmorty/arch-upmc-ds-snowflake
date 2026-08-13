@@ -1,0 +1,333 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_LOAD_CLEARSENSE_CONTROL_HISTORY("RUN_ID" VARCHAR(16777216), "DATA_FLOW_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load QUALITY.CCD_CONTROL_HISTORY from IDAP_LAKE.QUALITY.CCD_CONTROL'
+EXECUTE AS OWNER
+AS '
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_LOAD_CLEARSENSE_CONTROL_HISTORY";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = ''Y'' AND DATA_FLOW_NAME = :1 AND STEP_PROCEDURE_NAME = :2
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,null
+    ,''Starting''
+    )
+`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Succeeded''
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Error''
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_CLEARSENSE_HISTORY - START
+//-----------------------------------------
+
+
+    var sqlLogCommand = `
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+//
+// 
+// ***
+// *** NOTES ON SQL STRING MANIPULATIONS ***
+// FIND LOCATION OF 3RD UNDER-SCORE PLACE IN VARIABLE LOC_N3
+// FIND LOCATION OF 4TH UNDER-SCORE PLACE IN VARIABLE LOC_N4
+// DATE IS GENERALLY 2024, 2025;
+// FIND LOCATION OF "202" FOR THE DATE
+// FOR CLINIC_NUM, TAKE LOC_N3, ADD 1, AND GRAB 5 CHARACTERS
+// SUBSTRING( ZIP_FILE_NAME, (LOC_N3 +1), 5 ) as CLINIC_NUM,
+//
+// CALCULATE CLINIC_NAME_LENGTH AS LOC_N2 - LOC_N4
+// FOR CLINIC_NAME, TAKE LOC_N3 ADD 7 CHACTERS, GRAB CLINIC_NAME_LENGTH CHARS
+// SUBSTRING( ZIP_FILE_NAME, (LOC_N3 +7), LOC_202 - LOC_N4) as CLINIC_NAME,
+// SUBSTRING( ZIP_FILE_NAME, LOC_202+1, 4 ) AS DATE_YYYY,
+// SUBSTRING( ZIP_FILE_NAME, LOC_202+5, 2 ) AS DATE_MM,
+// SUBSTRING( ZIP_FILE_NAME, LOC_202+7, 2 ) AS DATE_DD,
+//
+
+    var sqlInsertCcdControlHistoryCommand = 
+`
+INSERT INTO QUALITY.CCD_CONTROL_HISTORY( 
+        PATIENT_MRN,
+        PRACTICE_ID,
+        DOC_ID,
+        CS_TRANSACTION_ID,
+        PATIENT_ACCOUNT,
+        SUBSCRIBER_ID_UPMC,
+        PATIENT_FIRST_NAME,
+        PATIENT_LAST_NAME,
+        PATIENT_DOB,
+        PATIENT_AGE,
+        PATIENT_LAST_APPT,
+        PATIENT_LAST_LAB,
+        ENCOUNTER_DT,
+        ACCOUNT_NUMBER_UPMC,
+        ELIGIBILITY_START,
+        ELIGIBILITY_END,
+        ZIP_FILE_NAME,
+        CLINIC_NUM,
+        CLINIC_NAME,
+        DATE_YYYY,
+        DATE_MM,
+        DATE_DD,
+        CONTROL_FILE_NAME,
+        ROW_NUM
+        )
+SELECT  PATIENT_MRN,
+        PRACTICE_ID,
+        DOC_ID,
+        CS_TRANSACTION_ID,
+        PATIENT_ACCOUNT,
+        SUBSCRIBER_ID_UPMC,
+        PATIENT_FIRST_NAME,
+        PATIENT_LAST_NAME,
+        PATIENT_DOB,
+        PATIENT_AGE,
+        PATIENT_LAST_APPT,
+        PATIENT_LAST_LAB,
+        ENCOUNTER_DT,
+        ACCOUNT_NUMBER_UPMC,
+        ELIGIBILITY_START,
+        ELIGIBILITY_END,
+        ZIP_FILE_NAME,
+        SUBSTRING( ZIP_FILE_NAME, (LOC_N3 +1), 5 ) AS CLINIC_NUM,
+        SUBSTRING( ZIP_FILE_NAME, (LOC_N3 +7), LOC_202 - LOC_N4) AS CLINIC_NAME,
+        SUBSTRING( ZIP_FILE_NAME, LOC_202+1, 4 ) AS DATE_YYYY,
+        SUBSTRING( ZIP_FILE_NAME, LOC_202+5, 2 ) AS DATE_MM,
+        SUBSTRING( ZIP_FILE_NAME, LOC_202+7, 2 ) AS DATE_DD,
+        CONTROL_FILE_NAME,
+        ROW_NUMBER        
+FROM (
+    SELECT 
+        UPPER(PATIENT_MRN) AS PATIENT_MRN,
+        PRACTICE_ID,
+        DOC_ID,
+        CS_TRANSACTION_ID,
+        PATIENT_ACCOUNT,
+        SUBSCRIBER_ID_UPMC,
+        PATIENT_FIRST_NAME,
+        PATIENT_LAST_NAME,
+        PATIENT_DOB,
+        PATIENT_AGE,
+        PATIENT_LAST_APPT,
+        PATIENT_LAST_LAB,
+        ENCOUNTER_DT,
+        ACCOUNT_NUMBER_UPMC,
+        ELIGIBILITY_START,
+        ELIGIBILITY_END,
+        ZIP_FILE_NAME,
+        CONTROL_FILE_NAME,    
+        ROW_NUMBER,
+        FILE_LAST_MODIFIED,
+        LENGTH( ZIP_FILE_NAME ) AS ZIP_FNAME_LEN,
+        REGEXP_INSTR(ZIP_FILE_NAME,''_'',1,3) AS LOC_N3,
+        REGEXP_INSTR(ZIP_FILE_NAME,''_'',1,4) AS LOC_N4,        
+        REGEXP_INSTR(ZIP_FILE_NAME,''202'',1) -1 AS LOC_202
+FROM &{idap_lake}.QUALITY.CCD_CONTROL
+);
+`;
+
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_CONTROL_HISTORY - END
+//-----------------------------------------
+
+    try
+    {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME,stepProcedureName]
+        });        
+
+        // check and handle for empty response
+        if(!lookupSet.next())
+        {     
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString(''DATA_DOMAIN_NAME'');    
+        stepOrderNumber = lookupSet.getColumnValue(''STEP_ORDER_NUMBER'');
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+
+
+
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//--------------------------------------- 
+    
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCcdControlHistoryCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log CCD_CONTROL_HISTORY Insert results to LOGDATA.TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [RUN_ID, "QUALITY.CCD_CONTROL_HISTORY", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(),				
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+
+
+
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+        return "Success";
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }        
+';
+
+!set variable_substitution=false;

@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE IDFS.CA_IDFS_PROCEDURES
+(
+ACCOUNT_NUMBER                     VARCHAR,
+PROCEDURE_CODE                     VARCHAR,
+PROCEDURE_DESCRIPTION              VARCHAR,
+PROCEDURE_CODE_TYPE                VARCHAR,
+PROCEDURE_DATE               TIMESTAMP_NTZ,
+PROCEDURE_LOCATION                 VARCHAR,
+PROCEDURE_PHYSICIAN_CODE           VARCHAR,
+PROCEDURE_PRIORITY               NUMBER(4),
+PROCEDURE_TYPE                     VARCHAR,
+IPOP                               VARCHAR,
+HP_MMI                             VARCHAR
+)
+COMMENT='Created for IDFS Migration'
+;

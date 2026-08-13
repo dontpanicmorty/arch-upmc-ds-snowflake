@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CITY_COUNTY
+(
+ID                       INT,
+CITY_ID                  INT,
+COUNTY_ID                INT,
+CREATED_AT     TIMESTAMP_NTZ,
+UPDATED_AT     TIMESTAMP_NTZ
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

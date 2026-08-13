@@ -1,0 +1,9 @@
+CREATE OR REPLACE FILE FORMAT HEALTHSPARQ.HEALTHSPARQ_EXTRACT_FILE_FORMAT
+  TYPE = CSV,
+  FIELD_DELIMITER = '|',
+  FILE_EXTENSION = 'txt',
+  SKIP_HEADER = 0, -- flip to 1 if it extracts headers and we don't want headers
+  SKIP_BLANK_LINES = TRUE,
+  NULL_IF = (),
+  COMPRESSION = NONE
+;

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram version="1" name="Member Dimension">
+	<entities>
+		<data-source id="snowflake_jdbc-171e148573c-2ca669cdd354247a">
+			<entity id="1" name="DimDateDay" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimDateDay&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="2" name="DimEligibilityType" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimEligibilityType&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="3" name="DimEnrollmentSpan" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimEnrollmentSpan&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="4" name="DimGLDistribution" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimGLDistribution&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="5" name="DimGroup" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimGroup&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="6" name="DimMember" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMember&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="7" name="DimMemberAddress" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberAddress&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="8" name="DimMemberCommunication" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberCommunication&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="9" name="DimMemberCommunicationPreference" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberCommunicationPreference&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="10" name="DimMemberIdentifier" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberIdentifier&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="11" name="DimPlan" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimPlan&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="12" name="DimRateCell" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimRateCell&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="13" name="DimRider" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimRider&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="14" name="DimSalesChannel" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimSalesChannel&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="15" name="DimSubGroup" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimSubGroup&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="16" name="DimTPAHierarchy" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimTPAHierarchy&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+			<entity id="17" name="FactEnrollment" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;">
+				<path name="dimdata"/>
+				<path name="IDAP"/>
+			</entity>
+		</data-source>
+	</entities>
+	<relations>
+		<relation name="FK_FactEnrollment_EligibilityEndDateKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_EligibilityEndDateKey&quot;" type="fk" pk-ref="1" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_EligibilityStartDateKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_EligibilityStartDateKey&quot;" type="fk" pk-ref="1" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_EnrollmentDateKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_EnrollmentDateKey&quot;" type="fk" pk-ref="1" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_RenewalDateKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_RenewalDateKey&quot;" type="fk" pk-ref="1" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimEligibilityTypeKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimEligibilityTypeKey&quot;" type="fk" pk-ref="2" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimEnrollmentSpanKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimEnrollmentSpanKey&quot;" type="fk" pk-ref="3" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimGLDistributionKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimGLDistributionKey&quot;" type="fk" pk-ref="4" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimGroupKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimGroupKey&quot;" type="fk" pk-ref="5" fk-ref="17"/>
+		<relation name="FK_DimMemberAddress_DimMemberKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberAddress&quot;.&quot;FK_DimMemberAddress_DimMemberKey&quot;" type="fk" pk-ref="6" fk-ref="7"/>
+		<relation name="FK_DimMemberCommunication_DimMemberKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberCommunication&quot;.&quot;FK_DimMemberCommunication_DimMemberKey&quot;" type="fk" pk-ref="6" fk-ref="8"/>
+		<relation name="FK_DimMemberIdentifier_DimMemberKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberIdentifier&quot;.&quot;FK_DimMemberIdentifier_DimMemberKey&quot;" type="fk" pk-ref="6" fk-ref="10"/>
+		<relation name="FK_FactEnrollment_DimMemberKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimMemberKey&quot;" type="fk" pk-ref="6" fk-ref="17"/>
+		<relation name="FK_DimMemberCommunicationPreference_DimMemberCommunicationPreferenceKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;DimMemberCommunicationPreference&quot;.&quot;FK_DimMemberCommunicationPreference_DimMemberCommunicationPreferenceKey&quot;" type="fk" pk-ref="8" fk-ref="9"/>
+		<relation name="FK_FactEnrollment_DimPlanKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimPlanKey&quot;" type="fk" pk-ref="11" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimRateCellKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimRateCellKey&quot;" type="fk" pk-ref="12" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimRiderKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimRiderKey&quot;" type="fk" pk-ref="13" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimSalesChannelKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimSalesChannelKey&quot;" type="fk" pk-ref="14" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimSubGroupKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimSubGroupKey&quot;" type="fk" pk-ref="15" fk-ref="17"/>
+		<relation name="FK_FactEnrollment_DimTPAHierarchyKey" fq-name="IDAP.&quot;dimdata&quot;.&quot;FactEnrollment&quot;.&quot;FK_FactEnrollment_DimTPAHierarchyKey&quot;" type="fk" pk-ref="16" fk-ref="17"/>
+	</relations>
+</diagram>

@@ -1,0 +1,87 @@
+/*
+Validates that we received a new URL from Cigna within the last 30 days. Time
+range is that large because they send us the URL approximately on the 15th of
+the month.
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_CIGNA_URL ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+    const LAST_N_DAYS = 30;
+    sqlText = `SELECT COUNT(*) AS MONTH_COUNT 
+    FROM &{IDAP_LAKE}.PRICING.CIGNA_URL 
+    WHERE DATEDIFF('day', INSERT_DATETIME, CURRENT_DATE()) < ${LAST_N_DAYS};`;
+
+    resultSet = snowflake.execute({sqlText});
+    resultSet.next();
+
+    let count = resultSet.getColumnValue('MONTH_COUNT');
+
+    if (count === 0) {
+        throw new Error('No Cigna URL was created within the last thirty days.');
+    }
+
+    let endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+    ) VALUES (
+        '${procName}',
+        'PROCEDURE',
+        '${startTime.toISOString()}',
+        '${endTime.toISOString()}',
+        '${count} Cigna URLs had been delivered within the last ${LAST_N_DAYS} days.',
+        '${sqlText.replace(/'/g, "''")}'
+    )`;
+    snowflake.execute({sqlText});
+    return 'SUCCESS'
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return 'FAILURE';
+}
+$$;
+
+!set variable_substitution=false;

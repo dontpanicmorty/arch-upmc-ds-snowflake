@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "provider",
+  "dataSourceName": "ESI",
+  "targetTableName": "RAWDATA.CMS_NPI",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/cms/npi/",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_CMS_NPI_FILE_FORMAT",
+  "sourceFilePattern": "cms/npi/\\\\d{4}/\\\\d{2}/\\\\d{2}/npidata_pfile.*.csv",
+  "sourceFileDelimitedColumnCount": 330,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

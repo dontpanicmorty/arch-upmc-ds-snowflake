@@ -1,0 +1,1279 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.spu_LoadFullExtract_Member()
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+try
+{
+
+    var trunc_table = "TRUNCATE TABLE DIMDATA.DIM_DATE_DAY;";
+    var trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    var res_trunc_table = trunc_table_snowflake.execute();
+
+
+	let load_DIM_DATE_DAY = `COPY INTO DIMDATA.DIM_DATE_DAY
+	(
+    DIM_DATE_DAY_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    FULL_DATE,
+    DAY_OF_MONTH_NBR,
+    DAY_NAME,
+    DAY_SHORT_NAME,
+    WEEK_DAY_IND,
+    WEEK_BEGIN_DATE,
+    MONTH_OF_YEAR_NBR,
+    MONTH_NAME,
+    MONTH_SHORT_NAME,
+    QUARTER_OF_YEAR_NBR,
+    YEAR_NBR,
+    LAST_DAY_OF_MONTH_IND,
+    SAME_DAY_YEAR_AGO_DATE,
+    DAY_OF_WEEK_NBR,
+    WEEK_OF_YEAR_NBR,
+    YEAR_MONTH_NBR
+	)
+    FROM (SELECT
+	$1:DimDateDayKey as "DIM_DATE_DAY_KEY"
+	,$1:MD5ValueText as "MD5_VALUE_TEXT" 
+	,$1:InsertDatetime as "INSERT_DATETIME" 
+	,$1:LastUpdatedDatetime as "LAST_UPDATED_DATETIME" 
+	,$1:FullDate as "FULL_DATE" 
+	,$1:DayOfMonthNbr as "DAY_OF_MONTH_NBR"
+    ,$1:DayName as "DAY_NAME"
+    ,$1:DayShortName as "DAY_SHORT_NAME"
+    ,$1:WeekDayInd as "WEEK_DAY_IND"
+    ,$1:WeekBeginDate as "WEEK_BEGIN_DATE"
+    ,$1:MonthOfYearNbr as "MONTH_OF_YEAR_NBR"
+    ,$1:MonthName as "MONTH_NAME"
+    ,$1:MonthShortName as "MONTH_SHORT_NAME"
+    ,$1:QuarterOfYearNbr as "QUARTER_OF_YEAR_NBR"
+    ,$1:YearNbr as "YEAR_NBR"
+    ,$1:LastDayOfMonthInd as "LAST_DAY_OF_MONTH_IND"
+    ,$1:SameDayYearAgoDate as "SAME_DAY_YEAR_AGO_DATE"
+    ,$1:DayOfWeekNbr as "DAY_OF_WEEK_NBR"
+    ,$1:WeekOfYearNbr as "WEEK_OF_YEAR_NBR"
+    ,$1:YearMonthNbr as "YEAR_MONTH_NBR"
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimDateDay.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_DATE_DAY_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_DATE_DAY
+    }
+    );
+    var res_load_DIM_DATE_DAY = load_DIM_DATE_DAY_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_ELIGIBILITY_TYPE;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_ELIGIBILITY_TYPE = `COPY INTO DIMDATA.DIM_ELIGIBILITY_TYPE
+	(
+    DIM_ELIGIBILITY_TYPE_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    ELIGIBILITY_TYPE_NAME,
+    ELIGIBILITY_TYPE_DESC
+	)
+    FROM (SELECT
+	$1:DimEligibilityTypeKey as "DIM_ELIGIBILITY_TYPE_KEY"
+	,$1:MD5ValueText as "MD5_VALUE_TEXT" 
+	,$1:InsertDatetime as "INSERT_DATETIME" 
+	,$1:LastUpdatedDatetime as "LAST_UPDATED_DATETIME" 
+	,$1:TPAClientId as "TPA_CLIENT_ID" 
+	,$1:TPAId as "TPA_ID"
+    ,$1:TPADivId as "TPA_DIV_ID"
+    ,$1:EligibilityTypeName as "ELIGIBILITY_TYPE_NAME"
+    ,$1:EligibilityTypeDesc as "ELIGIBILITY_TYPE_DESC"
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimEligibilityType.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_ELIGIBILITY_TYPE_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_ELIGIBILITY_TYPE
+    }
+    );
+    var res_load_DIM_ELIGIBILITY_TYPE = load_DIM_ELIGIBILITY_TYPE_snowflake.execute();
+
+     trunc_table = "TRUNCATE TABLE DIMDATA.DIM_ENROLLMENT_SPAN;";
+     trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+     res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_ENROLLMENT_SPAN = `COPY INTO DIMDATA.DIM_ENROLLMENT_SPAN
+	(
+    DIM_ENROLLMENT_SPAN_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    MEMBER_NBR,
+    MASTER_MEMBER_ID,
+    ELIGIBILITY_START_DATE,
+    ELIGIBILITY_END_DATE,
+    SPAN_TYPE_CODE,
+    TERMINATION_REASON_CODE,
+    TERMINATION_REASON_DESC,
+    ACA_MEMBER_STATUS_CODE,
+    ACA_ENROLLMENT_TYPE_CODE,
+    ACA_RENEWAL_DATE,
+    ACA_NPN_NBR,
+    ACA_SUBSIDY_LEVEL_NAME,
+    ENROLLMENT_DATE,
+    ACA_TERMED_FLAG,
+    ACA_SMOKING_STATUS_CODE,
+    CONTRACT_NBR,
+    FLEXIBLE_SPENDING_ACCOUNT_IND,
+    PLAN_BENEFIT_PACKAGE_ID,
+    MEMBER_TERMINATION_DATE,
+    SUB_SOURCE_NAME,
+    DPW_FACILITATED_COUNTY_DESC,
+    ASSISTANCE_CATEGORY_CODE,
+    PROGRAM_STATUS_CODE,
+    MEDICARE_SNP_TYPE_DESC
+	)
+    FROM (SELECT
+	$1:DimEnrollmentSpanKey as "DIM_ENROLLMENT_SPAN_KEY"
+	,$1:MD5ValueText as "MD5_VALUE_TEXT" 
+	,$1:InsertDatetime as "INSERT_DATETIME" 
+	,$1:LastUpdatedDatetime as "LAST_UPDATED_DATETIME"
+    ,$1:IsLogicalDeleteFlag as "IS_LOGICAL_DELETE_FLAG"
+	,$1:TPAClientID as "TPA_CLIENT_ID" 
+	,$1:TPAId as "TPA_ID"
+    ,$1:TPADivId as "TPA_DIV_ID"
+    ,$1:MemberNbr as "MEMBER_NBR"
+    ,$1:MasterMemberId as "MASTER_MEMBER_ID"
+    ,$1:EligibilityStartDate as "ELIGIBILITY_START_DATE"
+    ,CASE WHEN $1:EligibilityEndDate::varchar LIKE '1816-%' THEN '9999-12-31 00:00:00.000' ELSE TRY_TO_TIMESTAMP($1:EligibilityEndDate::varchar) END AS "ELIGIBILITY_END_DATE"
+    ,$1:SpanTypeCode as "SPAN_TYPE_CODE"
+    ,$1:TerminationReasonCode as "TERMINATION_REASON_CODE"
+    ,$1:TerminationReasonDesc as "TERMINATION_REASON_DESC"
+    ,$1:ACAMemberStatusCode as "ACA_MEMBER_STATUS_CODE"
+    ,$1:ACAEnrollmentTypeCode as "ACA_ENROLLMENT_TYPE_CODE"
+    ,$1:ACARnewalDate as "ACA_RENEWAL_DATE"
+    ,$1:ACANPNNbr as "ACA_NPN_NBR"
+    ,$1:ACASubsidyLevelName as "ACA_SUBSIDY_LEVEL_NAME"
+    ,$1:EnrollmentDate as "ENROLLMENT_DATE"
+    ,$1:ACATermedFlag as "ACA_TERMED_FLAG"
+    ,$1:ACASmokingStatusCode as "ACA_SMOKING_STATUS_CODE"
+    ,$1:ContractNbr as "CONTRACT_NBR"
+    ,$1:FlexibleSpendingAccountInd as "FLEXIBLE_SPENDING_ACCOUNT_IND"
+    ,$1:PlanBenefitPackageId as "PLAN_BENEFIT_PACKAGE_ID"
+    ,CASE WHEN $1:MemberTerminationDate::varchar LIKE '1816-%' THEN '9999-12-31 00:00:00.000' ELSE TRY_TO_TIMESTAMP($1:MemberTerminationDate::varchar) END
+    ,$1:SubSourceName as "SUB_SOURCE_NAME"
+    ,$1:DPWFacilitatedCountyDesc as "DPW_FACILITATED_COUNTY_DESC"
+    ,$1:AssistanceCategoryCode as "ASSISTANCE_CATEGORY_CODE"
+    ,$1:ProgramStatusCode as "PROGRAM_STATUS_CODE"
+    ,$1:MedicareSNPTypeDesc as "MEDICARE_SNP_TYPE_DESC"
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimEnrollmentSpan.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_ENROLLMENT_SPAN_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_ENROLLMENT_SPAN
+    }
+    );
+    var res_load_DIM_ENROLLMENT_SPAN = load_DIM_ENROLLMENT_SPAN_snowflake.execute();
+
+     trunc_table = "TRUNCATE TABLE DIMDATA.DIM_GL_DISTRIBUTION;";
+     trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+     res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_GL_DISTRIBUTION = `COPY INTO DIMDATA.DIM_GL_DISTRIBUTION
+	(
+    DIM_GL_DISTRIBUTION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    GL_DISTRIBUTION_CODE,
+    GL_DISTRIBUTION_DESC,
+    COMPANY_CODE,
+    FINANCE_BUSINESS_UNIT_DESC,
+    FINANCE_PRODUCT_CODE,
+    FINANCE_PRODUCT_DESC,
+    FINANCE_COST_CENTER_NAME,
+    CREDIT_GL_NBR,
+    DEBIT_GL_NBR,
+    SECONDARY_CREDIT_GL_NBR,
+    SECONDARY_DEBIT_GL_NBR,
+    DISCOUNT_GL_NBR,
+    DISCOUNT_OFFSET_GL_NBR,
+    INTEREST_GL_NBR,
+    INTEREST_OFFSET_GL_NBR,
+    FINANCE_LOB_DESC
+	)
+    FROM (SELECT
+	$1:DimGLDistributionKey as "DIM_GL_DISTRIBUTION_KEY"
+	,$1:MD5ValueText as "MD5_VALUE_TEXT" 
+	,$1:InsertDatetime as "INSERT_DATETIME" 
+	,$1:LastUpdatedDatetime as "LAST_UPDATED_DATETIME"
+	,$1:TPAClientId as "TPA_CLIENT_ID" 
+	,$1:TPAId as "TPA_ID"
+    ,$1:TPADivId as "TPA_DIV_ID"
+    ,$1:GLDistributionCode as "GL_DISTRIBUTION_CODE"
+    ,$1:GLDistributionDesc as "GL_DISTRIBUTION_DESC"
+    ,$1:CompanyCode as "COMPANY_CODE"
+    ,$1:FinanceBusinessUnitDesc as "FINANCE_BUSINESS_UNIT_DESC"
+    ,$1:FinanceProductCode as "FINANCE_PRODUCT_CODE"
+    ,$1:FinanceProductDesc as "FINANCE_PRODUCT_DESC"
+    ,$1:FinanceCostCenterName as "FINANCE_COST_CENTER_NAME"
+    ,$1:CreditGLNbr as "CREDIT_GL_NBR"
+    ,$1:DebitGLNbr as "DEBIT_GL_NBR"
+    ,$1:SecondaryCreditGLNbr as "SECONDARY_CREDIT_GL_NBR"
+    ,$1:SecondaryDebitGLNbr as "SECONDARY_DEBIT_GL_NBR"
+    ,$1:DiscountGLNbr as "DISCOUNT_GL_NBR"
+    ,$1:DiscountOffsetGLNbr as "DISCOUNT_OFFSET_GL_NBR"
+    ,$1:InterestGLNbr as "INTEREST_GL_NBR"
+    ,$1:InterestOffsetGLNbr as "INTEREST_OFFSET_GL_NBR"
+    ,$1:FinanceLOBDesc as "FINANCE_LOB_DESC"
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimGLDistribution.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_GL_DISTRIBUTION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_GL_DISTRIBUTION
+    }
+    );
+    var res_load_DIM_GL_DISTRIBUTION = load_DIM_GL_DISTRIBUTION_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_GROUP;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_GROUP = `COPY INTO DIMDATA.DIM_GROUP
+	(
+    DIM_GROUP_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    GROUP_NBR,
+    CORPORATE_ID,
+    GROUP_NAME,
+    GROUP_SIZE_NBR,
+    GROUP_STATE_ABBREVIATION_NAME,
+    GROUP_FIPS_COUNTY_CODE,
+    GROUP_FIPS_COUNTY_NAME,
+    GROUP_ZIP_CODE_NBR,
+    ORIGINAL_START_DATE,
+    RENEWAL_DATE,
+    CURRENT_GROUP_START_DATE,
+    CURRENT_GROUP_END_DATE,
+    STOP_LOSS_UPMC_IND,
+    STOP_LOSSCARRIER_CODE,
+    AGGREGATE_STOP_LOSS_IND,
+    STOP_LOSS_DEDUCTIBLE_AMT,
+    UNION_AFFILIATION_IND,
+    AGGREGATE_COMPANY_ATTACH_THRESHOLD_AMT,
+    AGGREGATE_FAMILY_ATTACH_THRESHOLD_AMT,
+    AGGREGATE_SINGLE_ATTACH_THRESHOLD_AMT,
+    CONTRACT_MAX_PAYOUT_THRESHOLD_AMT,
+    AGGREGATE_MAX_LIFETIME_COVERAGE_THRESHOLD_AMT,
+    THRESHOLD_CALCULATION_LEVEL_CODE,
+    STOP_LOSS_LEVEL_FUNDING_IND,
+    SPECIFIC_STOP_LOSS_IND,
+    COMPANY_COUNTY_NAME,
+    COMPANY_ID,
+    LEGAL_EMPLOYEE_SIZE_NBR,
+    DPW_PLAN_CODE,
+    PRIOR_GROUP_END_DATE,
+    PRIOR_GROUP_START_DATE
+	)
+    FROM (SELECT
+    $1:DimGroupKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:GroupNbr,
+    $1:CorporateId,
+    $1:GroupName,
+    $1:GroupSizeNbr,
+    $1:GroupStateAbbreviationName,
+    $1:GroupFIPSCountyCode,
+    $1:GroupFIPSCountyName,
+    $1:GroupZipCodeNbr,
+    $1:OriginalStartDate,
+    $1:RenewalDate,
+    $1:CurrentGroupStartDate,
+    $1:CurrentGroupEndDate,
+    $1:StopLossUPMCInd,
+    $1:StopLossCarrierCode,
+    $1:AggregateStopLossInd,
+    $1:StopLossDeductibleAmt,
+    $1:UnionAffiliationInd,
+    $1:AggregateCompanyAttachThresholdAmt,
+    $1:AggregateFamilyAttachThresholdAmt,
+    $1:AggregateSingleAttachThresholdAmt,
+    $1:ContractMaxPayoutThresholdAmt,
+    $1:AggregateMaxLifetimeCoverageThresholdAmt,
+    $1:ThresholdCalculationLevelCode,
+    $1:StopLossLevelFundingInd,
+    $1:SpecificStopLossInd,
+    $1:CompanyCountyName,
+    $1:CompanyId,
+    $1:LegalEmployeeSizeNbr,
+    $1:DPWPlanCode,
+    CASE WHEN $1:PriorGroupEndDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:PriorGroupEndDate::varchar) END,
+    CASE WHEN $1:PriorGroupStartDate::varchar LIKE '1816-%' THEN '9999-12-31 00:00:00.000' ELSE TRY_TO_TIMESTAMP($1:PriorGroupStartDate::varchar) END
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimGroup.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_GROUP_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_GROUP
+    }
+    );
+    var res_load_DIM_GROUP = load_DIM_GROUP_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_MEMBER;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_MEMBER = `COPY INTO DIMDATA.DIM_MEMBER
+	(
+    DIM_MEMBER_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    MEMBER_NBR,
+    MASTER_MEMBER_ID,
+    MEMBER_FULL_NAME,
+    MEMBER_LAST_NAME,
+    MEMBER_FIRST_NAME,
+    MEMBER_BIRTH_DATE,
+    GENDER_CODE,
+    SUBSCRIBER_RELATIONSHIP_CODE,
+    SUBSCRIBER_RELATIONSHIP_DESC,
+    MEMBER_ADDED_DATE,
+    MEMBER_DEATH_DATE,
+    MEMBER_MIDDLE_NAME,
+    SUBSCRIBER_RELATIONSHIP_TYPE_CODE,
+    SUB_SOURCE_NAME,
+    RESTRICTED_MEMBER_IND,
+    PRIVACY_RESTRICTION_IND,
+    PRIVACY_ALERT_IND,
+    FINANCE_REPORTING_REGION,
+    SOCIAL_SECURITY_NBR,
+    EMPI_NBR,
+    CURRENT_CHCSNP_ALIGNMENT_DESC,
+    RESPONSIBLE_PARTY_NAME,
+    RECIPIENT_ID,
+    MEDICAID_ID,
+    EPIC_MR_NBR,
+    EPIC_ENT_ID,
+    MEDIPAC_MR_NBR,
+    PART_D_RISK_FACTOR,
+    SECONDARY_MEMBER_IDENTIFIER_TEXT,
+    TERTIARY_MEMBER_IDENTIFIER_TEXT,
+    SUBSCRIBER_NBR,
+    PERSON_NBR,
+    MEMBER_SALUTORY_NAME,
+    CURRENT_ELIG_STATUS_CODE01,
+    CURRENT_ELIG_STATUS_CODE02,
+    CURRENT_ELIG_STATUS_DESC01,
+    CURRENT_ELIG_STATUS_DESC02,
+    PREGNANCY_DUE_DATE,
+    HIC_NBR,
+    CURRENT_CHRONIC_CONDITION_CNT,
+    RACE_DESC,
+    MEMBER_DPW_COUNTY_CODE,
+    MEMBER_DPW_COUNTY_DESC,
+    SELECTED_PCP_DIM_PROVIDER_KEY,
+    SELECTED_PCP_DIM_PROVIDER_ADDRESS_KEY,
+    IMPUTED_PCP_DIM_PROVIDER_KEY,
+    IMPUTED_PCP_DIM_PROVIDER_ADDRESS_KEY,
+    CLAIMS_SHARING_DESC
+        )
+    FROM (SELECT
+    $1:DimMemberKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:MemberNbr,
+    $1:MasterMemberId,
+    $1:MemberFullName,
+    $1:MemberLastName,
+    $1:MemberFirstName,
+    TO_DATE($1:MemberBirthDate::varchar),
+    $1:GenderCode,
+    $1:SubscriberRelationshipCode,
+    $1:SubscriberRelationshipDesc,
+    TO_DATE($1:MemberAddedDate::varchar),
+    CASE WHEN $1:MemberDeathDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:MemberDeathDate::varchar) END,
+    $1:MemberMiddleName,
+    $1:SubscriberRelationshipTypeCode,
+    $1:SubSourceName,
+    $1:RestrictedMemberInd,
+    $1:PrivacyRestrictionInd,
+    $1:PrivacyAlertInd,
+    $1:FinanceReportingRegion,
+    $1:SocialSecurityNbr,
+    $1:EMPINbr,
+    $1:CurrentCHCSNPAlignmentDesc,
+    $1:ResponsiblePartyName,
+    $1:RecipientId,
+    $1:MedicaidId,
+    $1:EpicMRNbr,
+    $1:EPIC_ENT_ID,
+    $1:MedipacMRNbr,
+    $1:PartDRiskFactor,
+    $1:SecondaryMemberIdentifierText,
+    $1:TertiaryMemberIdentifierText,
+    $1:SubscriberNbr,
+    $1:PersonNbr,
+    $1:MemberSalutoryName,
+    $1:CurrentEligStatusCode01,
+    $1:CurrentEligStatusCode02,
+    $1:CurrentEligStatusDesc01,
+    $1:CurrentEligStatusDesc02,
+    CASE WHEN $1:PregnancyDueDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:PregnancyDueDate::varchar) END,
+    $1:HICNbr,
+    $1:CurrentChronicConditionCnt,
+    $1:RaceDesc,
+    $1:MemberDPWCountyCode,
+    $1:MemberDPWCountyDesc,
+    $1:SelectedPCPDimProviderKey,
+    $1:SelectedPCPDimProviderAddressKey,
+    $1:ImputedPCPDimProviderKey,
+    $1:ImputedPCPDimProviderAddressKey,
+    $1:ClaimsSharingDesc
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimMember.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_MEMBER_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_MEMBER
+    }
+    );
+    var res_load_DIM_MEMBER = load_DIM_MEMBER_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_MEMBER_ADDRESS;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();    	
+
+	let load_DIM_MEMBER_ADDRESS = `COPY INTO DIMDATA.DIM_MEMBER_ADDRESS
+	(
+    DIM_MEMBER_ADDRESS_KEY,
+    MD5_VALUE_TEXT,
+    DIM_MEMBER_KEY,
+    MEMBER_ADDRESS_TYPE,
+    MEMBER_ADDRESSLINE1_TEXT,
+    MEMBER_ADDRESSLINE2_TEXT,
+    MEMBER_CITY_NAME,
+    MEMBER_STATE_ABBREVIATION_NAME,
+    MEMBER_ZIP_CODE_NBR,
+    MEMBER_FIPS_CODE,
+    MEMBER_FIPS_STATE_CODE,
+    MEMBER_FIPS_COUNTY_CODE,
+    MEMBER_CMS_COUNTY_CODE,
+    MEMBER_COUNTY_DESC,
+    MEMBER_LATITUDE_NBR,
+    MEMBER_LONGITUDE_NBR,
+    EFFECTIVE_START_DATE,
+    EFFECTIVE_END_DATE,
+    ACTIVE_IND,
+    VALID_IND,
+    CONGRESSIONAL_DISTRICT,
+	VERIFIED_ADDRESSLINE1_TEXT,
+	VERIFIED_ADDRESSLINE2_TEXT,
+    VERIFIED_COUNTY_DESCRIPTION,
+    VERIFIED_PRIMARY_NUMBER,
+    VERIFIED_STREET_NAME,
+    VERIFIED_STREET_PREDIRECTION,
+    VERIFIED_STREET_POSTDIRECTION,
+    VERIFIED_STREET_SUFFIX,
+    VERIFIED_SECONDARY_NUMBER,
+    VERIFIED_EXTRA_SECONDARY_NUMBER,
+	VERIFIED_CITY_NAME,
+	VERIFIED_STATE,
+	VERIFIED_ZIPCODE5_NBR,
+	VERIFIED_ZIPCODE9_NBR,
+    VERIFIED_PRECISION,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME
+	)
+    FROM (SELECT
+    $1:DimMemberAddressKey,
+    $1:MD5ValueText,
+    $1:DimMemberKey,
+    $1:MemberAddressType,
+    $1:MemberAddressLine1Text,
+    $1:MemberAddressLine2Text,
+    $1:MemberCityName,
+    $1:MemberStateAbbreviationName,
+    $1:MemberZipCodeNbr,
+    CASE WHEN $1:MemberFIPSCode IS NULL THEN '' ELSE $1:MemberFIPSCode end,
+    CASE WHEN $1:MemberFIPSStateCode IS NULL THEN '' ELSE $1:MemberFIPSStateCode end,
+    CASE WHEN $1:MemberFIPSCountyCode IS NULL THEN '' ELSE $1:MemberFIPSCountyCode end,
+    CASE WHEN $1:MemberCMSCountyCode IS NULL THEN '' ELSE $1:MemberCMSCountyCode end,
+    CASE WHEN $1:MemberCountyDesc IS NULL THEN '' ELSE $1:MemberCountyDesc end,
+    $1:MemberLatitudeNbr,
+    $1:MemberLongitudeNbr,
+    TRY_TO_DATE($1:EffectiveStartDate::varchar),
+    CASE WHEN $1:EffectiveEndDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:EffectiveEndDate::varchar) END,
+    $1:ActiveInd,
+    CASE WHEN $1:ValidInd IS NULL THEN '' ELSE $1:ValidInd end,
+    $1:CongressionalDistrict,
+    $1:VerifiedAddressLine1Text,
+    $1:VerifiedAddressLine2Text,
+    $1:VerifiedCountyDescription,
+    $1:VerifiedPrimaryNumber,
+    $1:VerifiedStreetName,
+    $1:VerifiedStreetPredirection,
+    $1:VerifiedStreetPostdirection,
+    $1:VerifiedStreetSuffix,
+    $1:VerifiedSecondaryNumber,
+    $1:VerifiedExtraSecondaryNumber,
+    $1:VerifiedCityName,
+    $1:VerifiedState,
+    $1:VerifiedZipCode5Nbr,
+    $1:VerifiedZipCode9Nbr,
+    $1:VerifiedPrecision,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimMemberAddress.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_MEMBER_ADDRESS_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_MEMBER_ADDRESS
+    }
+    );
+    var res_load_DIM_MEMBER_ADDRESS = load_DIM_MEMBER_ADDRESS_snowflake.execute();
+
+    
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_MEMBER_COMMUNICATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();      
+   
+	let load_DIM_MEMBER_COMMUNICATION = `COPY INTO DIMDATA.DIM_MEMBER_COMMUNICATION
+	(
+    DIM_MEMBER_COMMUNICATION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE,
+    ROW_EFFECTIVE_DATETIME,
+    ROW_EXPIRATION_DATETIME,
+    IS_CURRENT_ROW_FLAG,
+    DIM_MEMBER_KEY,
+    COMMUNICATION_ID,
+    COMMUNICATION_NAME,
+    COMMUNICATION_LEVEL_CODE,
+    COMMUNICATION_LEVEL_NAME,
+    COMMUNICATION_CATEGORY_NAME,
+    COMMUNICATION_METHOD_CODE,
+    COMMUNICATION_METHOD_DESC,
+    COMMUNICATION_CHANNEL_CODE,
+    COMMUNICATION_CHANNEL_DESC,
+    COMMUNICATION_STATUS_CODE,
+    COMMUNICATION_STATUS_DESC,
+    COMMUNICATION_START_DATE,
+    COMMUNICATION_END_DATE,
+    COMMUNICATION_ADDRESS_TYPE,
+    COMMUNICATION_PHONE_TYPE,
+    COMMUNICATION_PHONE_NBR,
+    COMMUNICATION_PHONE_EXTENSION_NBR,
+    COMMUNICATION_EMAIL_ADDRESS_TEXT,
+    COMMUNICATION_LANGUAGE_CODE,
+    COMMUNICATION_LANGUAGE_NAME,
+    COMMUNICATION_LANGUAGE_FORMAT_CODE,
+    COMMUNICATION_LANGUAGE_FORMAT_NAME,
+    COMMUNICATION_CORP_CODE,
+    COMMUNICATION_OPT_OUT_IND,
+    COMMUNICATION_MOBILE_IND,
+    COMMUNICATION_ELECTRONIC_OPT_IN_FLAG,
+    COMMUNICATION_MP_DISPLAY_START_DATE,
+    COMMUNICATION_MP_DISPLAY_END_DATE,
+    LAST_COMMUNICATION_DATE,
+    COMMUNICATION_SNOOZE_START_DATE,
+    COMMUNICATION_SNOOZE_END_DATE
+     )
+    FROM (SELECT
+    $1:DimMemberCommunicationKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:IsLogicalDelete,
+    $1:RowEffectiveDatetime,
+    CASE WHEN $1:RowExpirationDatetime::varchar LIKE '1816-%' THEN '9999-12-31 00:00:00.000' ELSE TRY_TO_TIMESTAMP($1:RowExpirationDatetime::varchar) END,
+    $1:IsCurrentRowFlag,
+    $1:DimMemberKey,
+    $1:CommunicationID,
+    $1:CommunicationName,
+    $1:CommunicationLevelCode,
+    $1:CommunicationLevelName,
+    $1:CommunicationCategoryName,
+    $1:CommunicationMethodCode,
+    $1:CommunicationMethodDesc,
+    $1:CommunicationChannelCode,
+    $1:CommunicationChannelDesc,
+    $1:CommunicationStatusCode,
+    $1:CommunicationStatusDesc,
+    $1:CommunicationStartDate,
+    $1:CommunicationEndDate,
+    $1:CommunicationAddressType,
+    $1:CommunicationPhoneType,
+    $1:CommunicationPhoneNbr,
+    $1:CommunicationPhoneExtensionNbr,
+    $1:CommunicationEmailAddressText,
+    $1:CommunicationLanguageCode,
+    $1:CommunicationLanguageName,
+    $1:CommunicationLanguageFormatCode,
+    $1:CommunicationLanguageFormatName,
+    $1:CommunicationCorpCode,
+    $1:CommunicationOptOutInd,
+    $1:CommunicationMobileInd,
+    $1:CommunicationElectronicOptInFlag,
+    $1:CommunicationMPDisplayStartDate,
+    $1:CommunicationMPDisplayEndDate,
+    $1:LastCommunicationDate,
+    $1:CommunicationSnoozeStartDate,
+    $1:CommunicationSnoozeEndDate
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimMemberCommunication.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_MEMBER_COMMUNICATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_MEMBER_COMMUNICATION
+    }
+    );
+    var res_load_DIM_MEMBER_COMMUNICATION = load_DIM_MEMBER_COMMUNICATION_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_MEMBER_COMMUNICATION_PREFERENCE;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+	let load_DIM_MEMBER_COMMUNICATION_PREFERENCE = `COPY INTO DIMDATA.DIM_MEMBER_COMMUNICATION_PREFERENCE
+	(
+    DIM_MEMBER_COMMUNICATION_PREFERENCE_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE,
+    ROW_EFFECTIVE_DATETIME,
+    ROW_EXPIRATION_DATETIME,
+    IS_CURRENT_ROW_FLAG,
+    DIM_MEMBER_COMMUNICATION_KEY,
+    COMMUNICATION_PREFERENCE_CATEGORY_CODE,
+    COMMUNICATION_PREFERENCE_CATEGORY_DESC,
+    COMMUNICATION_PREFERENCE_CODE,
+    COMMUNICATION_PREFERENCE_DESC
+    	)
+    FROM (SELECT
+    $1:DimMemberCommunicationPreferenceKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:IsLogicalDelete,
+    $1:RowEffectiveDatetime,
+    CASE WHEN $1:RowExpirationDatetime::varchar LIKE '1816-%' THEN '9999-12-31 00:00:00.000' ELSE TRY_TO_TIMESTAMP($1:RowExpirationDatetime::varchar) END,
+    $1:IsCurrentRowFlag,
+    $1:DimMemberCommunicationKey,
+    $1:CommunicationPreferenceCategoryCode,
+    $1:CommunicationPreferenceCategoryDesc,
+    $1:CommunicationPreferenceCode,
+    $1:CommunicationPreferenceDesc
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimMemberCommunicationPreference.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_MEMBER_COMMUNICATION_PREFERENCE_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_MEMBER_COMMUNICATION_PREFERENCE
+    }
+    );
+    var res_load_DIM_MEMBER_COMMUNICATION_PREFERENCE = load_DIM_MEMBER_COMMUNICATION_PREFERENCE_snowflake.execute(); 
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_MEMBER_IDENTIFIER;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+	let load_DIM_MEMBER_IDENTIFIER = `COPY INTO DIMDATA.DIM_MEMBER_IDENTIFIER
+	(
+    DIM_MEMBER_IDENTIFIER_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    DIM_MEMBER_KEY,
+    MEMBER_IDENTIFIER_SOURCE_NAME,
+    MEMBER_IDENTIFIER_TYPE,
+    MEMBER_IDENTIFIER,
+    IS_LOGICAL_DELETE_FLAG
+    	)
+    FROM (SELECT
+    $1:DimMemberIdentifierKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:DimMemberKey,
+    $1:MemberIdentifierSourceName,
+    $1:MemberIdentifierType,
+    $1:MemberIdentifier,
+    $1:IsLogicalDeleteFlag
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimMemberIdentifier.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_MEMBER_IDENTIFIER_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_MEMBER_IDENTIFIER
+    }
+    );
+    var res_load_DIM_MEMBER_IDENTIFIER = load_DIM_MEMBER_IDENTIFIER_snowflake.execute();  
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PLAN;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+    
+	let load_DIM_PLAN = `COPY INTO DIMDATA.DIM_PLAN
+	(
+    DIM_PLAN_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    ACA_MARKET_SEGMENT_NAME,
+    PLAN_CODE,
+    ACA_MIN_BENEFIT_YEAR,
+    ACA_PLAN_TYPE_NAME,
+    ACA_PRODUCT_CODE,
+    ACA_MARKETING_PLAN_NAME,
+    ACA_METAL_LEVEL_CODE,
+    ACA_ON_EXCHANGE_IND,
+    ACA_NETWORK_NAME,
+    ACA_COST_SHARE_TYPE_NAME,
+    ACA_HIOS_ID,
+    PLAN_TYPE_CODE,
+    PLAN_DESC,
+    LOB_CODE,
+    LOB_DESC,
+    LOB_PRODUCT_CODE,
+    LOB_PRODUCT_DESC,
+    LOB_PLAN_TYPE_DESC,
+    GRANDFATHERED_ACA_PLAN_IND,
+    PLAN_CATEGORY_NAME,
+    HEALTHY_U_IND,
+    WELLNESS_IND,
+    COMPANY_CODE,
+    FUNDING_TYPE_DESC,
+    BUSINESS_UNIT_DESC,
+    COMMERCIAL_ANALYTICS_PLAN_TYPE_GROUPING_CODE,
+    COMMERCIAL_ANALYTICS_PLAN_GROUPING_CODE
+    	)
+    FROM (SELECT
+    $1:DimPlanKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:ACAMarketSegmentName,
+    $1:PlanCode,
+    $1:ACAMinBenefitYear,
+    $1:ACAPlanTypeName,
+    $1:ACAProductCode,
+    $1:ACAMarketingPlanName,
+    $1:ACAMetalLevelCode,
+    $1:ACAOnExchangeInd,
+    $1:ACANetworkName,
+    $1:ACACostShareTypeName,
+    $1:ACAHIOSId,
+    $1:PlanTypeCode,
+    $1:PlanDesc,
+    $1:LOBCode,
+    $1:LOBDesc,
+    $1:LOBProductCode,
+    $1:LOBProductDesc,
+    $1:LOBPlanTypeDesc,
+    $1:GrandfatheredACAPlanInd,
+    $1:PlanCategoryName,
+    $1:HealthyUInd,
+    $1:WellnessInd,
+    $1:CompanyCode,
+    $1:FundingTypeDesc,
+    $1:BusinessUnitDesc,
+    $1:CommercialAnalyticsPlanTypeGroupingCode,
+    $1:CommercialAnalyticsPlanGroupingCode
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimPlan.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PLAN_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PLAN
+    }
+    );
+    var res_load_DIM_PLAN = load_DIM_PLAN_snowflake.execute(); 
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_RATE_CELL;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 	
+
+	let load_DIM_RATE_CELL = `COPY INTO DIMDATA.DIM_RATE_CELL
+	(
+    DIM_RATE_CELL_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    RATE_CELL_CODE,
+    RATE_CELL_DESC,
+    ASSISTANCE_CATEGORY_GROUP_CODES,
+    PROGRAM_STATUS_CODES,
+    PROMISE_CODE,
+    FRR_REPORT_NUMBER_DESC,
+    RATE_CELL_EFFECTIVE_DATE,
+    RATE_CELL_TERM_DATE,
+    RATE_CELL_PHYSICAL_HEALTH_DESC,
+    RATE_CELL_BEHAVIORAL_HEALTH_DESC,
+    ASSISTANCE_CATEGORY_GROUP_PARENT_CODE,
+    PROGRAM_STATUS_PARENT_CODE,
+    RATE_CELL_GENDER_CLASSIFICATION_CODE,
+    RATE_CELL_AGE_RANGE_TEXT,
+    MEDICARE_PART_CODE
+    	)
+    FROM (SELECT
+    $1:DimRateCellKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:RateCellCode,
+    $1:RateCellDesc,
+    $1:AssistanceCategoryGroupCodes,
+    $1:ProgramStatusCodes,
+    $1:PromiseCode,
+    $1:FRRReportNumberDesc,
+    TRY_TO_DATE($1:RateCellEffectiveDate::varchar),
+    CASE WHEN $1:RateCellTermDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:RateCellTermDate::varchar) END,
+    $1:RateCellPhysicalHealthDesc,
+    $1:RateCellBehavioralHealthDesc,
+    $1:AssistanceCategoryGroupParentCode,
+    $1:ProgramStatusParentCode,
+    $1:RateCellGenderClassificationCode,
+    $1:RateCellAgeRangeText,
+    $1:MedicarePartCode
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimRateCell.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_RATE_CELL_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_RATE_CELL
+    }
+    );
+    var res_load_DIM_RATE_CELL = load_DIM_RATE_CELL_snowflake.execute(); 
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_RIDER;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 		
+
+	let load_DIM_RIDER = `COPY INTO DIMDATA.DIM_RIDER
+	(
+    DIM_RIDER_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    RIDER_CODE,
+    RIDER_EFFECTIVE_DATE,
+    RIDER_TERMINATION_DATE,
+    RIDER_TYPE_CODE,
+    RIDER_DESC,
+    GROUP_NBR,
+    SUB_GROUP_NBR
+    	)
+    FROM (SELECT
+    $1:DimRiderKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:RiderCode,
+    TRY_TO_DATE($1:RiderEffectiveDate::varchar),
+    CASE WHEN $1:RiderTerminationDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:RiderTerminationDate::varchar) END,
+    $1:RiderTypeCode,
+    $1:RiderDesc,
+    $1:GroupNbr,
+    $1:SubGroupNbr
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimRider.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_RIDER_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_RIDER
+    }
+    );
+    var res_load_DIM_RIDER = load_DIM_RIDER_snowflake.execute(); 
+
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_SALES_CHANNEL;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+	let load_DIM_SALES_CHANNEL = `COPY INTO DIMDATA.DIM_SALES_CHANNEL
+	(
+    DIM_SALES_CHANNEL_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    CHANNEL_ID,
+    CHANNEL_NAME,
+    SUB_CHANNEL_NAME
+    	)
+    FROM (SELECT
+    $1:DimSalesChannelKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:ChannelId,
+    $1:ChannelName,
+    $1:SubChannelName
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimSalesChannel.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_SALES_CHANNEL_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_SALES_CHANNEL
+    }
+    );
+    var res_load_DIM_SALES_CHANNEL = load_DIM_SALES_CHANNEL_snowflake.execute(); 
+	
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_SUB_GROUP;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+	let load_DIM_SUB_GROUP = `COPY INTO DIMDATA.DIM_SUB_GROUP
+	(
+    DIM_SUB_GROUP_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    GROUP_NBR,
+    SUB_GROUP_NBR,
+    SUB_GROUP_CATEGORY_CODE,
+    SUB_GROUP_NAME,
+    TERMINATION_DATE,
+    SUB_GROUP_BILLING_STATE_ABBREVIATION_NAME,
+    SUB_GROUP_BILLING_ZIP_CODE_NBR,
+    SUB_GROUP_BILLING_FIPS_COUNTY_CODE,
+    SUB_GROUP_BILLING_FIPS_COUNTY_NAME,
+    DIVISION_ID,
+    SUB_GROUP_ID,
+    CURRENT_SUB_GROUP_EFFECTIVE_DATE,
+    PENDING_RENEWAL_DATE,
+    CURRENT_SUB_GROUP_END_DATE
+    	)
+    FROM (SELECT
+    $1:DimSubGroupKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:GroupNbr,
+    $1:SubGroupNbr,
+    $1:SubGroupCategoryCode,
+    $1:SubGroupName,
+    TRY_TO_DATE($1:TerminationDate::varchar),
+    $1:SubGroupBillingStateAbbreviationName,
+    $1:SubGroupBillingZipCodeNbr,
+    $1:SubGroupBillingFIPSCountyCode,
+    $1:SubGroupBillingFIPSCountyName,
+    $1:DivisionId,
+    $1:SubGroupId,
+    TRY_TO_DATE($1:CurrentSubGroupEffectiveDate::varchar),
+    TRY_TO_DATE($1:PendingRenewalDate::varchar),
+    CASE WHEN $1:CurrentSubGroupEndDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:CurrentSubGroupEndDate::varchar) END
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimSubGroup.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_SUB_GROUP_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_SUB_GROUP
+    }
+    );
+    var res_load_DIM_SUB_GROUP = load_DIM_SUB_GROUP_snowflake.execute(); 
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_TPA_HIERARCHY;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+	let load_DIM_TPA_HIERARCHY = `COPY INTO DIMDATA.DIM_TPA_HIERARCHY
+	(
+    DIM_TPA_HIERARCHY_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    TPA_CLIENT_DESC,
+    TPA_ID_DESC,
+    TPA_DIV_DESC
+    	)
+    FROM (SELECT
+    $1:DimTPAHierarchyKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:TPAClientId,
+    $1:TPAId,
+    $1:TPADivId,
+    $1:TPAClientDesc,
+    $1:TPAIdDesc,
+    $1:TPADivDesc
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimTPAHierarchy.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_TPA_HIERARCHY_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_TPA_HIERARCHY
+    }
+    );
+    var res_load_DIM_TPA_HIERARCHY = load_DIM_TPA_HIERARCHY_snowflake.execute(); 
+
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.FACT_ENROLLMENT;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute(); 
+
+	let load_FACT_ENROLLMENT = `COPY INTO DIMDATA.FACT_ENROLLMENT
+	(
+    FACT_ENROLLMENT_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    DIM_TPA_HIERARCHY_KEY,
+    DIM_MEMBER_KEY,
+    DIM_ENROLLMENT_SPAN_KEY,
+    DIM_PLAN_KEY,
+    DIM_SALES_CHANNEL_KEY,
+    ELIGIBILITY_START_DATE_KEY,
+    ELIGIBILITY_END_DATE_KEY,
+    ENROLLMENT_DATE_KEY,
+    RENEWAL_DATE_KEY,
+    ELIGIBILITY_START_DATE,
+    ELIGIBILITY_END_DATE,
+    ENROLLMENT_DATE,
+    RENEWAL_DATE,
+    DIM_GROUP_KEY,
+    DIM_SUB_GROUP_KEY,
+    DIM_GL_DISTRIBUTION_KEY,
+    SUBSCRIBER_FLAG,
+    DIM_RATE_CELL_KEY,
+    DIM_RIDER_KEY,
+    MEDICAL_RIDER_FLAG,
+    DIM_ELIGIBILITY_TYPE_KEY,
+    DIM_PLAN_SEGMENT_KEY
+    	)
+    FROM (SELECT
+    $1:FactEnrollmentKey,
+    $1:MD5ValueText,
+    $1:InsertDatetime,
+    $1:LastUpdatedDatetime,
+    $1:DimTPAHierarchyKey,
+    $1:DimMemberKey,
+    $1:DimEnrollmentSpanKey,
+    $1:DimPlanKey,
+    $1:DimSalesChannelKey,
+    $1:EligibilityStartDateKey,
+    $1:EligibilityEndDateKey,
+    $1:EnrollmentDateKey,
+    $1:RenewalDateKey,
+    TRY_TO_DATE($1:EligibilityStartDate::varchar),
+    CASE WHEN $1:EligibilityEndDate::varchar LIKE '1816-%' THEN '9999-12-31' ELSE TRY_TO_DATE($1:EligibilityEndDate::varchar) END,
+    TRY_TO_DATE($1:EnrollmentDate::varchar),
+    TRY_TO_DATE($1:RenewalDate::varchar),
+    $1:DimGroupKey,
+    $1:DimSubGroupKey,
+    $1:DimGLDistributionKey,
+    CASE WHEN $1:SubscriberFlag = 1 THEN 'TRUE' ELSE 'FALSE' end,
+    $1:DimRateCellKey,
+    $1:DimRiderKey,
+    $1:MedicalRiderFlag,
+    $1:DimEligibilityTypeKey,
+    $1:DimPlanSegmentKey
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.FactEnrollment.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_FACT_ENROLLMENT_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_FACT_ENROLLMENT
+    }
+    );
+    var res_load_FACT_ENROLLMENT = load_FACT_ENROLLMENT_snowflake.execute(); 
+
+
+
+    
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+    (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+    VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    return result;
+}
+return result;
+    
+$$;

@@ -1,0 +1,83 @@
+/**
+Truncates and loads the RAWDATA.DWOAO_VENDORS table from MC400 Database. 
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_CMS_RAWDATA_DWOAO_VENDORS()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+
+
+try {
+  sqlText = `INSERT OVERWRITE INTO RAWDATA.DWOAO_VENDORS (ADDRESS1,ADDRESS2,CATEGORY,CITY,EMAILADDRESS,FAXNUMBER,FEIN,HOLDPAYMENTFLAGY,NAME,PHONENBR,PRIMARYPREFDELIVERYMETHOD,PRINTREMITTANCEADVICE,SECONDARYPREFDELIVERYMETH,SHORTNAME,STATE,VENDORNBR,VENDORPENDDATE,ZIPCODE,CASSCERTIFIEDADDRESS,ELECTRONICFUND,SUBMITTERID,CHGLAST,CHGORIG,CHGUSER,TPACLIENT,TPADIVISION,TPAIDOFCLIENT,TPAROWID,ROWID,IRSLIENYN,IRSLIENSTARTDATE,IRSLIENENDDATE,EDI835,NEGREMIT)
+ SELECT TRIM(ADDRESS1),NULLIF(TRIM(ADDRESS2),''),CATEGORY,NULLIF(TRIM(CITY),''),NULLIF(TRIM(EMAILADDRESS),''),NULLIF(FAXNUMBER,''),FEIN,NULLIF(HOLDPAYMENTFLAGY,''),TRIM(NAME),NULLIF(PHONENBR,''),NULLIF(PRIMARYPREFDELIVERYMETHOD,''),NULLIF(PRINTREMITTANCEADVICE,''), NULLIF(SECONDARYPREFDELIVERYMETH,''),TRIM(SHORTNAME),NULLIF(STATE,''),VENDORNBR,VENDORPENDDATE,NULLIF(ZIPCODE,''),NULLIF(CASSCERTIFIEDADDRESS,''),NULLIF(ELECTRONICFUND,''),NULLIF(SUBMITTERID,''),
+  CHGLAST,CHGORIG,NULLIF(CHGUSER,''),TPACLIENT,TPADIVISION,TPAIDOFCLIENT,TPAROWID,ROWID,NULLIF(IRSLIENYN,''),IRSLIENSTARTDATE,IRSLIENENDDATE,NULLIF(EDI835,''),NULLIF(NEGREMIT,'')
+FROM &{MC400}.DWOAO.VENDORS`;
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;
+
+!set variable_substitution=false;

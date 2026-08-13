@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWOAO.PriceCategoryBaseRelationship
+AS
+SELECT * FROM CDC_Merge.dbo.PriceCategoryBaseRelationship WHERE TPACLIENT = '000001' AND TPADIVISION = '0001' AND TPAIDOFCLIENT = '000001' 
+;

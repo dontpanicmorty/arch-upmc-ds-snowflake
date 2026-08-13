@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+!load ./&{tokenFileName}
+!set variable_substitution=false;
+!load ./StaticData/healthsparq.File_Versions.staticdata.sql;
+!load ./StaticData/healthsparq_2.File_Versions.staticdata.sql;
+!load ./StaticData/util.adf_export_copy_control.staticdata.sql;
+!load ./StaticData/util.data_flow_control_table.staticdata.sql;
+!load ./StaticData/util.adf_storage_copy_control.staticdata.sql;
+!load ./StaticData/util.adf_epic_export_copy_control.staticdata.sql;

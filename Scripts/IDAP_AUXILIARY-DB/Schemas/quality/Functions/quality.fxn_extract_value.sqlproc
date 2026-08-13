@@ -1,0 +1,26 @@
+
+CREATE OR REPLACE FUNCTION QUALITY.FXN_EXTRACT_VALUE("TOKEN" VARCHAR(16777216), "DELIMITER" VARCHAR(100))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT = 'extract numeric value from XML tags (workaround for SF issue that truncates a trailing zero'
+AS '
+
+    if ((TOKEN === null) || ( DELIMITER === null) ) 
+        return null;
+
+    var dLen = DELIMITER.length +1;
+    var s1 = String( TOKEN );    
+
+    var ix01 = s1.indexOf( DELIMITER );
+    if ( ix01 === -1)
+        return null;
+    
+    var ix02 = s1.indexOf( `"`, ix01 + dLen );
+    var rtnValue = s1.substring( (ix01 + dLen ), ix02 );
+
+    if ( isNaN( rtnValue ) )
+       return TOKEN
+    else
+       return rtnValue;
+       
+';

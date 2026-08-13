@@ -1,0 +1,62 @@
+CREATE OR REPLACE PROCEDURE UTIL.REFRESH_PIPELINE_RUNS(DATABASE_NAME VARCHAR)
+  RETURNS VARCHAR
+  LANGUAGE JAVASCRIPT
+  EXECUTE AS OWNER
+AS
+$$
+const database_name = DATABASE_NAME;
+const procedureName = 'REFRESH_PIPELINE_RUNS';
+let startTime = new Date().toISOString();
+let statement;
+let result = '';
+try
+{
+    const sql = `
+      ALTER EXTERNAL TABLE ${database_name}.UTIL.PIPELINE_RUNS
+      REFRESH
+    `;
+    //Run SQL
+    statement = snowflake.createStatement({ sqlText: sql });
+    let sqlResult = statement.execute();
+    let affectedNum = sqlResult.getNumRowsAffected();
+    result += database_name + ' succeeded and affected ' + affectedNum + ' rows ' + '\n';
+    let endTime = new Date().toISOString();
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds: [database_name, "TABLE", startTime, endTime, statement.getNumRowsInserted(), statement.getNumRowsUpdated(), statement.getNumRowsDeleted(), result, statement.getSqlText()]
+        }
+    );
+
+}
+catch (err)
+{
+    console.log(err);
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed';
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message, stack]
+        }
+    );
+    throw message;
+}
+return result;
+$$;

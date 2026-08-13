@@ -1,0 +1,643 @@
+﻿<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="7/28/2021 10:43:25 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="USSH2VTNQ2-LAP"
+  DTS:CreatorName="1UPMC-ACCT\gentilega"
+  DTS:DTSID="{E595F93F-B445-477B-8498-D083D6B99F91}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="15.0.1900.78"
+  DTS:LocaleID="1033"
+  DTS:ObjectName="Package1"
+  DTS:PackageType="5"
+  DTS:VersionBuild="13"
+  DTS:VersionGUID="{FC7D1797-8C53-4A83-BB41-E869E6562507}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[EDWRPT.WORLD.GENTILEGA]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{CC3BD699-2B7E-415F-84FF-EE4ACFD3691A}"
+      DTS:ObjectName="EDWRPT.WORLD.GENTILEGA">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=EDWRPT.WORLD;User ID=GENTILEGA;Provider=MSDAORA.1;Persist Security Info=True;">
+          <DTS:Password
+            DTS:Name="Password"
+            Sensitive="1"
+            Encrypted="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAxavdkSdqn0ekfUXkZJjzRwAAAAAIAAAARABUAFMAAAADZgAAwAAAABAAAADDucCs2QexLkMGTNz8gD/pAAAAAASAAACgAAAAEAAAACGuxJnN1sidaBZSH66XR8EgAAAACqR6EJ3cRB36/9tKC8zHMbAbVFWYXd1b4g5hTD3XqW4UAAAAjdWmkpKQSnZtfLCDwn69bGN4/74</DTS:Password>
+        </DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[Flat File Connection Manager]"
+      DTS:CreationName="FLATFILE"
+      DTS:DTSID="{BED438D0-D66B-4891-B7A9-3A957155A0D8}"
+      DTS:ObjectName="Flat File Connection Manager">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:Format="Delimited"
+          DTS:LocaleID="1033"
+          DTS:HeaderRowDelimiter="_x000D__x000A_"
+          DTS:ColumnNamesInFirstDataRow="True"
+          DTS:RowDelimiter=""
+          DTS:TextQualifier="_x003C_none_x003E_"
+          DTS:CodePage="1252"
+          DTS:ConnectionString="C:\IDAP\FullExtract\FSS_PULL_FINAL_5YRS.txt">
+          <DTS:FlatFileColumns>
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="FSS_SOURCE"
+              DTS:DTSID="{366203A2-547C-42FB-AC67-3E27475B184A}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="LOB"
+              DTS:DTSID="{63404AB9-A34D-4131-A2D5-0E9A313C330C}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="CLAIM_NBR"
+              DTS:DTSID="{64E1B8AF-929D-4752-A9FE-E1E6B45FA486}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="CLAIM_LINE_SEQ"
+              DTS:DTSID="{D8417A19-FF8B-44FA-AD32-015AD6D37E3D}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="CLAIM_SEQ"
+              DTS:DTSID="{5C2FC751-F79B-401A-A5C7-A467E335C499}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="FSS"
+              DTS:DTSID="{4999715D-DBBD-4F3D-988A-3419FD59AEA2}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x007C_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="ADMIT_CNT"
+              DTS:DTSID="{AC833C96-5928-41E2-8E17-0046C139221E}"
+              DTS:CreationName="" />
+            <DTS:FlatFileColumn
+              DTS:ColumnType="Delimited"
+              DTS:ColumnDelimiter="_x000D__x000A_"
+              DTS:MaximumWidth="50"
+              DTS:DataType="129"
+              DTS:TextQualified="True"
+              DTS:ObjectName="CLAIM_DAY_CNT"
+              DTS:DTSID="{877CEFD8-C536-4040-8434-6AC5C816D41E}"
+              DTS:CreationName="" />
+          </DTS:FlatFileColumns>
+        </DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{556EADD5-18FA-4686-853A-58854FC65395}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="rowCount">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+  </DTS:Variables>
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\FSS_POC_Extract"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:Description="Data Flow Task"
+      DTS:DTSID="{E6B343BC-4AA5-4762-AFCD-DEEDCCCB1DFE}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="FSS_POC_Extract"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <pipeline
+          autoAdjustBufferSize="true"
+          defaultBufferMaxRows="50000"
+          version="1">
+          <components>
+            <component
+              refId="Package\FSS_POC_Extract\Flat File Destination"
+              componentClassID="Microsoft.FlatFileDestination"
+              contactInfo="Flat File Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
+              description="Flat File Destination"
+              localeId="1033"
+              name="Flat File Destination">
+              <properties>
+                <property
+                  dataType="System.Boolean"
+                  description="Specifies whether the data will overwrite or append to the destination file."
+                  name="Overwrite">true</property>
+                <property
+                  dataType="System.Null"
+                  description="Specifies the text to write to the destination file before any data is written."
+                  expressionType="Notify"
+                  name="Header" />
+                <property
+                  dataType="System.Boolean"
+                  description="When text qualifier is enabled, specifies whether the text qualifier in the data written to the destination file will be escaped or not."
+                  name="EscapeQualifier">false</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\FSS_POC_Extract\Flat File Destination.Connections[FlatFileConnection]"
+                  connectionManagerID="Package.ConnectionManagers[Flat File Connection Manager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Flat File Connection Manager]"
+                  name="FlatFileConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input]"
+                  hasSideEffects="true"
+                  name="Flat File Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[FSS_SOURCE]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="5"
+                      cachedName="FSS_SOURCE"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FSS_SOURCE]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[FSS_SOURCE]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[LOB]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="12"
+                      cachedName="LOB"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[LOB]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[LOB]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[CLAIM_NBR]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="20"
+                      cachedName="CLAIM_NBR"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_NBR]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_NBR]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[CLAIM_LINE_SEQ]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="6"
+                      cachedName="CLAIM_LINE_SEQ"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_LINE_SEQ]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_LINE_SEQ]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[CLAIM_SEQ]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="6"
+                      cachedName="CLAIM_SEQ"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_SEQ]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_SEQ]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[FSS]"
+                      cachedDataType="r8"
+                      cachedName="FSS"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FSS]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[FSS]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[ADMIT_CNT]"
+                      cachedDataType="r8"
+                      cachedName="ADMIT_CNT"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ADMIT_CNT]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[ADMIT_CNT]" />
+                    <inputColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].Columns[CLAIM_DAY_CNT]"
+                      cachedDataType="r8"
+                      cachedName="CLAIM_DAY_CNT"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_DAY_CNT]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_DAY_CNT]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FSS_SOURCE]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="FSS_SOURCE" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[LOB]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="LOB" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_NBR]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="CLAIM_NBR" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_LINE_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="CLAIM_LINE_SEQ" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="CLAIM_SEQ" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FSS]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="FSS" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ADMIT_CNT]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="ADMIT_CNT" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CLAIM_DAY_CNT]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="CLAIM_DAY_CNT" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+            </component>
+            <component
+              refId="Package\FSS_POC_Extract\OLE DB Source 1"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="OLE DB Source 1"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset"></property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=15.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">SELECT * FROM "GENTILEGA"."FSS_PULL_FINAL_5YRS"</property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">true</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\FSS_POC_Extract\OLE DB Source 1.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[EDWRPT.WORLD.GENTILEGA]"
+                  connectionManagerRefId="Package.ConnectionManagers[EDWRPT.WORLD.GENTILEGA]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[FSS_SOURCE]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[FSS_SOURCE]"
+                      length="5"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[FSS_SOURCE]"
+                      name="FSS_SOURCE"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[LOB]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[LOB]"
+                      length="12"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[LOB]"
+                      name="LOB"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_NBR]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_NBR]"
+                      length="20"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_NBR]"
+                      name="CLAIM_NBR"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_LINE_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_LINE_SEQ]"
+                      length="6"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_LINE_SEQ]"
+                      name="CLAIM_LINE_SEQ"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_SEQ]"
+                      length="6"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_SEQ]"
+                      name="CLAIM_SEQ"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[FSS]"
+                      dataType="r8"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[FSS]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[FSS]"
+                      name="FSS"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[ADMIT_CNT]"
+                      dataType="r8"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[ADMIT_CNT]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[ADMIT_CNT]"
+                      name="ADMIT_CNT"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_DAY_CNT]"
+                      dataType="r8"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_DAY_CNT]"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].Columns[CLAIM_DAY_CNT]"
+                      name="CLAIM_DAY_CNT"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[FSS_SOURCE]"
+                      codePage="1252"
+                      dataType="str"
+                      length="5"
+                      name="FSS_SOURCE" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[LOB]"
+                      codePage="1252"
+                      dataType="str"
+                      length="12"
+                      name="LOB" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_NBR]"
+                      codePage="1252"
+                      dataType="str"
+                      length="20"
+                      name="CLAIM_NBR" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_LINE_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      name="CLAIM_LINE_SEQ" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      name="CLAIM_SEQ" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[FSS]"
+                      dataType="r8"
+                      name="FSS" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[ADMIT_CNT]"
+                      dataType="r8"
+                      name="ADMIT_CNT" />
+                    <externalMetadataColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output].ExternalColumns[CLAIM_DAY_CNT]"
+                      dataType="r8"
+                      name="CLAIM_DAY_CNT" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[FSS_SOURCE]"
+                      codePage="1252"
+                      dataType="str"
+                      length="5"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[FSS_SOURCE]"
+                      name="FSS_SOURCE" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[LOB]"
+                      codePage="1252"
+                      dataType="str"
+                      length="12"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[LOB]"
+                      name="LOB" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_NBR]"
+                      codePage="1252"
+                      dataType="str"
+                      length="20"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_NBR]"
+                      name="CLAIM_NBR" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_LINE_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_LINE_SEQ]"
+                      name="CLAIM_LINE_SEQ" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_SEQ]"
+                      codePage="1252"
+                      dataType="str"
+                      length="6"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_SEQ]"
+                      name="CLAIM_SEQ" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[FSS]"
+                      dataType="r8"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[FSS]"
+                      name="FSS" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[ADMIT_CNT]"
+                      dataType="r8"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[ADMIT_CNT]"
+                      name="ADMIT_CNT" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_DAY_CNT]"
+                      dataType="r8"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[CLAIM_DAY_CNT]"
+                      name="CLAIM_DAY_CNT" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\FSS_POC_Extract.Paths[OLE DB Source Output]"
+              endId="Package\FSS_POC_Extract\Flat File Destination.Inputs[Flat File Destination Input]"
+              name="OLE DB Source Output"
+              startId="Package\FSS_POC_Extract\OLE DB Source 1.Outputs[OLE DB Source Output]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph">
+        <NodeLayout
+          Size="171,42"
+          Id="Package\FSS_POC_Extract"
+          TopLeft="250,202" />
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+  <TaskHost
+    design-time-name="Package\FSS_POC_Extract">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="166,42"
+          Id="Package\FSS_POC_Extract\OLE DB Source 1"
+          TopLeft="380.5,221.5" />
+        <NodeLayout
+          Size="176,42"
+          Id="Package\FSS_POC_Extract\Flat File Destination"
+          TopLeft="380,350" />
+        <EdgeLayout
+          Id="Package\FSS_POC_Extract.Paths[OLE DB Source Output]"
+          TopLeft="465.75,263.5">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,86.5"
+              Start="0,0"
+              End="0,79">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,79" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\FSS_POC_Extract\OLE DB Source 1">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>

@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "claim",
+  "dataSourceName": "GBH",
+  "targetTableName": "RAWDATA.GREENBACK_RX_CLAIM_HISTORY",
+  "sourceCloneTableName": "IDAP_LAKE.CLAIM.GREENBACK_RX_CLAIM_HISTORY",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": null
+}

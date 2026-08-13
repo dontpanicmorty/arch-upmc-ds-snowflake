@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE FDBDATA.RPEIMD0_MED_DF_LINK (
+	MEDID NUMERIC(8, 0) NOT NULL,
+	DOSAGE_FORM_ID NUMERIC(8, 0) NOT NULL,
+	DOSAGE_FORM_TYPE_ID NUMERIC(8, 0) NOT NULL,
+	LINK_INACTIVEDATE VARCHAR(8) NULL,
+	CONSTRAINT PK_RPEIMD0_MED_DF_LINK PRIMARY KEY (MEDID, DOSAGE_FORM_ID, DOSAGE_FORM_TYPE_ID)
+)
+COMMENT = 'Contains associations between a Medication Identifier (MEDID) and the Final Dosage Form and Alternative Dosage Forms rolled up from directly associated packaged products (NDCs/UPCs).'
+;

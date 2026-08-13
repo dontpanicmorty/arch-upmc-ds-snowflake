@@ -1,0 +1,337 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_DIM_ENROLLMENT_SPAN_LOOKUP()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+/* get procedure start time and set variables */
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP`;
+
+//get all the enrollment spans and fill in the missing sub_source_name
+var sqlCommandStep1 =
+`
+INSERT OVERWRITE INTO STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+SELECT
+DIM_ENROLLMENT_SPAN.DIM_ENROLLMENT_SPAN_KEY
+,DIM_ENROLLMENT_SPAN.IS_LOGICAL_DELETE_FLAG
+,DIM_ENROLLMENT_SPAN.TPA_CLIENT_ID
+,DIM_ENROLLMENT_SPAN.TPA_ID
+,DIM_ENROLLMENT_SPAN.TPA_DIV_ID
+,DIM_ENROLLMENT_SPAN.MEMBER_NBR
+,DIM_ENROLLMENT_SPAN.ELIGIBILITY_START_DATE
+,DIM_ENROLLMENT_SPAN.ELIGIBILITY_END_DATE
+,IFNULL(DIM_ENROLLMENT_SPAN.SUB_SOURCE_NAME, DIM_MEMBER.SUB_SOURCE_NAME) AS SUB_SOURCE_NAME
+,NULL AS MC400_ELIGIBILITY_END_DATE
+FROM DIMDATA.DIM_ENROLLMENT_SPAN
+    JOIN DIMDATA.DIM_MEMBER
+        ON (DIM_MEMBER.TPA_CLIENT_ID = DIM_ENROLLMENT_SPAN.TPA_CLIENT_ID
+        AND DIM_MEMBER.TPA_ID = DIM_ENROLLMENT_SPAN.TPA_ID
+        AND DIM_MEMBER.TPA_DIV_ID = DIM_ENROLLMENT_SPAN.TPA_DIV_ID
+        AND DIM_MEMBER.MEMBER_NBR = DIM_ENROLLMENT_SPAN.MEMBER_NBR)
+WHERE DIM_ENROLLMENT_SPAN.ELIGIBILITY_START_DATE IS NOT NULL
+;`;
+
+//remove the duplicate enrollment span records that are marked as logical delete, matching start & enddate
+var sqlCommandStep2 = 
+`DELETE FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+WHERE DIM_ENROLLMENT_SPAN_KEY IN
+(
+SELECT
+DIM_ENROLLMENT_SPAN_LOOKUP.DIM_ENROLLMENT_SPAN_KEY
+FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+    JOIN (SELECT TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, MEMBER_NBR, SUB_SOURCE_NAME, ELIGIBILITY_START_DATE, ELIGIBILITY_END_DATE, COUNT(1)
+        FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+        GROUP BY TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, MEMBER_NBR, SUB_SOURCE_NAME, ELIGIBILITY_START_DATE, ELIGIBILITY_END_DATE
+        HAVING COUNT(1) > 1) DUPS
+        ON (DUPS.TPA_CLIENT_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_CLIENT_ID
+        AND DUPS.TPA_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_ID
+        AND DUPS.TPA_DIV_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_DIV_ID
+        AND DUPS.MEMBER_NBR = DIM_ENROLLMENT_SPAN_LOOKUP.MEMBER_NBR
+        AND DUPS.SUB_SOURCE_NAME = DIM_ENROLLMENT_SPAN_LOOKUP.SUB_SOURCE_NAME
+        AND DUPS.ELIGIBILITY_START_DATE = DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_START_DATE
+        AND DUPS.ELIGIBILITY_END_DATE = DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_END_DATE)
+WHERE DIM_ENROLLMENT_SPAN_LOOKUP.IS_LOGICAL_DELETE_FLAG = TRUE
+)
+;`;
+
+//Update MC400_ELIGIBILITY_END_DATE for MC400UPM Members 0001 DWOAO
+var sqlCommandStep3 =
+`
+UPDATE STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+SET MC400_ELIGIBILITY_END_DATE = TO_DATE(TO_VARCHAR(IFF(EligibilityHistory.EligibilityEndDate = 0, 99991231, EligibilityHistory.EligibilityEndDate)), 'YYYYMMDD')
+FROM MC400.DWOAO.EligibilityHistory
+WHERE
+DIM_ENROLLMENT_SPAN_LOOKUP.TPA_CLIENT_ID = EligibilityHistory.TpaClient
+AND DIM_ENROLLMENT_SPAN_LOOKUP.TPA_ID = EligibilityHistory.TpaIdOfClient
+AND DIM_ENROLLMENT_SPAN_LOOKUP.TPA_DIV_ID = EligibilityHistory.TpaDivision
+AND DIM_ENROLLMENT_SPAN_LOOKUP.MEMBER_NBR = EligibilityHistory.MemberNbr
+AND DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_START_DATE = TO_TIMESTAMP_NTZ(TO_VARCHAR(EligibilityHistory.EligibilityStartDate), 'YYYYMMDD')
+AND DIM_ENROLLMENT_SPAN_LOOKUP.SUB_SOURCE_NAME = 'MEDICAL UPMC'
+;`;
+
+//Update MC400_ELIGIBILITY_END_DATE for MC400UPM Members 0002 DWDNV_NONCLAIMS
+var sqlCommandStep4 =
+`
+UPDATE STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+SET MC400_ELIGIBILITY_END_DATE = TO_DATE(TO_VARCHAR(IFF(EligibilityHistory.EligibilityEndDate = 0, 99991231, EligibilityHistory.EligibilityEndDate)), 'YYYYMMDD')
+FROM MC400.DWDNV_NONCLAIMS.EligibilityHistory
+WHERE
+DIM_ENROLLMENT_SPAN_LOOKUP.TPA_CLIENT_ID = EligibilityHistory.TpaClient
+AND DIM_ENROLLMENT_SPAN_LOOKUP.TPA_ID = EligibilityHistory.TpaIdOfClient
+AND DIM_ENROLLMENT_SPAN_LOOKUP.TPA_DIV_ID = EligibilityHistory.TpaDivision
+AND DIM_ENROLLMENT_SPAN_LOOKUP.MEMBER_NBR = EligibilityHistory.MemberNbr
+AND DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_START_DATE = TO_TIMESTAMP_NTZ(TO_VARCHAR(EligibilityHistory.EligibilityStartDate), 'YYYYMMDD')
+AND DIM_ENROLLMENT_SPAN_LOOKUP.SUB_SOURCE_NAME = 'DENTAL UPMC'
+;`;
+
+//Update MC400_ELIGIBILITY_END_DATE for MC400DNT Members 0001 DWDNV
+var sqlCommandStep5 =
+`
+UPDATE STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+SET MC400_ELIGIBILITY_END_DATE = TO_DATE(TO_VARCHAR(IFF(EligibilityHistory.EligibilityEndDate = 0, 99991231, EligibilityHistory.EligibilityEndDate)), 'YYYYMMDD')
+FROM MC400.DWDNV.EligibilityHistory
+WHERE
+DIM_ENROLLMENT_SPAN_LOOKUP.TPA_CLIENT_ID = '000001'
+AND DIM_ENROLLMENT_SPAN_LOOKUP.TPA_ID = '000001'
+AND DIM_ENROLLMENT_SPAN_LOOKUP.TPA_DIV_ID = '0001'
+AND DIM_ENROLLMENT_SPAN_LOOKUP.MEMBER_NBR = EligibilityHistory.MemberNbr
+AND DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_START_DATE = TO_TIMESTAMP_NTZ(TO_VARCHAR(EligibilityHistory.EligibilityStartDate), 'YYYYMMDD')
+AND DIM_ENROLLMENT_SPAN_LOOKUP.SUB_SOURCE_NAME = 'DENTAL UPMC'
+;`;
+
+//Delete all records where DimEnrollmentSpan endDate does not match mc400 and are logical delete
+//Also delete anything that does not have a match in mc400 and is logical delete
+var sqlCommandStep6 =
+`
+DELETE FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+WHERE 
+(
+ELIGIBILITY_END_DATE <> MC400_ELIGIBILITY_END_DATE AND IS_LOGICAL_DELETE_FLAG = TRUE)
+OR (MC400_ELIGIBILITY_END_DATE IS NULL AND IS_LOGICAL_DELETE_FLAG = TRUE)
+;`;
+
+//Delete the remaining duplicates where dim_enrollment_span does not match mc400
+var sqlCommandStep7 =
+`
+DELETE FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+WHERE DIM_ENROLLMENT_SPAN_KEY IN
+(
+SELECT
+DIM_ENROLLMENT_SPAN_LOOKUP.DIM_ENROLLMENT_SPAN_KEY
+FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+    JOIN (SELECT
+            TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, SUB_SOURCE_NAME, MEMBER_NBR, ELIGIBILITY_START_DATE, COUNT(1) AS CNT
+            FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+            GROUP BY TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, SUB_SOURCE_NAME, MEMBER_NBR, ELIGIBILITY_START_DATE
+            HAVING COUNT(1) > 1) DUPS
+        ON (DUPS.TPA_CLIENT_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_CLIENT_ID
+        AND DUPS.TPA_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_ID
+        AND DUPS.TPA_DIV_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_DIV_ID
+        AND DUPS.SUB_SOURCE_NAME = DIM_ENROLLMENT_SPAN_LOOKUP.SUB_SOURCE_NAME
+        AND DUPS.MEMBER_NBR = DIM_ENROLLMENT_SPAN_LOOKUP.MEMBER_NBR
+        AND DUPS.ELIGIBILITY_START_DATE = DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_START_DATE)
+WHERE ELIGIBILITY_END_DATE <> MC400_ELIGIBILITY_END_DATE
+)
+;`;
+
+//Delete any overlapping enrollment spans where there is not a matching mc400 end date or the overlap is logically deleted 
+var sqlCommandStep8 =
+`
+DELETE FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+WHERE DIM_ENROLLMENT_SPAN_KEY IN
+(
+SELECT
+OVERLAP.DIM_ENROLLMENT_SPAN_KEY
+FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+    JOIN STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP OVERLAP
+        ON (OVERLAP.TPA_CLIENT_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_CLIENT_ID
+        AND OVERLAP.TPA_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_ID
+        AND OVERLAP.TPA_DIV_ID = DIM_ENROLLMENT_SPAN_LOOKUP.TPA_DIV_ID
+        AND OVERLAP.SUB_SOURCE_NAME = DIM_ENROLLMENT_SPAN_LOOKUP.SUB_SOURCE_NAME
+        AND OVERLAP.MEMBER_NBR = DIM_ENROLLMENT_SPAN_LOOKUP.MEMBER_NBR
+        AND OVERLAP.ELIGIBILITY_START_DATE >= DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_START_DATE
+        AND OVERLAP.ELIGIBILITY_START_DATE <= DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_END_DATE
+        AND OVERLAP.DIM_ENROLLMENT_SPAN_KEY <> DIM_ENROLLMENT_SPAN_LOOKUP.DIM_ENROLLMENT_SPAN_KEY
+        AND OVERLAP.ELIGIBILITY_START_DATE <> DIM_ENROLLMENT_SPAN_LOOKUP.ELIGIBILITY_END_DATE)
+WHERE OVERLAP.MC400_ELIGIBILITY_END_DATE IS NULL OR OVERLAP.IS_LOGICAL_DELETE_FLAG = TRUE
+)
+;`;
+
+//Delete any remaining duplicates
+var sqlCommandStep9 =
+`
+DELETE
+FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+WHERE DIM_ENROLLMENT_SPAN_KEY IN (
+    SELECT MIN(DIM_ENROLLMENT_SPAN_KEY)
+    FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+    WHERE (TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, MEMBER_NBR, ELIGIBILITY_START_DATE) IN (
+            SELECT TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, MEMBER_NBR, ELIGIBILITY_START_DATE
+            FROM STAGEDATA.DIM_ENROLLMENT_SPAN_LOOKUP
+            GROUP BY TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, MEMBER_NBR, ELIGIBILITY_START_DATE
+            HAVING COUNT(*) > 1
+    )
+GROUP BY TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, MEMBER_NBR, ELIGIBILITY_START_DATE
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Step 1
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep1});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 2
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep2});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 3
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep3});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });    
+
+    //Execute Step 4
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep4});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 5
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep5});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 6
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep6});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 7
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep7});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 8
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep8});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Step 9
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommandStep9});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

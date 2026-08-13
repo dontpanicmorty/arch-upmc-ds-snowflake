@@ -1,0 +1,176 @@
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_INSERT_CCD_CONTROL("JOB_ID" VARCHAR(16777216), "YEARVAL" VARCHAR(4) DEFAULT '-', "MONTHVAL" VARCHAR(2) DEFAULT '-', "DAYVAL" VARCHAR(2) DEFAULT '-')
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load IDAP_LAKE.QUALITY.CCD_CONTROL'
+EXECUTE AS OWNER
+AS $$
+
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_INSERT_CCD_CONTROL";
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY 
+(RUN_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT,ADF_CONTROL_KEY)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9)
+;`;
+
+var sqlTruncateCommand = 
+`TRUNCATE TABLE QUALITY.CCD_CONTROL;`;
+
+
+
+var sqlUpdateCommand =
+`
+UPDATE QUALITY.CCD_CONTROL
+    SET PATIENT_MRN = UPPER(PATIENT_MRN),
+        PATIENT_FIRST_NAME = UPPER( PATIENT_FIRST_NAME),
+        PATIENT_LAST_NAME = UPPER(PATIENT_LAST_NAME);
+`
+
+
+    try
+    {
+    
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//---------------------------------------
+
+    // truncate QUALITY.CCD_CONTROL table 
+    var sfStatement = snowflake.createStatement({sqlText: sqlTruncateCommand});
+    sfStatement.execute();
+
+
+
+    // EXAMINE INPUT PARMS AND DETERMINE IF WE SHOULD LIMIT THE COPY
+    // BY YEAR AND/OR MONTH AND/OR DAY
+    var filterPattern = "";    
+
+    if(YEARVAL != ''-'')
+    {
+        filterPattern += "/" + YEARVAL;
+        if(MONTHVAL != ''-'')
+        {
+            filterPattern += "/" + MONTHVAL;
+            if(DAYVAL != ''-'')
+            {
+                filterPattern += "/" + DAYVAL;
+            }
+        }
+    }
+
+//    var txtRegex = ''.+\\.txt$'';
+//
+//    var doubleQuote = `"`;
+//    var doubleQuoteField = `''` + doubleQuote + `''`;
+//
+//    var fileFormat = `
+//         FILE_FORMAT = (type=CSV, 
+//                  FIELD_DELIMITER = ''|'', 
+//                  SKIP_HEADER = 1,
+//                  FIELD_OPTIONALLY_ENCLOSED_BY = ` + doubleQuoteField + ` );
+//    `;
+
+
+        var sqlCopyCommand = `COPY INTO QUALITY.CCD_CONTROL FROM (
+          SELECT 
+               $1,  $2,  $3,  $4, $5, $6,  $7,  $8,  $9, $10, $11, $12, $13, $14, $15, $16, $17,
+               metadata$filename,
+               metadata$file_row_number,
+               metadata$file_last_modified,
+               METADATA$START_SCAN_TIME
+          FROM @QUALITY.CLEARSENSE_CCD_INDEX` + filterPattern + `) FILE_FORMAT = FF_CCD_CONTROL `;
+    
+    var sfStatement = snowflake.createStatement({sqlText: sqlCopyCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    // Log results to LOGDATA.ADF_TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, "QUALITY.CCD_CONTROL", "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), result, sfStatement.getSqlText(), "QUALITY.SPU_INSERT_CCD_CONTROL"]
+        }
+    );    
+  
+    var sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    // Log results to LOGDATA.ADF_TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, "QUALITY.CCD_CONTROL", "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), result, sfStatement.getSqlText(), "QUALITY.SPU_INSERT_CCD_CONTROL"]
+        }
+    );    
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+     return "Success";
+
+   }
+   catch (err)    
+   {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+
+    
+    endTime = new Date().toISOString();    
+    
+    // Log ERROR results to table ADF_TABLE_LOAD_HISTORY
+    var logErrorCommand = `INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY
+        (RUN_ID,NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, ADF_CONTROL_KEY)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {sqlText: logErrorCommand,
+        binds:[JOB_ID,
+               "QUALITY.CCD_CONTROL", 
+               "TABLE", 
+               startTime, 
+               endTime, 
+               "FAILURE", 
+               sfStatement.getSqlText(), 
+               err.code, 
+               err.state, 
+               err.message, 
+               err.stackTraceTxt,
+			   "QUALITY.SPU_INSERT_CCD_CONTROL"
+               ]
+        }
+    );
+        
+        throw err;
+    }        
+$$;

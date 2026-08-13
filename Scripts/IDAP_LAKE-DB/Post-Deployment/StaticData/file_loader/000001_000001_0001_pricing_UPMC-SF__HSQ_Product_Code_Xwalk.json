@@ -1,0 +1,36 @@
+{
+    "outputSchema": "PRICING",
+    "outputTable": "HEALTHSPARQ_PRODUCT_CODE_CROSSWALK",
+    "hasHeader": true,
+    "hasTrailer": false,
+    "fileType": "delimited",
+    "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+    "fileFormat": "BUSINESS_FILE_FORMAT",
+    "truncReload": true,
+    "mappingTypes": {
+        "all": {
+        "mappingContents": [
+            {
+            "columnOrder": 1,
+            "inputField": "SEGMENT",
+            "outputField": "SEGMENT"
+            },
+            {
+            "columnOrder": 2,
+            "inputField": "PROV_SET",
+            "outputField": "PROVIDER_SET"
+            },
+            {
+            "columnOrder": 3,
+            "inputField": "PRODUCT_CODE",
+            "outputField": "PRODUCT_CODE"
+            },
+            {
+            "columnOrder": 4,
+            "inputField": "PROVIDER_NETWORK_NAME",
+            "outputField": "NETWORK_NAME"
+            }
+        ]
+        }
+    }
+}

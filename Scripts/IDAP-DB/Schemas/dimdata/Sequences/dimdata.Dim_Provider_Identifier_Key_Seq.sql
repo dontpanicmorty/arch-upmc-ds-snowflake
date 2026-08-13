@@ -1,0 +1,5 @@
+CREATE OR REPLACE SEQUENCE DIMDATA.DIM_PROVIDER_IDENTIFIER_KEY_SEQ
+    START = 100000000
+    INCREMENT = 1
+    COMMENT = 'Sequence to create for DIM_PROVIDER_IDENTIFIER_KEY until we migrate provider to markLogic'
+;

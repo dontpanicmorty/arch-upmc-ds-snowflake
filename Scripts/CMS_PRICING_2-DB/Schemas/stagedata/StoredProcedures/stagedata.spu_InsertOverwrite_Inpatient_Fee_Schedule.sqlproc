@@ -1,0 +1,116 @@
+/**
+Inserts into the INPATIENT_FEE_SCHEDULE_SELECT_HOLD table to reduce in-line computation of unioned views
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_INSERT_OVERWRITE_INPATIENT_FEE_SCHEDULE ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+  sqlText = `SELECT CURRENT_DATABASE();`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  let currentDatabase = resultSet.getColumnValueAsString('CURRENT_DATABASE()');
+
+  let internal = `
+    SELECT SCHEDULE_TYPE, SEGMENT, VENDOR, BILLING_CODE, NULL AS BILLING_CODE_MODIFIER, MS_DRG_TITLE, REPLACE(RATE,',','') AS RATE, NEGOTIATION_TYPE, FILE_DATE, ADDITIONAL_INFORMATION
+    FROM &{IDAP_LAKE}.PRICING.INPATIENT_FEE_SCHEDULE
+  `;
+
+  // Effectively: if we're running in HEALTHSPARQ, include their additional views
+  if (currentDatabase.includes('HEALTHSPARQ')) {
+      internal += `UNION
+      SELECT SCHEDULE_TYPE, SEGMENT, VENDOR, BILLING_CODE, BILLING_CODE_MODIFIER, MS_DRG_TITLE, REPLACE(RATE,',','') AS RATE, NEGOTIATION_TYPE, FILE_DATE, ADDITIONAL_INFORMATION
+      FROM STAGEDATA.PRICING_RULE_009_VW
+      UNION
+      SELECT SCHEDULE_TYPE, SEGMENT, VENDOR, BILLING_CODE, BILLING_CODE_MODIFIER, MS_DRG_TITLE, REPLACE(RATE,',','') AS RATE, NEGOTIATION_TYPE, FILE_DATE, ADDITIONAL_INFORMATION
+      FROM STAGEDATA.PRICING_RULE_041_VW
+      UNION
+      SELECT SCHEDULE_TYPE, SEGMENT, VENDOR, BILLING_CODE, BILLING_CODE_MODIFIER, MS_DRG_TITLE, REPLACE(RATE,',','') AS RATE, NEGOTIATION_TYPE, FILE_DATE, ADDITIONAL_INFORMATION
+      FROM STAGEDATA.PRICING_RULE_065_VW`;
+  }
+
+  sqlText = `INSERT OVERWRITE INTO STAGEDATA.INPATIENT_FEE_SCHEDULE_SELECT_HOLD
+  (
+    SCHEDULE_TYPE,
+    SEGMENT,
+    VENDOR,
+    BILLING_CODE,
+    BILLING_CODE_MODIFIERS,
+    MS_DRG_TITLE,
+    RATE,
+    NEGOTIATION_TYPE_NAME,
+    FILE_DATE,
+    ADDITIONAL_INFORMATION
+  )
+  SELECT SCHEDULE_TYPE, SEGMENT, VENDOR, BILLING_CODE, NVL2(BILLING_CODE_MODIFIER,ARRAY_CONSTRUCT(BILLING_CODE_MODIFIER),ARRAY_CONSTRUCT()) BILLING_CODE_MODIFIERS, MS_DRG_TITLE, RATE, NEGOTIATION_TYPE, FILE_DATE, ADDITIONAL_INFORMATION
+  FROM (${internal})`;
+
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;
+
+!set variable_substitution=false;

@@ -1,0 +1,7 @@
+CREATE OR REPLACE TABLE FDBDATA.RPEIRL0_RT_LABELED_DESC (
+	RT_LABELED_ID NUMERIC(8, 0) NOT NULL,
+	RT_LABELED_DESC VARCHAR(50) NOT NULL,
+	CONSTRAINT PK_RPEIRL0_RT_LABELED_DESC PRIMARY KEY (RT_LABELED_ID)
+)
+COMMENT = 'Provides the description for values that describe the source of clinical routes associated to a product.'
+;

@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE STAGING.MC4_SYSTEM_PROVIDER_LKP
+(
+IRS_NBR                        VARCHAR,
+PROVIDER_CODE                  VARCHAR,
+LOAD_DATE                TIMESTAMP_NTZ,
+PROV_NBR                       VARCHAR,
+ID_TO_USE                      VARCHAR,
+EFFECTIVE_START_DATE     TIMESTAMP_NTZ,
+EFFECTIVE_END_DATE       TIMESTAMP_NTZ,
+MC4_ID                         VARCHAR
+)
+COMMENT='Created for STAGING Migration'
+;

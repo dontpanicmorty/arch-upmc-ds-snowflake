@@ -1,0 +1,27 @@
+CREATE OR REPLACE TABLE EDW_RPT.PRESCRIBER
+(
+PRESCRIBER_KEY                        NUMBER,
+PRESCRIBER_ID                        VARCHAR,
+PRESCRIBER_NAME                      VARCHAR,
+ADDRESS_LINE_SECONDARY               VARCHAR,
+ADDRESS_LINE_PRIMARY                 VARCHAR,
+ADDRESS_CITY                         VARCHAR,
+ADDRESS_STATE                        VARCHAR,
+ADDRESS_ZIP_CODE                     VARCHAR,
+LOAD_DATE                      TIMESTAMP_NTZ,
+UPDATE_DATE                    TIMESTAMP_NTZ,
+PRESCRIBER_SOURCE_CODE               VARCHAR,
+PROVIDER_ID                          VARCHAR,
+TELEPHONE_NBR                        VARCHAR,
+FAX_NBR                              VARCHAR,
+PRIMARY_TAXONOMY_CODE                VARCHAR,
+PRIMARY_TAXONOMY_TYPE                VARCHAR,
+PRIMARY_TAXONOMY_CLASS               VARCHAR,
+PRIMARY_TAXONOMY_SPECIALTY           VARCHAR,
+PRIMARY_SPECIALTY_CODE               VARCHAR,
+PRIMARY_SPECIALTY_DESC               VARCHAR,
+EFFECTIVE_START_DATE           TIMESTAMP_NTZ,
+EFFECTIVE_END_DATE             TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

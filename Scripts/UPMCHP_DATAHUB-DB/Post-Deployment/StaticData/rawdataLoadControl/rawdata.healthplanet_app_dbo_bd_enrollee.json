@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "member",
+  "dataSourceName": "HealthPlanet",
+  "targetTableName": "RAWDATA.HEALTHPLANET_APP_DBO_BD_ENROLLEE",
+  "sourceCloneTableName": "IDAP_LAKE.HEALTHPLANET_APP_STAGE.DBO__BD_ENROLLEE",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": null
+}

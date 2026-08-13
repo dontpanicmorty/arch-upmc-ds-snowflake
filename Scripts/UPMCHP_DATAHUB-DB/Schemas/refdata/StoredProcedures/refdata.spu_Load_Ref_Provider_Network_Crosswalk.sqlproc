@@ -1,0 +1,348 @@
+CREATE OR REPLACE PROCEDURE REFDATA.SPU_LOAD_REF_PROVIDER_NETWORK_CROSSWALK(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `REFDATA.PROVIDER_NETWORK_CROSSWALK`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO REFDATA.PROVIDER_NETWORK_CROSSWALK tgt
+USING (
+    SELECT
+        PROVIDER_NETWORK_CROSSWALK_HKEY
+        ,CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,WEB_DIRECTORY_VISIBLE_IND
+        ,CARE_TYPE_NAME
+        ,COVERAGE_TYPE
+        ,PLAN_NAME
+        ,PROVDIR_H2_PRODUCT_KEY
+        ,PROVDIR_H2_SUB_PRODUCT_KEY
+        ,H2_ENTITY_NAME
+        ,PROVDIR_H2_PRODUCT_NAME
+        ,PROVDIR_H2_SUB_PRODUCT_NAME
+        ,PRODUCT_NAME
+        ,PRODUCT_TYPE_NAME
+        ,ALT_DESTINATION_URL
+        ,ALTERNATE_NETWORK_NAME
+        ,SUPER_PCP_RECORDS_FLAG
+        ,LEVELED_SUB_PRODUCT_IND
+        ,MARKET_IDENTITY_NAME
+        ,CONTRACT_MODEL_NAME
+        ,SOURCE_NAME
+        ,MC400_IPA_CODE
+        ,MC400_PLAN_TYPE_CODE
+        ,OUT_OF_AREA_MESSAGE_TEMPLATE
+        ,COVERAGE_VALUE
+        ,PROVDIR_NETWORK_ID
+        ,DNV_PLAN_TYPE_CODE
+        ,RIDER_TYPE_CODE
+        ,PLAN_NAME_DISPLAY_KEY
+        ,COVERAGE_TYPE_DISPLAY_ORDER_NBR
+        ,PLAN_NAME_DISPLAY_ORDER_NBR
+        ,LINE_OF_BUSINESS_NAME
+        ,SPECIALTY_LIST_IND
+        ,YEAR_SPECIFIC_PLAN_IND
+        ,PLAN_YEAR
+        ,UPMC_OWNED_DISPLAY_IND
+        ,CHANGE_NOTIFICATION_TEXT
+        ,INCLUDE_IN_DIRECTORY
+        ,FORMULARY_CODE
+    FROM ${SOURCE_VIEW_NAME}
+    MINUS
+    SELECT
+        PROVIDER_NETWORK_CROSSWALK_HKEY
+        ,CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,WEB_DIRECTORY_VISIBLE_IND
+        ,CARE_TYPE_NAME
+        ,COVERAGE_TYPE
+        ,PLAN_NAME
+        ,PROVDIR_H2_PRODUCT_KEY
+        ,PROVDIR_H2_SUB_PRODUCT_KEY
+        ,H2_ENTITY_NAME
+        ,PROVDIR_H2_PRODUCT_NAME
+        ,PROVDIR_H2_SUB_PRODUCT_NAME
+        ,PRODUCT_NAME
+        ,PRODUCT_TYPE_NAME
+        ,ALT_DESTINATION_URL
+        ,ALTERNATE_NETWORK_NAME
+        ,SUPER_PCP_RECORDS_FLAG
+        ,LEVELED_SUB_PRODUCT_IND
+        ,MARKET_IDENTITY_NAME
+        ,CONTRACT_MODEL_NAME
+        ,SOURCE_NAME
+        ,MC400_IPA_CODE
+        ,MC400_PLAN_TYPE_CODE
+        ,OUT_OF_AREA_MESSAGE_TEMPLATE
+        ,COVERAGE_VALUE
+        ,PROVDIR_NETWORK_ID
+        ,DNV_PLAN_TYPE_CODE
+        ,RIDER_TYPE_CODE
+        ,PLAN_NAME_DISPLAY_KEY
+        ,COVERAGE_TYPE_DISPLAY_ORDER_NBR
+        ,PLAN_NAME_DISPLAY_ORDER_NBR
+        ,LINE_OF_BUSINESS_NAME
+        ,SPECIALTY_LIST_IND
+        ,YEAR_SPECIFIC_PLAN_IND
+        ,PLAN_YEAR
+        ,UPMC_OWNED_DISPLAY_IND
+        ,CHANGE_NOTIFICATION_TEXT
+        ,INCLUDE_IN_DIRECTORY
+        ,FORMULARY_CODE    
+    FROM REFDATA.PROVIDER_NETWORK_CROSSWALK
+    ) src
+
+ON (tgt.PROVIDER_NETWORK_CROSSWALK_HKEY = src.PROVIDER_NETWORK_CROSSWALK_HKEY)  
+
+WHEN MATCHED
+THEN UPDATE
+    SET
+        tgt.LAST_UPDATED_DATETIME = :1
+        ,tgt.CLIENT_ID=src.CLIENT_ID
+        ,tgt.TPA_ID=src.TPA_ID
+        ,tgt.TPA_DIV_ID=src.TPA_DIV_ID
+        ,tgt.WEB_DIRECTORY_VISIBLE_IND=src.WEB_DIRECTORY_VISIBLE_IND
+        ,tgt.CARE_TYPE_NAME=src.CARE_TYPE_NAME
+        ,tgt.COVERAGE_TYPE=src.COVERAGE_TYPE
+        ,tgt.PLAN_NAME=src.PLAN_NAME
+        ,tgt.PROVDIR_H2_PRODUCT_KEY=src.PROVDIR_H2_PRODUCT_KEY
+        ,tgt.PROVDIR_H2_SUB_PRODUCT_KEY=src.PROVDIR_H2_SUB_PRODUCT_KEY
+        ,tgt.H2_ENTITY_NAME=src.H2_ENTITY_NAME
+        ,tgt.PROVDIR_H2_PRODUCT_NAME=src.PROVDIR_H2_PRODUCT_NAME
+        ,tgt.PROVDIR_H2_SUB_PRODUCT_NAME=src.PROVDIR_H2_SUB_PRODUCT_NAME
+        ,tgt.PRODUCT_NAME=src.PRODUCT_NAME
+        ,tgt.PRODUCT_TYPE_NAME=src.PRODUCT_TYPE_NAME
+        ,tgt.ALT_DESTINATION_URL=src.ALT_DESTINATION_URL
+        ,tgt.ALTERNATE_NETWORK_NAME=src.ALTERNATE_NETWORK_NAME
+        ,tgt.SUPER_PCP_RECORDS_FLAG=src.SUPER_PCP_RECORDS_FLAG
+        ,tgt.LEVELED_SUB_PRODUCT_IND=src.LEVELED_SUB_PRODUCT_IND
+        ,tgt.MARKET_IDENTITY_NAME=src.MARKET_IDENTITY_NAME
+        ,tgt.CONTRACT_MODEL_NAME=src.CONTRACT_MODEL_NAME
+        ,tgt.SOURCE_NAME=src.SOURCE_NAME
+        ,tgt.MC400_IPA_CODE=src.MC400_IPA_CODE
+        ,tgt.MC400_PLAN_TYPE_CODE=src.MC400_PLAN_TYPE_CODE
+        ,tgt.OUT_OF_AREA_MESSAGE_TEMPLATE=src.OUT_OF_AREA_MESSAGE_TEMPLATE
+        ,tgt.COVERAGE_VALUE=src.COVERAGE_VALUE
+        ,tgt.PROVDIR_NETWORK_ID=src.PROVDIR_NETWORK_ID
+        ,tgt.DNV_PLAN_TYPE_CODE=src.DNV_PLAN_TYPE_CODE
+        ,tgt.RIDER_TYPE_CODE=src.RIDER_TYPE_CODE
+        ,tgt.PLAN_NAME_DISPLAY_KEY=src.PLAN_NAME_DISPLAY_KEY
+        ,tgt.COVERAGE_TYPE_DISPLAY_ORDER_NBR=src.COVERAGE_TYPE_DISPLAY_ORDER_NBR
+        ,tgt.PLAN_NAME_DISPLAY_ORDER_NBR=src.PLAN_NAME_DISPLAY_ORDER_NBR
+        ,tgt.LINE_OF_BUSINESS_NAME=src.LINE_OF_BUSINESS_NAME
+        ,tgt.SPECIALTY_LIST_IND=src.SPECIALTY_LIST_IND
+        ,tgt.YEAR_SPECIFIC_PLAN_IND=src.YEAR_SPECIFIC_PLAN_IND
+        ,tgt.PLAN_YEAR=src.PLAN_YEAR
+        ,tgt.UPMC_OWNED_DISPLAY_IND=src.UPMC_OWNED_DISPLAY_IND
+        ,tgt.CHANGE_NOTIFICATION_TEXT=src.CHANGE_NOTIFICATION_TEXT
+        ,tgt.INCLUDE_IN_DIRECTORY=src.INCLUDE_IN_DIRECTORY
+        ,tgt.FORMULARY_CODE=src.FORMULARY_CODE
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        PROVIDER_NETWORK_CROSSWALK_HKEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,WEB_DIRECTORY_VISIBLE_IND
+        ,CARE_TYPE_NAME
+        ,COVERAGE_TYPE
+        ,PLAN_NAME
+        ,PROVDIR_H2_PRODUCT_KEY
+        ,PROVDIR_H2_SUB_PRODUCT_KEY
+        ,H2_ENTITY_NAME
+        ,PROVDIR_H2_PRODUCT_NAME
+        ,PROVDIR_H2_SUB_PRODUCT_NAME
+        ,PRODUCT_NAME
+        ,PRODUCT_TYPE_NAME
+        ,ALT_DESTINATION_URL
+        ,ALTERNATE_NETWORK_NAME
+        ,SUPER_PCP_RECORDS_FLAG
+        ,LEVELED_SUB_PRODUCT_IND
+        ,MARKET_IDENTITY_NAME
+        ,CONTRACT_MODEL_NAME
+        ,SOURCE_NAME
+        ,MC400_IPA_CODE
+        ,MC400_PLAN_TYPE_CODE
+        ,OUT_OF_AREA_MESSAGE_TEMPLATE
+        ,COVERAGE_VALUE
+        ,PROVDIR_NETWORK_ID
+        ,DNV_PLAN_TYPE_CODE
+        ,RIDER_TYPE_CODE
+        ,PLAN_NAME_DISPLAY_KEY
+        ,COVERAGE_TYPE_DISPLAY_ORDER_NBR
+        ,PLAN_NAME_DISPLAY_ORDER_NBR
+        ,LINE_OF_BUSINESS_NAME
+        ,SPECIALTY_LIST_IND
+        ,YEAR_SPECIFIC_PLAN_IND
+        ,PLAN_YEAR
+        ,UPMC_OWNED_DISPLAY_IND
+        ,CHANGE_NOTIFICATION_TEXT
+        ,INCLUDE_IN_DIRECTORY
+        ,FORMULARY_CODE    
+    )
+ VALUES 
+    (
+        src.PROVIDER_NETWORK_CROSSWALK_HKEY
+        ,:1
+        ,:1
+        ,src.CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.WEB_DIRECTORY_VISIBLE_IND
+        ,src.CARE_TYPE_NAME
+        ,src.COVERAGE_TYPE
+        ,src.PLAN_NAME
+        ,src.PROVDIR_H2_PRODUCT_KEY
+        ,src.PROVDIR_H2_SUB_PRODUCT_KEY
+        ,src.H2_ENTITY_NAME
+        ,src.PROVDIR_H2_PRODUCT_NAME
+        ,src.PROVDIR_H2_SUB_PRODUCT_NAME
+        ,src.PRODUCT_NAME
+        ,src.PRODUCT_TYPE_NAME
+        ,src.ALT_DESTINATION_URL
+        ,src.ALTERNATE_NETWORK_NAME
+        ,src.SUPER_PCP_RECORDS_FLAG
+        ,src.LEVELED_SUB_PRODUCT_IND
+        ,src.MARKET_IDENTITY_NAME
+        ,src.CONTRACT_MODEL_NAME
+        ,src.SOURCE_NAME
+        ,src.MC400_IPA_CODE
+        ,src.MC400_PLAN_TYPE_CODE
+        ,src.OUT_OF_AREA_MESSAGE_TEMPLATE
+        ,src.COVERAGE_VALUE
+        ,src.PROVDIR_NETWORK_ID
+        ,src.DNV_PLAN_TYPE_CODE
+        ,src.RIDER_TYPE_CODE
+        ,src.PLAN_NAME_DISPLAY_KEY
+        ,src.COVERAGE_TYPE_DISPLAY_ORDER_NBR
+        ,src.PLAN_NAME_DISPLAY_ORDER_NBR
+        ,src.LINE_OF_BUSINESS_NAME
+        ,src.SPECIALTY_LIST_IND
+        ,src.YEAR_SPECIFIC_PLAN_IND
+        ,src.PLAN_YEAR
+        ,src.UPMC_OWNED_DISPLAY_IND
+        ,src.CHANGE_NOTIFICATION_TEXT
+        ,src.INCLUDE_IN_DIRECTORY
+        ,src.FORMULARY_CODE 
+    )
+;`;
+
+// Delete command to remove any entries not in the source data but need to ensure none source data is perserved.
+var sqlDeleteCommand =
+`
+DELETE FROM REFDATA.PROVIDER_NETWORK_CROSSWALK
+WHERE PROVIDER_NETWORK_CROSSWALK_HKEY NOT IN (SELECT PROVIDER_NETWORK_CROSSWALK_HKEY FROM ${SOURCE_VIEW_NAME})
+;
+`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    };
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        };
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Delete Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

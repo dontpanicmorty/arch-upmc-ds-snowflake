@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_PROPORTIONS
+(
+AGG_GROUP                    VARCHAR,
+CODE                         VARCHAR,
+DATE_START                    NUMBER(33,5),
+DATE_END                      NUMBER(33,5),
+EMP_CNT                       NUMBER(33,5),
+CHNG_JOB_PROPORTION           NUMBER(33,5),
+CHNG_LOCATION_PROPORTION      NUMBER(33,5),
+REPRIMAND_PROPORTION          NUMBER(33,5),
+BONUS_PROPORTION              NUMBER(33,5),
+TERM_PROPORTION               NUMBER(33,5),
+HIRED_PROPORTION              NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

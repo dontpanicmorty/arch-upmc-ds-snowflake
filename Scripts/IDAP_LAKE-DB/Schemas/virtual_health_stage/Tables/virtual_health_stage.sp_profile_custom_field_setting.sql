@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.SP_PROFILE_CUSTOM_FIELD_SETTING
+(
+ID                    INT,
+ALIAS             VARCHAR,
+LABEL             VARCHAR,
+TYPE                  INT,
+CONFIGURATION     VARIANT,
+IS_ACTIVE             INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

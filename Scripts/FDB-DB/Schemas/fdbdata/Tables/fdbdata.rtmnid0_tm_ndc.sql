@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE FDBDATA.RTMNID0_TM_NDC (
+	NDC VARCHAR(11) NOT NULL,
+	TM_NAME_TYPE_ID NUMERIC(5, 0) NOT NULL,
+	TM_SOURCE_ID NUMERIC(5, 0) NULL,
+	TM_IND NUMERIC(1, 0) NOT NULL,
+	TM_ALT_NDC_DESC VARCHAR(60) NOT NULL,
+	CONSTRAINT PK_RTMNID0_TM_NDC PRIMARY KEY (NDC, TM_NAME_TYPE_ID)
+)
+COMMENT = 'When appropriate, provides Tall Man lettering of a Packaged Product (NDC) as well as the sources of the recommendations for inclusion.'
+;

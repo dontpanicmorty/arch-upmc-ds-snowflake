@@ -1,0 +1,20 @@
+/**
+Creates the truncate table from all extract component tables. Needs to be run
+before anything else; grabs all the possible priceCategiries and inserts them 
+into the table with an integer key.
+*/
+
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_TRUNCATE_TABLE(TABLE_NAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+sqlCommand = `TRUNCATE TABLE ${TABLE_NAME}`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();     
+        
+return resultSet;
+$$
+;

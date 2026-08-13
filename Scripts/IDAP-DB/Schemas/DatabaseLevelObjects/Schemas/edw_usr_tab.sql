@@ -1,0 +1,2 @@
+CREATE SCHEMA IF NOT EXISTS EDW_USR_TAB
+COMMENT = 'Contains objects designed to mimic those in EDW_USR_TAB.WORLD for backward compatibility. Typical IDAP naming conventions and standards therefore do not apply';

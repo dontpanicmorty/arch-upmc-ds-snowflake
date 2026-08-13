@@ -1,0 +1,20 @@
+CREATE OR REPLACE TABLE CMS.DRUG_EVENT_41COV_CTR_HISTORY (
+    RECORD_ID                           VARCHAR,
+    SEQUENCE_NUMBER                     NUMBER,
+    CONTRACT_NUMBER                     VARCHAR,
+    DRUG_COVERAGE_STATUS_CODE           VARCHAR,
+    BENEFICIARY_COUNT                   NUMBER, 
+    CURR_MON_GDCB                       FLOAT, 
+    CURR_MON_GDCA                       FLOAT, 
+    CURR_MON_TOTAL_GROSS_DRUG_COST      FLOAT, 
+    CURR_MON_LICS_AMOUNT                FLOAT, 
+    CURR_MON_CPP_AMOUNT                 FLOAT, 
+    DET_RECORD_TOTAL                    NUMBER, 
+    CURR_MON_P2P_AMT_DUE_ALL_PLANS      FLOAT, 
+    CURR_MON_SELE_DRUG_SUB_AMT          FLOAT,
+    FILLER                              VARCHAR,
+    FILENAME                            VARCHAR,
+    INSERT_DATETIME                     TIMESTAMP_NTZ
+)
+COMMENT = 'Historical data from Oracle through the end of 2025' 
+;

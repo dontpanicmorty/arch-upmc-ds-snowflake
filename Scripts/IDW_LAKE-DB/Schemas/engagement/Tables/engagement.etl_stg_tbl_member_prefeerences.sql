@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE ENGAGEMENT.ETL_STG_TBL_MEMBER_PREFEERENCES
+(
+MEMBER_ID                     VARCHAR,
+EMAIL_ADDRESS                 VARCHAR,
+MOBILE_PHONE_NUMBER           VARCHAR,
+PREF_EM_BNP                NUMBER(38),
+PREF_EM_EOB                NUMBER(38),
+PREF_EM_HNW                NUMBER(38),
+PREF_EM_PNI                NUMBER(38),
+PREF_TX_BNP                NUMBER(38),
+PREF_TX_EOB                NUMBER(38),
+PREF_TX_HNW                NUMBER(38),
+PREF_TX_PNI                NUMBER(38),
+UPDATE_DTE_MAX          TIMESTAMP_NTZ,
+UPDATE_DTE_MIN          TIMESTAMP_NTZ
+)
+COMMENT='Created for ENGAGEMENT Migration'
+;

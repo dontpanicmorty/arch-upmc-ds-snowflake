@@ -1,0 +1,213 @@
+!set variable_substitution=true;
+CREATE OR REPLACE PROCEDURE GREENBACK.SPU_LOAD_PLAN_DESIGN_EXTRACT_UPMC_OUTBOUND()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `GREENBACK.PLAN_DESIGN_EXTRACT_UPMC_OUTBOUND`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO GREENBACK.PLAN_DESIGN_EXTRACT_UPMC_OUTBOUND AS tgt
+USING (
+    SELECT
+    TRY_TO_DATE(PLAN_EFFECTIVE_DATE) AS PLAN_EFFECTIVE_DATE,
+    COALESCE(
+    TRY_TO_DATE(PLAN_TERM_DATE,'MM-DD-YYYY'), DATE '9999-12-31') AS PLAN_TERM_DATE,
+    PLAN_ID,
+    FORMULARY_ID,
+    MAX_EMBEDDED_DEDUCTIBLE_AMOUNT,
+    MAX_FAMILY_DEDUCTIBLE,
+    MAX_INDIVIDUAL_DEDUCTIBLE,
+    MAX_EMBEDDED_OOP_AMOUNT,
+    MAX_FAMILY_OOP_AMOUNT,
+    MAX_INDIVIDUAL_OOP_AMOUNT,
+    SUBSCRIBER_FAMILY_INDICATOR,
+    FORMULARY_TIER,
+    NETWORK_NAME,
+    IS_DEDUCTIBLE_REQUIRED,
+    --AMOUNT FIELDS
+    TRY_TO_DECIMAL(REPLACE(TRIM(COPAY), '$', ''),10,2) AS COPAY,
+    COINSURANCE,
+    TRY_TO_DECIMAL(REPLACE(TRIM(COINSURANCE_MINIMUM_COST), '$', ''),10,2) AS COINSURANCE_MINIMUM_COST,
+    TRY_TO_DECIMAL(REPLACE(TRIM(COINSURANCE_MAXIMUM_COST), '$', ''),10,2) AS COINSURANCE_MAXIMUM_COST,
+    TRY_TO_DECIMAL(REPLACE(TRIM(ANNUAL_COINSURANCE_CAP), '$', ''),10,2) AS ANNUAL_COINSURANCE_CAP,
+INSERT_DATETIME,
+FILENAME
+    FROM &{IDAP_LAKE}.CLAIM.GREENBACK_RX_PLAN_DESIGN
+    ) AS src
+ON (tgt.PLAN_EFFECTIVE_DATE = src.PLAN_EFFECTIVE_DATE
+AND tgt.PLAN_TERM_DATE=src.PLAN_TERM_DATE
+AND tgt.PLAN_ID = src.PLAN_ID
+AND tgt.FORMULARY_ID = src.FORMULARY_ID
+AND tgt.FORMULARY_TIER=src.FORMULARY_TIER)
+
+WHEN MATCHED AND
+(
+ NVL(tgt.COPAY, -1) <> NVL(src.COPAY, -1)
+    OR NVL(tgt.COINSURANCE, -1) <> NVL(src.COINSURANCE, -1)
+    OR NVL(tgt.COINSURANCE_MINIMUM_COST, -1) <> NVL(src.COINSURANCE_MINIMUM_COST, -1)
+    OR NVL(tgt.COINSURANCE_MAXIMUM_COST, -1) <> NVL(src.COINSURANCE_MAXIMUM_COST, -1)
+    OR NVL(tgt.ANNUAL_COINSURANCE_CAP, -1) <> NVL(src.ANNUAL_COINSURANCE_CAP, -1)
+    OR NVL(tgt.IS_DEDUCTIBLE_REQUIRED, 'X') <> NVL(src.IS_DEDUCTIBLE_REQUIRED, 'X')
+)
+
+THEN UPDATE SET
+    
+    tgt.PLAN_EFFECTIVE_DATE = src.PLAN_EFFECTIVE_DATE,
+    tgt.PLAN_TERM_DATE = src.PLAN_TERM_DATE,
+    tgt.PLAN_ID = src.PLAN_ID,
+    tgt.FORMULARY_ID = src.FORMULARY_ID,
+    tgt.MAX_EMBEDDED_DED_AMOUNT=src.MAX_EMBEDDED_DEDUCTIBLE_AMOUNT,
+    tgt.MAX_FAMILY_DEDUCTIBLE=src.MAX_FAMILY_DEDUCTIBLE,
+    tgt.MAX_INDIVIDUAL_DEDUCTIBLE=src.MAX_INDIVIDUAL_DEDUCTIBLE,
+    tgt.MAX_EMBEDDED_OOP_AMOUNT=src.MAX_EMBEDDED_OOP_AMOUNT,
+    tgt.MAX_FAMILY_OOP_AMOUNT=src.MAX_FAMILY_OOP_AMOUNT,
+    tgt.MAX_INDIVIDUAL_OOP_AMOUNT=src.MAX_INDIVIDUAL_OOP_AMOUNT,
+    tgt.SUB_FAM_IND=src.SUBSCRIBER_FAMILY_INDICATOR,
+    tgt.FORMULARY_TIER=src.FORMULARY_TIER,
+    tgt.NETWORK_NAME=src.NETWORK_NAME,
+    tgt.IS_DEDUCTIBLE_REQUIRED=src.IS_DEDUCTIBLE_REQUIRED,
+    tgt.COPAY=src.COPAY,
+    tgt.COINSURANCE=src.COINSURANCE,
+    tgt.COINSURANCE_MINIMUM_COST=src.COINSURANCE_MINIMUM_COST,
+    tgt.COINSURANCE_MAXIMUM_COST=src.COINSURANCE_MAXIMUM_COST,
+    tgt.ANNUAL_COINSURANCE_CAP=src.ANNUAL_COINSURANCE_CAP,
+    tgt.INSERT_DATETIME=src.INSERT_DATETIME,
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.FILE_NAME=src.FILENAME,
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE
+    
+    WHEN NOT MATCHED
+
+THEN INSERT
+    (
+        PLAN_EFFECTIVE_DATE
+	    ,PLAN_TERM_DATE
+	    ,PLAN_ID
+        ,FORMULARY_ID
+	    ,MAX_EMBEDDED_DED_AMOUNT
+        ,MAX_FAMILY_DEDUCTIBLE
+        ,MAX_INDIVIDUAL_DEDUCTIBLE
+        ,MAX_EMBEDDED_OOP_AMOUNT
+        ,MAX_FAMILY_OOP_AMOUNT
+        ,MAX_INDIVIDUAL_OOP_AMOUNT
+        ,SUB_FAM_IND
+        ,FORMULARY_TIER
+        ,NETWORK_NAME
+        ,IS_DEDUCTIBLE_REQUIRED
+        ,COPAY
+        ,COINSURANCE
+        ,COINSURANCE_MINIMUM_COST
+        ,COINSURANCE_MAXIMUM_COST
+        ,ANNUAL_COINSURANCE_CAP
+         ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,FILE_NAME
+        ,IS_LOGICAL_DELETE_FLAG
+    )
+VALUES
+    (
+       
+        src.PLAN_EFFECTIVE_DATE
+	    ,src.PLAN_TERM_DATE
+	    ,src.PLAN_ID
+        ,src.FORMULARY_ID
+	    ,src.MAX_EMBEDDED_DEDUCTIBLE_AMOUNT
+        ,src.MAX_FAMILY_DEDUCTIBLE
+        ,src.MAX_INDIVIDUAL_DEDUCTIBLE
+        ,src.MAX_EMBEDDED_OOP_AMOUNT
+        ,src.MAX_FAMILY_OOP_AMOUNT
+        ,src.MAX_INDIVIDUAL_OOP_AMOUNT
+        ,src.SUBSCRIBER_FAMILY_INDICATOR
+        ,src.FORMULARY_TIER
+        ,src.NETWORK_NAME
+        ,src.IS_DEDUCTIBLE_REQUIRED
+        ,src.COPAY
+        ,src.COINSURANCE
+        ,src.COINSURANCE_MINIMUM_COST
+        ,src.COINSURANCE_MAXIMUM_COST
+        ,src.ANNUAL_COINSURANCE_CAP
+         ,src.INSERT_DATETIME
+        ,CURRENT_TIMESTAMP()
+        ,src.FILENAME
+        ,FALSE
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE GREENBACK.PLAN_DESIGN_EXTRACT_UPMC_OUTBOUND
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE PLAN_DESIGN_EXTRACT_UPMC_OUTBOUND.PLAN_TERM_DATE< CURRENT_DATE()
+AND PLAN_DESIGN_EXTRACT_UPMC_OUTBOUND.IS_LOGICAL_DELETE_FLAG = FALSE
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;
+
+!set variable_substitution=false;

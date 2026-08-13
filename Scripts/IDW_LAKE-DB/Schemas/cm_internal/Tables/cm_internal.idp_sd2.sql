@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_SD2
+(
+MEMBER_NBR           VARCHAR,
+SVC_DATE       TIMESTAMP_NTZ,
+MED_PAID              NUMBER(33,5),
+RX_PAID               NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

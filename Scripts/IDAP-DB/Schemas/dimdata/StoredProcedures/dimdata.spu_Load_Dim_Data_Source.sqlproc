@@ -1,0 +1,138 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_DATA_SOURCE()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_DATA_SOURCE`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_DATA_SOURCE AS tgt
+USING
+    (
+        SELECT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,DATA_SOURCE_NAME
+        ,DATA_SOURCE_DESC
+        FROM STAGEDATA.DIM_DATA_SOURCE_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,DATA_SOURCE_NAME
+        ,DATA_SOURCE_DESC
+        FROM DIMDATA.DIM_DATA_SOURCE
+    ) AS src
+
+ON (tgt.DATA_SOURCE_NAME = src.DATA_SOURCE_NAME)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.DATA_SOURCE_DESC = src.DATA_SOURCE_DESC
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_DATA_SOURCE_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DATA_SOURCE_NAME
+        ,DATA_SOURCE_DESC
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DIM_DATA_SOURCE_KEY), 1000) FROM DIMDATA.DIM_DATA_SOURCE) + ROW_NUMBER() OVER (ORDER BY 1)   
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DATA_SOURCE_NAME
+        ,src.DATA_SOURCE_DESC
+    )
+;`;
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_DATA_SOURCE
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_DATA_SOURCE_KEY IN
+(
+    SELECT
+    DIM_DATA_SOURCE.DIM_DATA_SOURCE_KEY
+    FROM DIMDATA.DIM_DATA_SOURCE
+        LEFT OUTER JOIN STAGEDATA.DIM_DATA_SOURCE_SELECT_VW STAGE_DATA
+            ON (STAGE_DATA.DATA_SOURCE_NAME = DIM_DATA_SOURCE.DATA_SOURCE_NAME)
+    WHERE STAGE_DATA.DATA_SOURCE_NAME IS NULL
+    AND DIM_DATA_SOURCE.DIM_DATA_SOURCE_KEY > 2
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

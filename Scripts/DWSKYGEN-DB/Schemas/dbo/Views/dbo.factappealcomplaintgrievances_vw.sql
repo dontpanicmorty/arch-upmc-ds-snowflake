@@ -1,0 +1,31 @@
+CREATE OR REPLACE VIEW DBO.FactAppealComplaintGrievances_VW
+AS 
+SELECT 	$1:AppealCreatorKey::NUMBER(38, 0) AS AppealCreatorKey, 
+		$1:AppealInitiatorTypeKey::NUMBER(38, 0) AS AppealInitiatorTypeKey, 
+		$1:AppealResolutionLevelKey::NUMBER(38, 0) AS AppealResolutionLevelKey, 
+		$1:AppealTypeKey::NUMBER(38, 0) AS AppealTypeKey, 
+		$1:AppealTypesKey::NUMBER(38, 0) AS AppealTypesKey, 
+		$1:BenefitPlanKey::NUMBER(38, 0) AS BenefitPlanKey, 
+		$1:ComplaintCategoryKey::NUMBER(38, 0) AS ComplaintCategoryKey, 
+		$1:ComplaintTypeKey::NUMBER(38, 0) AS ComplaintTypeKey, 
+		$1:DateClientReceivedKey::NUMBER(38, 0) AS DateClientReceivedKey, 
+		$1:DateDueKey::NUMBER(38, 0) AS DateDueKey, 
+		$1:DateOriginalDueKey::NUMBER(38, 0) AS DateOriginalDueKey, 
+		$1:DateReceivedKey::NUMBER(38, 0) AS DateReceivedKey, 
+		$1:DateResolvedKey::NUMBER(38, 0) AS DateResolvedKey, 
+		$1:EnrolleeKey::NUMBER(38, 0) AS EnrolleeKey, 
+		$1:LocationKey::NUMBER(38, 0) AS LocationKey, 
+		$1:PayeeKey::NUMBER(38, 0) AS PayeeKey, 
+		$1:ProviderSimpleKey::NUMBER(38, 0) AS ProviderSimpleKey, 
+		$1:ResolutionStatusKey::NUMBER(38, 0) AS ResolutionStatusKey, 
+		$1:ReviewerDomainSourceKey::NUMBER(38, 0) AS ReviewerDomainSourceKey, 
+		$1:UpdatedByDomainSouceKey::NUMBER(38, 0) AS UpdatedByDomainSouceKey, 
+		$1:APPEAL_ID::NUMBER(38, 0) AS APPEAL_ID, 
+		$1:APPEAL_NUMBER::VARCHAR AS APPEAL_NUMBER, 
+		$1:EXPEDITED_FLAG::BOOLEAN AS EXPEDITED_FLAG, 
+		$1:EXTENSION_FLAG::BOOLEAN AS EXTENSION_FLAG, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime--, 
+		--$1:DW_Hash::VARCHAR AS DW_Hash
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactAppealComplaintGrievances/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

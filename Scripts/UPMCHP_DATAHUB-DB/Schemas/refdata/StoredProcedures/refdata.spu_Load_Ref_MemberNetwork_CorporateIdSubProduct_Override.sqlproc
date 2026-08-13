@@ -1,0 +1,212 @@
+CREATE OR REPLACE PROCEDURE REFDATA.SPU_LOAD_REF_MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `REFDATA.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO REFDATA.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE tgt
+USING (
+    SELECT
+        MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY
+        ,CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,CORPORATE_ID
+        ,COVERAGE_GROUP_CODE
+        ,PLAN_NAME
+        ,PLAN_TYPE_CODE
+        ,IN_PROVIDER_NETWORK_ID
+        ,OUT_PROVIDER_NETWORK_ID
+        ,IN_SUB_PRODUCT_KEY
+        ,OUT_SUB_PRODUCT_KEY
+    FROM ${SOURCE_VIEW_NAME}
+    MINUS
+    SELECT
+        MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY
+        ,CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,CORPORATE_ID
+        ,COVERAGE_GROUP_CODE
+        ,PLAN_NAME
+        ,PLAN_TYPE_CODE
+        ,IN_PROVIDER_NETWORK_ID
+        ,OUT_PROVIDER_NETWORK_ID
+        ,IN_SUB_PRODUCT_KEY
+        ,OUT_SUB_PRODUCT_KEY    
+    FROM REFDATA.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE
+    ) src
+
+ON (tgt.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY = src.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY)  
+
+WHEN MATCHED
+THEN UPDATE
+    SET
+        tgt.LAST_UPDATED_DATETIME = :1
+        ,tgt.CLIENT_ID=src.CLIENT_ID
+        ,tgt.TPA_ID=src.TPA_ID
+        ,tgt.TPA_DIV_ID=src.TPA_DIV_ID
+        ,tgt.CORPORATE_ID=src.CORPORATE_ID
+        ,tgt.COVERAGE_GROUP_CODE=src.COVERAGE_GROUP_CODE
+        ,tgt.PLAN_NAME=src.PLAN_NAME
+        ,tgt.PLAN_TYPE_CODE=src.PLAN_TYPE_CODE
+        ,tgt.IN_PROVIDER_NETWORK_ID=src.IN_PROVIDER_NETWORK_ID
+        ,tgt.OUT_PROVIDER_NETWORK_ID=src.OUT_PROVIDER_NETWORK_ID
+        ,tgt.IN_SUB_PRODUCT_KEY=src.IN_SUB_PRODUCT_KEY
+        ,tgt.OUT_SUB_PRODUCT_KEY=src.OUT_SUB_PRODUCT_KEY
+
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,CORPORATE_ID
+        ,COVERAGE_GROUP_CODE
+        ,PLAN_NAME
+        ,PLAN_TYPE_CODE
+        ,IN_PROVIDER_NETWORK_ID
+        ,OUT_PROVIDER_NETWORK_ID
+        ,IN_SUB_PRODUCT_KEY
+        ,OUT_SUB_PRODUCT_KEY
+   
+    )
+ VALUES 
+    (
+        src.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY
+        ,:1
+        ,:1
+        ,src.CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.CORPORATE_ID
+        ,src.COVERAGE_GROUP_CODE
+        ,src.PLAN_NAME
+        ,src.PLAN_TYPE_CODE
+        ,src.IN_PROVIDER_NETWORK_ID
+        ,src.OUT_PROVIDER_NETWORK_ID
+        ,src.IN_SUB_PRODUCT_KEY
+        ,src.OUT_SUB_PRODUCT_KEY
+
+    )
+;`;
+
+// Delete command to remove any entries not in the source data but need to ensure none source data is perserved.
+var sqlDeleteCommand =
+`
+DELETE FROM REFDATA.MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE
+WHERE MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY NOT IN (SELECT MEMBERNETWORK_CORPORATEIDSUBPRODUCT_OVERRIDE_HKEY FROM ${SOURCE_VIEW_NAME})
+;
+`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    };
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        };
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Delete Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

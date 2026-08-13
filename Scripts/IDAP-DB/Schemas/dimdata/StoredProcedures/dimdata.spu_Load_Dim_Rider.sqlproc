@@ -1,0 +1,157 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_RIDER()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_RIDER`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_RIDER AS tgt
+USING (
+    SELECT RIDER_CODE,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    RIDER_EFFECTIVE_DATE,
+    GROUP_NBR,
+    SUB_GROUP_NBR,
+    DATA_HUB_UNIVERSAL_RIDER_ID,
+    DATA_SOURCE_NAME,
+    RIDER_DESC,
+    RIDER_TERMINATION_DATE,
+    TIER_METHOD_CODE,
+    RIDER_AMT_1,
+    RIDER_AMT_2,
+    RIDER_AMT_3,
+    RIDER_AMT_4,
+    RIDER_AMT_5,
+    RIDER_AMT_6,
+    RIDER_AMT_7,
+    RIDER_AMT_8,
+    RIDER_AMT_9,
+    RIDER_AMT_10,
+    RIDER_TYPE_CODE,
+    RIDER_TYPE_DESC,
+    AR_CASH_GL_DISTRIBUTION_CODE,
+    COMPANY_CODE,
+    ELIGIBILITY_RULE_CODE,
+    GL_DISTRIBUTION_CODE,
+    FORMULARY_CODE,
+    FORMULARY_CODE_DESC
+    FROM STAGEDATA.DIM_RIDER_SELECT_VW
+    ) AS src
+ON (tgt.RIDER_CODE = src.RIDER_CODE
+AND tgt.TPA_CLIENT_ID = src.TPA_CLIENT_ID
+AND tgt.TPA_ID = src.TPA_ID
+AND tgt.TPA_DIV_ID = src.TPA_DIV_ID
+AND tgt.RIDER_EFFECTIVE_DATE = src.RIDER_EFFECTIVE_DATE
+AND tgt.RIDER_TYPE_CODE = src.RIDER_TYPE_CODE
+AND tgt.GROUP_NBR = src.GROUP_NBR
+AND tgt.SUB_GROUP_NBR = src.SUB_GROUP_NBR)
+
+WHEN MATCHED
+    AND (NOT EQUAL_NULL(tgt.DATA_HUB_UNIVERSAL_RIDER_ID, src.DATA_HUB_UNIVERSAL_RIDER_ID)
+        OR NOT EQUAL_NULL(tgt.DATA_SOURCE_NAME, src.DATA_SOURCE_NAME)         
+        OR NOT EQUAL_NULL(tgt.RIDER_DESC, src.RIDER_DESC)
+        OR NOT EQUAL_NULL(tgt.RIDER_TERMINATION_DATE, src.RIDER_TERMINATION_DATE)
+        OR NOT EQUAL_NULL(tgt.TIER_METHOD_CODE, src.TIER_METHOD_CODE)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_1, src.RIDER_AMT_1)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_2, src.RIDER_AMT_2)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_3, src.RIDER_AMT_3)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_4, src.RIDER_AMT_4)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_5, src.RIDER_AMT_5)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_6, src.RIDER_AMT_6)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_7, src.RIDER_AMT_7)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_8, src.RIDER_AMT_8)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_9, src.RIDER_AMT_9)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_10, src.RIDER_AMT_10)
+        OR NOT EQUAL_NULL(tgt.RIDER_AMT_10, src.RIDER_AMT_10)
+        OR NOT EQUAL_NULL(tgt.RIDER_TYPE_CODE, src.RIDER_TYPE_CODE)
+        OR NOT EQUAL_NULL(tgt.RIDER_TYPE_DESC, src.RIDER_TYPE_DESC)
+        OR NOT EQUAL_NULL(tgt.AR_CASH_GL_DISTRIBUTION_CODE, src.AR_CASH_GL_DISTRIBUTION_CODE)
+        OR NOT EQUAL_NULL(tgt.COMPANY_CODE, src.COMPANY_CODE)
+        OR NOT EQUAL_NULL(tgt.ELIGIBILITY_RULE_CODE, src.ELIGIBILITY_RULE_CODE)
+        OR NOT EQUAL_NULL(tgt.GL_DISTRIBUTION_CODE, src.GL_DISTRIBUTION_CODE)
+        OR NOT EQUAL_NULL(tgt.FORMULARY_CODE, src.FORMULARY_CODE)
+        OR NOT EQUAL_NULL(tgt.FORMULARY_CODE_DESC, src.FORMULARY_CODE_DESC)
+        )
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.DATA_HUB_UNIVERSAL_RIDER_ID = src.DATA_HUB_UNIVERSAL_RIDER_ID,
+    tgt.DATA_SOURCE_NAME = src.DATA_SOURCE_NAME,
+    tgt.RIDER_DESC = src.RIDER_DESC,
+    tgt.RIDER_TERMINATION_DATE = src.RIDER_TERMINATION_DATE,
+    tgt.TIER_METHOD_CODE = src.TIER_METHOD_CODE,
+    tgt.RIDER_AMT_1 = src.RIDER_AMT_1,
+    tgt.RIDER_AMT_2 = src.RIDER_AMT_2,
+    tgt.RIDER_AMT_3 = src.RIDER_AMT_3,
+    tgt.RIDER_AMT_4 = src.RIDER_AMT_4,
+    tgt.RIDER_AMT_5 = src.RIDER_AMT_5,
+    tgt.RIDER_AMT_6 = src.RIDER_AMT_6,
+    tgt.RIDER_AMT_7 = src.RIDER_AMT_7,
+    tgt.RIDER_AMT_8 = src.RIDER_AMT_8,
+    tgt.RIDER_AMT_9 = src.RIDER_AMT_9,
+    tgt.RIDER_AMT_10 = src.RIDER_AMT_10,
+    tgt.RIDER_TYPE_CODE = src.RIDER_TYPE_CODE,
+    tgt.RIDER_TYPE_DESC = src.RIDER_TYPE_DESC,
+    tgt.AR_CASH_GL_DISTRIBUTION_CODE = src.AR_CASH_GL_DISTRIBUTION_CODE,
+    tgt.COMPANY_CODE = src.COMPANY_CODE,
+    tgt.ELIGIBILITY_RULE_CODE = src.ELIGIBILITY_RULE_CODE,
+    tgt.GL_DISTRIBUTION_CODE = src.GL_DISTRIBUTION_CODE,
+    tgt.FORMULARY_CODE = src.FORMULARY_CODE,
+    tgt.FORMULARY_CODE_DESC = src.FORMULARY_CODE_DESC
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+    
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

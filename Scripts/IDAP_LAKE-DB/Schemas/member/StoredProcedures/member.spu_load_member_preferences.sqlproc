@@ -1,0 +1,143 @@
+CREATE OR REPLACE PROCEDURE MEMBER.SPU_LOAD_MEMBER_PREFERENCES(YEAR_IN VARCHAR, MONTH_IN VARCHAR, DAY_IN VARCHAR, HOUR_IN VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT = 'Procedure to load MEMBER.MEMBER_PREFERENCES table from stage location.'
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet, result;
+let fileCount = 0;
+
+try
+{
+
+	//Build the file pattern based off the filed out variables..
+    let filePattern = "";
+    if (YEAR_IN) //If year_in is not empty then add it to the pattern
+    {
+        filePattern += YEAR_IN+"/";  //for a month value
+        if (MONTH_IN)
+        {
+            filePattern += MONTH_IN+"/";
+            if (DAY_IN)
+            {
+                filePattern += DAY_IN+"/";
+                if (HOUR_IN)
+                {
+                    filePattern += HOUR_IN+"/";
+                }
+            }
+        }
+    }
+
+	// copy into query from stage to MEMBER.MEMBER_PREFERENCES
+	sqlText = `
+		COPY INTO MEMBER.MEMBER_PREFERENCES
+			(
+			FILENAME, 
+			FILE_ROW_NBR, 
+			INSERT_DATETIME, 
+			JSON_ID, 
+			JSON_LAST_UPDATED_DATE, 
+			JSON_DATA
+			)
+		FROM 
+			(
+				SELECT 
+				split_part(metadata$filename, '/', 7), 
+				metadata$file_row_number,
+				metadata$file_last_modified,
+				parse_json($1):Id,
+				parse_json($1):LastUpdatedDate,
+				$1
+				FROM @MEMBER.HPDSDATALAKE_PREFERENCE_CENTER/${filePattern}
+			)
+			FILE_FORMAT = MEMBER.MEMBER_PREFERENCES_FILE_FORMAT;`;
+
+	// Execute COPY INTO statement
+	resultSet = snowflake.execute({sqlText});
+    resultSet.next();
+    
+    if (resultSet.getRowCount() === 1 && resultSet.getNumRowsAffected() === 0)
+	{
+        result = 'Copy executed with 0 files processed.';
+        fileCount = 0;
+        }
+    else
+    {
+        result = 'Copy executed with ' + resultSet.getRowCount() + ' files processed.';
+        fileCount = resultSet.getNumRowsAffected();
+        }
+
+	// Log success
+	let endTime = new Date();	
+	sqlText = `
+		INSERT INTO LOGDATA.LOAD_MEMBER_PREFERENCES_HISTORY (
+		   NAME
+		  ,TYPE
+		  ,START_TIME
+		  ,END_TIME
+		  ,FILE_COUNT
+		  ,RESULT_TEXT
+		  ,SQL_STATEMENT
+		) VALUES (
+			'${procName}',
+			'PROCEDURE',
+			'${startTime.toISOString()}',
+			'${endTime.toISOString()}',
+			'${fileCount}',
+			'${result}',
+			'${sqlText.replace(/'/g, "''")}'
+			)`;
+			
+	snowflake.execute({sqlText});
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+	
+    result = 'Failed';
+	
+	let endTime = new Date();
+    
+	//Log on Error 
+	sqlText = `
+		INSERT INTO LOGDATA.LOAD_MEMBER_PREFERENCES_HISTORY (
+			NAME
+			,TYPE
+			,START_TIME
+			,END_TIME
+			,RESULT_TEXT
+			,SQL_STATEMENT
+			,ERROR_CODE
+			,ERROR_STATE
+			,ERROR_MESSAGE
+			,ERROR_STACK_TRACE_TEXT
+		) VALUES (
+			  '${procName}',
+			  'PROCEDURE',
+			  '${startTime.toISOString()}',
+			  '${endTime.toISOString()}',
+			  '${result}',
+			  '${sqlText}',
+			  '${code}',
+			  '${state}',
+			  '${message}',
+			  '${stack}'
+			)`;
+		
+	snowflake.execute({sqlText});
+	throw err;
+}
+
+return result;
+
+$$
+;

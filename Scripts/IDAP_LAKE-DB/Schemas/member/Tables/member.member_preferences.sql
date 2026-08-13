@@ -1,0 +1,13 @@
+create or replace TABLE MEMBER.MEMBER_PREFERENCES 
+(
+	MEMBER_PREFERENCES_KEY NUMBER(38,0) NOT NULL AUTOINCREMENT ORDER,
+	FILENAME VARCHAR NOT NULL COMMENT 'The timestamp at the end of the file name is in UTC time',
+	FILE_ROW_NBR NUMBER(38,0) NOT NULL,
+	INSERT_DATETIME TIMESTAMP_TZ(9) NOT NULL COMMENT 'Last modified timestamp of the staged data file the current row belongs to',
+	JSON_ID VARCHAR NOT NULL,
+	JSON_LAST_UPDATED_DATE TIMESTAMP_TZ(9) NOT NULL,
+	JSON_DATA VARIANT NOT NULL,	
+	constraint UK_MEMBER_PREFERENCES unique (FILENAME, INSERT_DATETIME),
+	constraint PK_MEMBER_PREFERENCES primary key (MEMBER_PREFERENCES_KEY)
+) COMMENT='Running history of all data received from PrefCenter CosmosDB'
+;

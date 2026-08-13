@@ -1,0 +1,36 @@
+{
+  "outputSchema": "PRICING",
+  "outputTable": "BILLING_CODE_TYPE",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+  "fileFormat": "BUSINESS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "BILLING_CODE_TYPE",
+          "outputField": "BILLING_CODE_TYPE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "BILLING_CODE_TYPE_VERSION",
+          "outputField": "BILLING_CODE_TYPE_VERSION"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "START_DATE",
+          "outputField": "START_DATE"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "END_DATE",
+          "outputField": "END_DATE"
+        }
+      ]
+    }
+  }
+}

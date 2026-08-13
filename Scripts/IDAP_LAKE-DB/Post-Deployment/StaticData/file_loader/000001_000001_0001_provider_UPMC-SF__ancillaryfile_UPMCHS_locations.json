@@ -1,0 +1,71 @@
+{
+  "outputSchema": "PROVIDER",
+  "outputTable": "UPMC_CANCER_CENTER_ANCILLARY",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "UPMC_CANCER_CENTER_ANCILLARY_FILE_FORMAT_HEADER",
+  "fileFormat": "UPMC_CANCER_CENTER_ANCILLARY_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "Sort",
+          "outputField": "SORT"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "Name",
+          "outputField": "NAME"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "Address1",
+          "outputField": "ADDRESS_1"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "Address2",
+          "outputField": "ADDRESS_2"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "City",
+          "outputField": "CITY"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "State",
+          "outputField": "STATE"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "Zip",
+          "outputField": "ZIP_CODE"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "Phone number",
+          "outputField": "PHONE"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "County",
+          "outputField": "COUNTY"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "servicecategory_k_of_provideraddrcategory",
+          "outputField": "SRV_CAT_OF_PRVDR_ADDR_CAT"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "Do not Print",
+          "outputField": "DO_NOT_PRINT"
+        }
+      ]
+    }
+  }
+}

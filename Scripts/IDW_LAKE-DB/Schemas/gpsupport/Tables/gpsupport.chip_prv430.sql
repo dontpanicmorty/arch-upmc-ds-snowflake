@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE GPSUPPORT.CHIP_PRV430
+(
+PROMISEPROVIDERNUMBER           VARCHAR,
+SERVICELOCATION                 VARCHAR,
+NPINUMBER                       VARCHAR,
+TAXONOMYCODE                    VARCHAR,
+ADDRESSZIP                      VARCHAR,
+EFFECTIVEDATE                   VARCHAR,
+ENDDATE                         VARCHAR,
+VALIDATIONINDICATOR             VARCHAR,
+LOAD_DATE                 TIMESTAMP_NTZ
+)
+COMMENT='Created for GPSUPPORT Migration'
+;

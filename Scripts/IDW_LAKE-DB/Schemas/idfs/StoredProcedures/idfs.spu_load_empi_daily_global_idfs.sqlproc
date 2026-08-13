@@ -1,0 +1,144 @@
+!set variable_substitution=true;
+CREATE OR REPLACE PROCEDURE IDFS.EMPI_DAILY_GLOBAL_IDFS_LOAD()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+
+
+
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+try
+{
+    var trunc_table = "TRUNCATE TABLE IF EXISTS IDFS.EMPI_DAILY_GLOBAL_IDFS";
+    var trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+);
+    var res_trunc_table = trunc_table_snowflake.execute();
+
+    var populate_table = `INSERT INTO IDFS.EMPI_DAILY_GLOBAL_IDFS
+    (
+    HEALTHPLAN_ID,
+    MASTERMEMBER,
+    LAST_NAME,
+    FIRST_NAME,
+    MIDDLE_NAME,
+    DOB,
+    GENDER,
+    EMPI_ID,
+    EPIC_MRN,
+    MEDIPAC_MRN,
+    LOAD_DATE,
+    AMWELL_ID,
+    ELIGIBILITYENDDATE,
+    LOB,
+    CORPORATEID,
+    IDFS_LOAD_DATE,
+    HORIZON_HOMECARE_ID,
+    EPIC_EAST_MRN,
+    SEXO,
+    BGENDER,
+    GENDER_ID,
+    EPIC_ENT_ID 
+    )
+ 
+    select EDG.Healthplan_ID
+    , cast(MMI.MasterMember as varchar)
+    , EDG.Last_Name
+    , EDG.FIRST_NAME
+    , EDG.Middle_Name
+    , EDG.DOB
+    , EDG.Gender
+    , RTRIM(EDG.EMPI_ID)
+    , EDG.EPIC_MRN
+    , EDG.Medipac_MRN
+    , EDG.Load_Date
+    , EDG.Amwell_ID
+    , Case when (EH.EligibilityEndDate = 0) then NULL else TO_DATE(cast(EH.EligibilityEndDate as varchar), 'YYYYMMDD') end as EligibilityEndDate
+    , LPT.LINE_OF_BUSINESS_CODE
+    , case when Grp.CorporateID = '' then NULL else Grp.CORPORATEID end as CORPORATEID
+    , GETDATE() as SystemDate
+    , EDG.Horizon_Homecare_ID
+    , EDG.Epic_East_MRN
+    , EDG.Sexo
+    , EDG.Bgender
+    , EDG.Gender_ID
+    , EDG.EPIC_ENT_ID
+    FROM MEMBER_STAGING.EMPI_DAILY_GLOBAL EDG
+    LEFT JOIN &{MC400}.dwoao.MasterMemberID MMI on MMI.SourceID = EDG.HEALTHPLAN_ID
+    LEFT JOIN &{MC400}.dwoao.EligibilityHistory EH on EH.MemberNbr = EDG.Healthplan_ID 
+    and EH.ELIGIBILITYSTARTDATE = 
+    (Select Max(EligibilityStartDate) from &{MC400}.dwoao.EligibilityHistory
+    Where EligibilityStartDate<>case when EligibilityEndDate is null then 0 else EligibilityEndDate end and (EH.MEMBERNBR=MemberNbr))
+    LEFT JOIN &{MC400}.dwoao.Groups Grp on Grp.GroupNbr = EH.CoverageGroupCode 
+    LEFT JOIN &{IDAP_LAKE}.network.lob_plan_type LPT on LPT.Plan_Type = EH.PlanType and LPT.TPA_DIV_ID = '0001';`;
+    
+    var populate_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: populate_table
+    }
+);
+    var res_populate_table = populate_table_snowflake.execute();
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    var sqlLogCommand = `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+    (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+    VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );
+    return result;
+}
+return result;
+  
+$$;
+
+!set variable_substitution=false;

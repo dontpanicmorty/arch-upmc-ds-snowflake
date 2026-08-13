@@ -1,0 +1,106 @@
+CREATE OR REPLACE PROCEDURE MARKETING_PROSPECTS.SPU_LOAD_PROSPECT_ADDRESS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `MARKETING_PROSPECTS.PROSPECT_ADDRESS`; 
+
+// Create truncate statement to be executed.
+var sqlTruncateCommand = 
+`    
+TRUNCATE TABLE MARKETING_PROSPECTS.PROSPECT_ADDRESS
+;`;
+
+
+// Create insert statement to be executed.
+var sqlInsertCommand = 
+`    
+INSERT INTO MARKETING_PROSPECTS.PROSPECT_ADDRESS (ADDRESS_LINE_1, ADDRESS_LINE_2, CITY, STATE, ZIP, ZIP4, DELIVERY_LINE_1_SMARTY, DELIVERY_LINE_2_SMARTY, PRIMARY_NUMBER, STREET_NAME_SMARTY, STREET_PREDIRECTION_SMARTY, STREET_POSTDIRECTION_SMARTY, STREET_SUFFIX_SMARTY, STREET_DESIGNATOR_SMARTY, SECONDARY_NBR_SMARTY, EXTRA_SECONDARY_NBR_SMARTY, CITY_NAME_SMARTY, STATE_ABBREVIATION_SMARTY, ZIPCODE_SMARTY, PLUS4_CODE_SMARTY, PRECISION_SMARTY, ENTITY_REALID_PLACE_ID, JSON_DATA, INSERT_DATETIME)
+   SELECT 
+UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.ADDRESS_LINE_1,
+UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.ADDRESS_LINE_2,
+UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.CITY,
+UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.STATE,
+UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.ZIP,
+UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.ZIP4,
+PROSPECT_ADDRESS_SELECT.DELIVERY_LINE_1_SMARTY, 
+PROSPECT_ADDRESS_SELECT.DELIVERY_LINE_2_SMARTY, 
+PROSPECT_ADDRESS_SELECT.PRIMARY_NUMBER_SMARTY, 
+PROSPECT_ADDRESS_SELECT.STREET_NAME_SMARTY,
+PROSPECT_ADDRESS_SELECT.STREET_PREDIRECTION,
+PROSPECT_ADDRESS_SELECT.STREET_POSTDIRECTION,
+PROSPECT_ADDRESS_SELECT.STREET_SUFFIX_SMARTY,
+PROSPECT_ADDRESS_SELECT.SECONDARY_DESIGNATOR,
+PROSPECT_ADDRESS_SELECT.SECONDARY_NBR,
+PROSPECT_ADDRESS_SELECT.EXTRA_SECONDARY_NBR,
+PROSPECT_ADDRESS_SELECT.CITY_NAME_SMARTY,
+PROSPECT_ADDRESS_SELECT.STATE_ABBREVIATION_SMARTY,
+PROSPECT_ADDRESS_SELECT.ZIP_CODE_SMARTY,
+PROSPECT_ADDRESS_SELECT.ZIP_PLUS_4,
+PROSPECT_ADDRESS_SELECT.PRECISION,
+PROSPECT_ADDRESS_SELECT.ENTITY_REALID_PLACE_ID,
+PROSPECT_ADDRESS_SELECT.JSON_DATA,
+SYSDATE()
+FROM MARKETING_PROSPECTS.PROSPECT_ADDRESS_SMARTY_SELECT_VW PROSPECT_ADDRESS_SELECT
+INNER JOIN MARKETING_PROSPECTS.UNVERIFIED_ACXIOM_PROSPECT_ADDRESS
+    ON UNVERIFIED_ACXIOM_PROSPECT_ADDRESS.ENTITY_REALID_PLACE_ID = PROSPECT_ADDRESS_SELECT.ENTITY_REALID_PLACE_ID
+;`;
+
+   
+try 
+{
+ //Execute Truncate Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlTruncateCommand});
+    sfStatement.execute();
+    var result = "Succeeded";
+    
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+      sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+          (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+          VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText()]
+          }
+      )
+ 
+}
+catch (err)
+{
+    statement = snowflake.createStatement({ sqlText: sqlInsertCommand });
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed'
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message]
+        }
+    );        
+    throw result;
+}
+
+return result;
+$$
+;

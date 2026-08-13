@@ -1,0 +1,177 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_ADLS_FILES_TABLE_REFRESH(
+    ADF_FILE_COPY_CONTROL_KEY   VARCHAR,
+    RUN_ID                      VARCHAR,
+    DATE_PATH                   VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+/*
+    -- USE CASE: AVER_OB_DATA table load, we receive 8 distinct files, usually having the
+                same filenames as previous versions, that require the table to be 
+                truncated and all loaded from the same directory
+
+    -- inputs:  
+            adf_file_copy_control_key 
+                - the table will be truncated, so has to be passed by control table
+            run_id
+                - arbitraty, just used to logging
+            date_path       
+                - regular use would be 'yyyy/mm/dd' folder path off of target_data_lake_path from control table
+                    can be used to trunc and reload from any, ex. 'yyyy/mm' would load all files for the month after trunc
+*/
+
+//temp 
+let stageName = '@util.hpdsdatalake_idaplake';
+
+//inputs
+const adfFileCopyControlKey = ADF_FILE_COPY_CONTROL_KEY;
+const runId = RUN_ID;
+const datePath = DATE_PATH;
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date().toISOString();
+let sfStatement, resultSet, result, sqlText; 
+
+//Queries
+let cntrlTableQuery = `
+    SELECT  TARGET_SCHEMA_NAME, 
+            TARGET_TABLE_NAME, 
+            QUERY_FILE_FORMAT, 
+            TARGET_DATA_LAKE_PATH, 
+            IS_ACTIVE, 
+            TRUNCATE_TABLE_FLAG,  
+            SOURCE_FILENAME_PATTERN 
+    FROM    UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL 
+    WHERE   ADF_FILE_COPY_CONTROL_KEY = :1;`; 
+
+let truncateTableQuery = `TRUNCATE TABLE IDENTIFIER(:1);`;
+
+let copyIntoColumsQuery = `
+    SELECT  LISTAGG(column_name, ', ') WITHIN GROUP (ORDER BY ordinal_position)
+    FROM    information_schema.columns
+    WHERE   table_name = :1;`;
+
+let fileColumnsQuery = `
+    SELECT LISTAGG('$'||(order_id+1), ', ') WITHIN GROUP (ORDER BY order_id) || ', METADATA$FILENAME, METADATA$FILE_LAST_MODIFIED'
+    FROM TABLE(
+        INFER_SCHEMA(
+            LOCATION=> :1
+          , FILE_FORMAT=> :2
+          , MAX_RECORDS_PER_FILE => 10
+          )
+        );`;
+    
+let sqlLogCommand =`
+    INSERT INTO LOGDATA.ADF_FILE_LOAD_HISTORY (
+        RUN_ID,
+        ADF_CONTROL_KEY,
+        NAME,
+        TYPE,
+        START_TIME,
+        END_TIME,
+        INSERT_COUNT,
+        RESULT_TEXT,
+        SQL_STATEMENT,
+        ERROR_CODE,
+        ERROR_STATE,
+        ERROR_MESSAGE,
+        ERROR_STACK_TRACE_TEXT,
+        FILENAME
+        )
+    VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14);`;
+
+let filesLoadedQuery = `
+    select  listagg(split_part("file", '/', -1), ',  ') as fn
+    from    table(result_scan(:1))
+    where   "rows_loaded" != 0;`;
+
+try
+{
+    //--   
+    //Query control table  
+    sfStatement = snowflake.createStatement({sqlText: cntrlTableQuery, binds: [adfFileCopyControlKey] });
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+        
+    let tagetSchemaName         = resultSet.getColumnValue(1);
+    let targetTableName         = resultSet.getColumnValue(2);
+    let fileFormat              = resultSet.getColumnValue(3);
+    let dataLakePath            = resultSet.getColumnValue(4);
+    let isActive                = resultSet.getColumnValue(5);
+    let truncateTableFlag       = resultSet.getColumnValue(6);
+    let sourceFileNamePattern   = resultSet.getColumnValue(7);
+
+    stageName = stageName + dataLakePath + datePath;
+
+    //--
+    //TRUNCATE TABLE
+    let qualifiedTable = tagetSchemaName + '.' + targetTableName;
+    sfStatement = snowflake.createStatement({sqlText: truncateTableQuery, binds: [qualifiedTable] });
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    //--
+    //Get column list from table
+    sfStatement = snowflake.createStatement({sqlText: copyIntoColumsQuery, binds: [targetTableName] });
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    let tableColumnList = resultSet.getColumnValue(1);
+
+    //--
+    //Get column list from file
+    sfStatement = snowflake.createStatement({sqlText: fileColumnsQuery, binds: [stageName, fileFormat] });
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    let fileColumnList = resultSet.getColumnValue(1);
+
+    //--
+    //Build copy into statement
+    let copyIntoQuery = ` COPY INTO ${qualifiedTable} ( ${tableColumnList} ) FROM ( SELECT ${fileColumnList} FROM ${stageName} ) FILE_FORMAT = ${fileFormat} ;`;
+    sfStatement = snowflake.createStatement({sqlText: copyIntoQuery});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    //--
+    //Get File Names loaded by copy into
+    let numRowsCopied = sfStatement.getNumRowsInserted();
+    let copyQuerySql = sfStatement.getSqlText();
+    let copyIntoQueryId = sfStatement.getQueryId();
+
+    sfStatement = snowflake.createStatement({sqlText: filesLoadedQuery, binds: [copyIntoQueryId]});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    let copiedFileNames = resultSet.getColumnValue(1);
+
+    //--
+    //LOG Success
+    let endTime = new Date().toISOString();
+    result = 'Successful';
+    
+    sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [runId, adfFileCopyControlKey, procName, 'PROCEDURE', startTime, endTime, numRowsCopied, result, copyQuerySql, '', '', '', '' , copiedFileNames ] });
+    resultSet = sfStatement.execute();   
+
+
+}
+catch (err)
+{
+
+    //--
+    //LOG Failure
+    let endTime = new Date().toISOString();
+    result = 'FAILED';    
+
+    sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [runId, adfFileCopyControlKey, procName, 'PROCEDURE', startTime, endTime, '', result, '', err.code, err.state, err.message, err.stackTraceTxt, 'FileNames' ] });
+    resultSet = sfStatement.execute();   
+    
+}
+
+return result;
+
+$$
+;

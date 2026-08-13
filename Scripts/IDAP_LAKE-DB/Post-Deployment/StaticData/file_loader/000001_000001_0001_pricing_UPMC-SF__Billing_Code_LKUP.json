@@ -1,0 +1,36 @@
+{
+  "outputSchema": "PRICING",
+  "outputTable": "BILLING_CODE_LKP",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+  "fileFormat": "BUSINESS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "BILLING_CODE",
+          "outputField": "BILLING_CODE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "NAME",
+          "outputField": "NAME"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "DESCRIPTION",
+          "outputField": "DESCRIPTION"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "BILLING_CODE_TYPE",
+          "outputField": "BILLING_CODE_TYPE"
+        }
+      ]
+    }
+  }
+}

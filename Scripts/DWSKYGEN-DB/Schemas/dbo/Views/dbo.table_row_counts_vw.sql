@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW DBO.Table_Row_Counts_VW
+AS 
+SELECT 	$1:Schema_Name::VARCHAR AS Schema_Name, 
+		$1:Table_Name::VARCHAR AS Table_Name, 
+		$1:Row_Count::NUMBER(38, 0) AS Row_Count
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/Table_Row_Counts/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

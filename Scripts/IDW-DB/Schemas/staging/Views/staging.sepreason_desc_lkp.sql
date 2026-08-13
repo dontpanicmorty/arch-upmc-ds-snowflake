@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.SEPREASON_DESC_LKP
+AS
+SELECT
+SEP_REASON_CODE,
+SEP_REASON_DESC
+FROM &{IDW_LAKE}.STAGING.SEPREASON_DESC_LKP;
+!set variable_substitution=false;

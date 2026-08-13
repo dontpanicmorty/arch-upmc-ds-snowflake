@@ -1,0 +1,66 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW RAWDATA.MC400_DWOAO_APWORK_SELECT_VW
+AS 
+WITH DUPES_TO_IGNORE_CTE AS (
+SELECT FILETYPE,SYSGENID,HINSDPROWID,HENCDPROWID, STATUS
+FROM &{MC400}.DWOAO.APWORK
+WHERE STATUS = 'EC'
+AND EXISTS (SELECT 1
+            FROM &{MC400}.DWOAO.APWORK APWORK2
+            WHERE APWORK2.FILETYPE = APWORK.FILETYPE 
+            AND APWORK2.SYSGENID = APWORK.SYSGENID
+            AND APWORK2.HINSDPROWID = APWORK.HINSDPROWID
+            AND APWORK2.HENCDPROWID = APWORK.HENCDPROWID 
+            AND APWORK2.STATUS <> 'EC')
+)
+
+SELECT
+ROWID,
+TPAROWID,
+HENCDPROWID,
+HINSDPROWID,
+PRIMARYDATEOFSERVICE,
+FORMNUMBER,
+SPECIFICDATEOFSERVICE,
+PROCEDURECODE,
+SYSGENID,
+SYSTEMTIMESTAMP,
+COMPCODE,
+BANKCODE,
+PRODTYPE,
+BATCHNUMBER,
+VENDORNO,
+AMOUNT,
+GLDISTCODE,
+STATUS,
+NONENCCAP,
+FILETYPE,
+CLAIMSDETAILRECEIVEDATE,
+RECIDENT,
+STATISTICALCLAIM,
+POSTDATE,
+CALCULATEINTERESTFLAG,
+INTERESTCALBASEDFINALIZEDATE,
+INTERESTAPPLIEDFLAG,
+CHGUSER,
+CHGORIG,
+CHGLAST,
+LASTUPDATED,
+LASTAPPLIED,
+DELETEDFLAG,
+APWORKSEQNBR
+FROM &{MC400}.DWOAO.APWORK
+WHERE (FILETYPE,SYSGENID,HINSDPROWID,HENCDPROWID, STATUS) NOT IN (SELECT FILETYPE,
+                                                                       SYSGENID,
+                                                                       HINSDPROWID,
+                                                                       HENCDPROWID,
+                                                                       STATUS
+                                                                FROM DUPES_TO_IGNORE_CTE)
+QUALIFY DENSE_RANK() OVER(PARTITION BY FILETYPE, CASE
+                                                    WHEN FILETYPE = 'I'
+                                                        THEN HINSDPROWID
+                                                    ELSE HENCDPROWID
+                                                END
+                        ORDER BY SYSGENID) = 1
+;
+!set variable_substitution=false;

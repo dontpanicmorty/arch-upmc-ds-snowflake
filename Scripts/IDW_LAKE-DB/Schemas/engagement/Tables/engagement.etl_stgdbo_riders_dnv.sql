@@ -1,0 +1,31 @@
+CREATE OR REPLACE TABLE ENGAGEMENT.ETL_STGDBO_RIDERS_DNV
+(
+GROUPNBR                    VARCHAR,
+RIDERCODE                   VARCHAR,
+RIDEREFFDATE             NUMBER(38),
+SUBGROUP                    VARCHAR,
+ARCASHDISTCODE              VARCHAR,
+COMPANYCODE                 VARCHAR,
+ELIGRULE                    VARCHAR,
+GLDISTRIBUTIONCODE          VARCHAR,
+RIDERAMT1              NUMBER(11,2),
+RIDERAMT10             NUMBER(11,2),
+RIDERAMT2              NUMBER(11,2),
+RIDERAMT3              NUMBER(11,2),
+RIDERAMT4              NUMBER(11,2),
+RIDERAMT5              NUMBER(11,2),
+RIDERAMT6              NUMBER(11,2),
+RIDERAMT7              NUMBER(11,2),
+RIDERAMT8              NUMBER(11,2),
+RIDERAMT9              NUMBER(11,2),
+RIDERDESC                   VARCHAR,
+RIDERTERMDATE            NUMBER(38),
+TIERINGMETHOD               VARCHAR,
+LASTUPDATED            TIMESTAMP(6),
+LASTAPPLIED            TIMESTAMP(6),
+DELETEDFLAG            TIMESTAMP(6),
+RIDERSSEQNBR             NUMBER(38),
+RIDERTYPE                   VARCHAR
+)
+COMMENT='Created for ENGAGEMENT Migration'
+;

@@ -1,0 +1,88 @@
+CREATE OR REPLACE TEMPORARY TABLE
+	ODSDATA.TMP_EDUCATIONAL_DEPARTMENT (
+		EDUCATIONAL_DEPARTMENT_KEY NUMBER(38,0) AUTOINCREMENT START 1 INCREMENT 1 NOT NULL,
+		EDUCATIONAL_DEPARTMENT_NAME VARCHAR NOT NULL,
+		LAST_UPDATED_DATETIME TIMESTAMP_TZ(9) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		CONSTRAINT PK_EDUCATIONAL_DEPARTMENT PRIMARY KEY (EDUCATIONAL_DEPARTMENT_KEY),
+		CONSTRAINT UK_EDUCATIONAL_DEPARTMENT UNIQUE (EDUCATIONAL_DEPARTMENT_NAME)
+	)COMMENT='The speciality or department that the practitioner recieved education in. Examples include: Endocrinology, Plastic Surgery, Neurosurgery'
+;
+
+INSERT INTO ODSDATA.TMP_EDUCATIONAL_DEPARTMENT (EDUCATIONAL_DEPARTMENT_KEY,EDUCATIONAL_DEPARTMENT_NAME) VALUES
+	 (1,'Allergy & Immunology'),
+	 (10,'Family Practice'),
+	 (11,'Gastroenterology'),
+	 (12,'General Practice'),
+	 (13,'Gynecology'),
+	 (14,'Hand Surgery'),
+	 (15,'Hematology/Oncology'),
+	 (16,'Infectious Disease'),
+	 (17,'Internal Medicine'),
+	 (18,'Neonatology'),
+	 (19,'Nephrology'),
+	 (2,'Anesthesiology'),
+	 (20,'Neurology'),
+	 (21,'Neurosurgery'),
+	 (22,'Obstetrics'),
+	 (23,'Obstetrics/Gynechology'),
+	 (24,'Oncology'),
+	 (25,'Ophthalmology'),
+	 (26,'Optometry'),
+	 (27,'Oral Maxillofacial Surgery'),
+	 (28,'Orthopedic'),
+	 (29,'Otolaryngology'),
+	 (3,'Cardiology'),
+	 (30,'Pediatric Otolaryngology'),
+	 (31,'Pediatrics'),
+	 (32,'Physical Medicine & Rehabilitation'),
+	 (33,'Plastic Surgery'),
+	 (34,'Podiatry'),
+	 (35,'Psychiatry'),
+	 (36,'Pulmonary Diseases'),
+	 (37,'Radiation Oncology'),
+	 (38,'Radiology'),
+	 (39,'Rheumatology'),
+	 (4,'Colon & Rectal Surgery'),
+	 (40,'Surgery'),
+	 (41,'Urology'),
+	 (42,'Sleep Medicine'),
+	 (43,'Unknown'),
+	 (5,'Critical Care Medicine'),
+	 (6,'Dentistry'),
+	 (7,'Dermatology'),
+	 (8,'Emergency Medicine'),
+	 (9,'Endocrinology');
+
+MERGE INTO ODSDATA.EDUCATIONAL_DEPARTMENT AS TGT
+USING (SELECT EDUCATIONAL_DEPARTMENT_KEY, EDUCATIONAL_DEPARTMENT_NAME
+	FROM ODSDATA.TMP_EDUCATIONAL_DEPARTMENT
+	MINUS 
+	SELECT EDUCATIONAL_DEPARTMENT_KEY, EDUCATIONAL_DEPARTMENT_NAME
+	FROM ODSDATA.EDUCATIONAL_DEPARTMENT
+	) AS SRC
+ON TGT.EDUCATIONAL_DEPARTMENT_KEY = SRC.EDUCATIONAL_DEPARTMENT_KEY
+WHEN MATCHED 
+THEN UPDATE
+	SET TGT.EDUCATIONAL_DEPARTMENT_NAME = SRC.EDUCATIONAL_DEPARTMENT_NAME
+	,TGT.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHEN NOT MATCHED 
+THEN INSERT
+	(EDUCATIONAL_DEPARTMENT_KEY
+	,EDUCATIONAL_DEPARTMENT_NAME
+	)
+VALUES
+	(
+	SRC.EDUCATIONAL_DEPARTMENT_KEY
+	,SRC.EDUCATIONAL_DEPARTMENT_NAME
+	);
+	
+--Flip the minus and delete from the target
+DELETE FROM ODSDATA.EDUCATIONAL_DEPARTMENT TGT
+USING
+(SELECT EDUCATIONAL_DEPARTMENT_KEY, EDUCATIONAL_DEPARTMENT_NAME
+	FROM ODSDATA.EDUCATIONAL_DEPARTMENT
+	MINUS 
+	SELECT EDUCATIONAL_DEPARTMENT_KEY, EDUCATIONAL_DEPARTMENT_NAME
+	FROM ODSDATA.TMP_EDUCATIONAL_DEPARTMENT
+	) SRC
+WHERE TGT.EDUCATIONAL_DEPARTMENT_KEY = SRC.EDUCATIONAL_DEPARTMENT_KEY;	 

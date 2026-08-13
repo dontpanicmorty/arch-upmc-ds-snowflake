@@ -1,0 +1,64 @@
+CREATE OR REPLACE VIEW CMS.BATCH_COMPLETION_STATUS_SUMMARY_HEADER_VW AS 
+WITH header AS (
+    SELECT
+        FILENAME,
+        FILE_LAST_MODIFIED_DATETIME AS LOAD_DATE,
+        ROW_NUMBER,
+        SUBSTRING(RECORD, 1, 2)     AS HDR_TYPE,
+        RECORD                      AS LINE
+    FROM CMS.BATCH_COMPLETION_STATUS_SUMMARY
+    WHERE SUBSTRING(RECORD, 1, 1) = 'H'
+),
+parsed AS (
+    SELECT
+        FILENAME,
+        LOAD_DATE,
+        HDR_TYPE,
+
+        CASE WHEN HDR_TYPE = 'H1' THEN
+            TRIM(REGEXP_SUBSTR(LINE, '\\d{4}-\\d{2}-\\d{2}\\s+AT\\s+\\d{2}\\.\\d{2}\\.\\d{2}'))
+        END AS H1_TRANSACTION_RECEIVED_ON,
+
+        CASE WHEN HDR_TYPE = 'H2' THEN
+            TRIM(REGEXP_SUBSTR(LINE, '\\d{4}-\\d{2}-\\d{2}\\s+AT\\s+\\d{2}\\.\\d{2}\\.\\d{2}'))
+        END AS H2_TRANSACTION_PROCESSED_ON,
+
+        CASE WHEN HDR_TYPE = 'H3' THEN
+            TRIM(SUBSTRING(LINE,4)) 
+        END AS H3_STATUS_MESSAGE,
+
+        CASE WHEN HDR_TYPE = 'H4' THEN
+            TRIM(SPLIT_PART(LINE, '=', 2))
+        END AS H4_HEADER_CODE,
+
+        CASE WHEN HDR_TYPE = 'H5' THEN
+            TRIM(SPLIT_PART(LINE, '=', 2))
+        END AS H5_HEADER_DATE,
+
+        CASE WHEN HDR_TYPE = 'H6' THEN
+            TRIM(SPLIT_PART(LINE, '=', 2))
+        END AS H6_REQUEST_ID,
+
+        CASE WHEN HDR_TYPE = 'H7' THEN
+            TRIM(SPLIT_PART(LINE, '=', 2))
+        END AS H7_BATCH_ID, 
+
+        CASE WHEN HDR_TYPE = 'H8' THEN
+            TRIM(SPLIT_PART(LINE, '=', 2))
+        END AS H8_USER_ID
+
+    FROM header
+)
+SELECT 
+    FILENAME,
+    LOAD_DATE,
+    MAX(H1_TRANSACTION_RECEIVED_ON)        AS H1_TRANSACTION_RECEIVED_ON,
+    MAX(H2_TRANSACTION_PROCESSED_ON)       AS H2_TRANSACTION_PROCESSED_ON,
+    MAX(H3_STATUS_MESSAGE)                 AS H3_STATUS_MESSAGE,
+    MAX(H4_HEADER_CODE)                    AS H4_HEADER_CODE,
+    MAX(H5_HEADER_DATE)                    AS H5_HEADER_DATE,
+    MAX(H6_REQUEST_ID)                     AS H6_REQUEST_ID,
+    MAX(H7_BATCH_ID)                       AS H7_BATCH_ID,
+    MAX(H8_USER_ID)                        AS H8_USER_ID
+FROM parsed
+GROUP BY FILENAME, LOAD_DATE;

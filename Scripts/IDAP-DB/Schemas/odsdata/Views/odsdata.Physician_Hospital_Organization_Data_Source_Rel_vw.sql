@@ -1,0 +1,12 @@
+CREATE OR REPLACE VIEW ODSDATA.PHYSICIAN_HOSPITAL_ORGANIZATION_DATA_SOURCE_REL_VW
+COMMENT = 'Replicated from Azure SQL DB'
+AS
+SELECT
+PhysicianHospitalOrganizationDataSourceRel.$1::NUMBER(38,0) AS PHYSICIAN_HOSPITAL_ORGANIZATION_DATA_SOURCE_REL_KEY
+,PhysicianHospitalOrganizationDataSourceRel.$2::NUMBER(38,0) AS DATA_SOURCE_KEY
+,PhysicianHospitalOrganizationDataSourceRel.$3::NUMBER(38,0) AS PHYSICIAN_HOSPITAL_ORGANIZATION_KEY
+,PhysicianHospitalOrganizationDataSourceRel.$4::VARCHAR AS PHYSICIAN_HOSPITAL_ORGANIZATION_SOURCE_NAME
+,PhysicianHospitalOrganizationDataSourceRel.$5::DATETIME AS LAST_UPDATED_DATETIME
+FROM @ODSDATA.HPDSDATALAKE_IDAPSQL/providerods/PhysicianHospitalOrganizationDataSourceRel.txt
+(FILE_FORMAT => 'ODSDATA.PROVIDER_ODS_FILE_FORMAT')PhysicianHospitalOrganizationDataSourceRel
+;

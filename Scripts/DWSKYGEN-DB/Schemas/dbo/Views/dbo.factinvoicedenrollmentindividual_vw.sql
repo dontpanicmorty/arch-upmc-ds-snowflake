@@ -1,0 +1,32 @@
+CREATE OR REPLACE VIEW DBO.FactInvoicedEnrollmentIndividual_VW
+AS 
+SELECT 	$1:BenefitPlanKey::NUMBER(38, 0) AS BenefitPlanKey, 
+		$1:BillingPeriod_DateKey::NUMBER(38, 0) AS BillingPeriod_DateKey, 
+		$1:AdjustmentBillingPeriod_DateKey::NUMBER(38, 0) AS AdjustmentBillingPeriod_DateKey, 
+		$1:EnrolleeKey::NUMBER(38, 0) AS EnrolleeKey, 
+		$1:ClientKey::NUMBER(38, 0) AS ClientKey, 
+		$1:DateCreateKey::NUMBER(38, 0) AS DateCreateKey, 
+		$1:DatePremiumDueKey::NUMBER(38, 0) AS DatePremiumDueKey, 
+		$1:InvoiceItemTypeKey::NUMBER(38, 0) AS InvoiceItemTypeKey, 
+		$1:PremiumGroupKey::NUMBER(38, 0) AS PremiumGroupKey, 
+		$1:PremiumGroupPremiumTypeKey::NUMBER(38, 0) AS PremiumGroupPremiumTypeKey, 
+		$1:INVOICE_ID::NUMBER(38, 0) AS INVOICE_ID, 
+		$1:RECORD_TYPE::NUMBER(38, 0) AS RECORD_TYPE, 
+		$1:INVOICE_NUMBER::VARCHAR AS INVOICE_NUMBER, 
+		$1:PRIOR_UNPAID_BALANCE::NUMBER(19, 2) AS PRIOR_UNPAID_BALANCE, 
+		$1:BALANCE_LAST_STATEMENT::NUMBER(19, 2) AS BALANCE_LAST_STATEMENT, 
+		$1:ORIG_TOTAL_AMOUNT_DUE::NUMBER(19, 2) AS ORIG_TOTAL_AMOUNT_DUE, 
+		$1:SUBSCRIBER_ID::VARCHAR AS SUBSCRIBER_ID, 
+		$1:SubscriberContractType::VARCHAR AS SubscriberContractType, 
+		$1:AdjustmentAmount::NUMBER(19, 4) AS AdjustmentAmount, 
+		$1:BilledAmount::NUMBER(19, 4) AS BilledAmount, 
+		$1:WriteOffAmount::NUMBER(19, 4) AS WriteOffAmount, 
+		$1:AppliedAmount::NUMBER(19, 4) AS AppliedAmount, 
+		$1:MemberCount::NUMBER(38, 0) AS MemberCount, 
+		$1:SubscriberCount::NUMBER(38, 0) AS SubscriberCount, 
+		$1:INVOICE_LOCKED_FLAG::BOOLEAN AS INVOICE_LOCKED_FLAG, 
+		--$1:DWH_Hash::VARCHAR AS DWH_Hash, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactInvoicedEnrollmentIndividual/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

@@ -1,0 +1,167 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_LOAD_CLAIM_JSON(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `EXTRACTDATA.CLAIM_JSON`;
+
+// Create merge statement to be executed.
+//consider changing this to a MINUS query like dimdata does it for speed purposes
+var sqlMergeCommand =
+`
+MERGE INTO EXTRACTDATA.CLAIM_JSON TGT
+USING ( 
+    SELECT DATA_SOURCE_NAME,
+    CLAIM_NBR,
+    JSON_DATA,
+    MULTISOURCE_CLAIM_IND
+    FROM ${SOURCE_VIEW_NAME}
+    MINUS
+    SELECT DATA_SOURCE_NAME,
+    CLAIM_NBR,
+    JSON_DATA,
+    MULTISOURCE_CLAIM_IND
+    FROM EXTRACTDATA.CLAIM_JSON
+) SRC
+ON (TGT.CLAIM_NBR = SRC.CLAIM_NBR
+AND TGT.DATA_SOURCE_NAME = SRC.DATA_SOURCE_NAME)
+
+WHEN MATCHED AND 
+    (
+        TGT.JSON_DATA <> SRC.JSON_DATA
+        OR NOT (EQUAL_NULL(tgt.MULTISOURCE_CLAIM_IND, src.MULTISOURCE_CLAIM_IND))
+    )
+
+THEN UPDATE SET
+    TGT.LAST_UPDATED_DATETIME = :1,
+    TGT.JSON_DATA = SRC.JSON_DATA
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        CLAIM_JSON_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,DATA_SOURCE_NAME
+        ,CLAIM_NBR
+        ,MULTISOURCE_CLAIM_IND
+        ,JSON_DATA
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(CLAIM_JSON_KEY), 1000) FROM EXTRACTDATA.CLAIM_JSON) + ROW_NUMBER() OVER (ORDER BY 1)   
+        ,:1
+        ,:1
+        ,SRC.DATA_SOURCE_NAME
+        ,SRC.CLAIM_NBR
+        ,SRC.MULTISOURCE_CLAIM_IND
+        ,SRC.JSON_DATA
+    )
+;`;
+
+// set delete command which will hard delete from the target table
+var sqlDeleteCommand =
+`
+DELETE FROM ${targetTableName} WHERE CLAIM_NBR IN 
+(
+SELECT CLAIM_NBR FROM ${targetTableName}
+MINUS
+SELECT CLAIM_NBR FROM ${SOURCE_VIEW_NAME}
+);`;
+
+
+try 
+{
+     //Lookup Job
+    var sqlLogCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

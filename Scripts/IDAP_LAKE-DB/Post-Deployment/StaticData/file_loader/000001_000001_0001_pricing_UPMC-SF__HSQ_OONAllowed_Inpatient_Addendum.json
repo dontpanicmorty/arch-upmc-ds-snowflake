@@ -1,0 +1,76 @@
+{
+        "outputSchema": "PRICING",
+        "outputTable": "HEALTHSPARQ_OON_INPATIENT_ALLOWED_AMOUNT",
+        "hasHeader": true,
+        "hasTrailer": false,
+        "fileType": "delimited",
+        "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+        "fileFormat": "BUSINESS_FILE_FORMAT",
+        "truncReload": true,
+        "mappingTypes": {
+            "all": {
+            "mappingContents": [
+                {
+                "columnOrder": 1,
+                "inputField": "UPDATE_TYPE",
+                "outputField": "UPDATE_TYPE"
+                },
+                {
+                "columnOrder": 2,
+                "inputField": "INSURER_CODE",
+                "outputField": "INSURER_CODE"
+                },
+                {
+                "columnOrder": 3,
+                "inputField": "PRODUCT_CODE",
+                "outputField": "PRODUCT_CODE"
+                },
+                {
+                "columnOrder": 4,
+                "inputField": "BILLING_CODE_TYPE",
+                "outputField": "BILLING_CODE_TYPE"
+                },
+                {
+                "columnOrder": 5,
+                "inputField": "BILLING_CODE_TYPE_VER",
+                "outputField": "BILLING_CODE_TYPE_VER"
+                },  
+                {
+                "columnOrder": 6,
+                "inputField": "BILLING_CODE",
+                "outputField": "BILLING_CODE"
+                },
+                {
+                "columnOrder": 7,
+                "inputField": "POS_COLLECTION_KEY",
+                "outputField": "POS_COLLECTION_KEY"
+                },
+                {
+                "columnOrder": 8,
+                "inputField": "ALLOWED_AMOUNT_TYPE",
+                "outputField": "ALLOWED_AMOUNT_TYPE"
+                },
+                {
+                "columnOrder": 9,
+                "inputField": "ALLOWED_AMOUNT",
+                "outputField": "ALLOWED_AMOUNT"
+                },
+                {
+                "columnOrder": 10,
+                "inputField": "CLIENT_REGION_KEY",
+                "outputField": "CLIENT_REGION_KEY"
+                },
+                {
+                "columnOrder": 11,
+                "inputField": "MODIFIER",
+                "outputField": "MODIFIER"
+                },
+                {
+                "columnOrder": 12,
+                "inputField": "BILLING_CLASS",
+                "outputField": "BILLING_CLASS"
+                }
+            ]
+            }
+        }
+    }

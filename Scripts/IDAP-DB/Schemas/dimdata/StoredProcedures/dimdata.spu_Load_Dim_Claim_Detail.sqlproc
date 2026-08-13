@@ -1,0 +1,355 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_CLAIM_DETAIL()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_CLAIM_DETAIL`;
+
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TRANSIENT TABLE STAGEDATA.DIM_CLAIM_DETAIL
+AS
+SELECT * FROM STAGEDATA.DIM_CLAIM_DETAIL_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_CLAIM_DETAIL AS tgt
+USING (
+        SELECT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,CLAIM_NBR
+        ,CLAIM_LINE_NBR
+        ,CLAIM_SEQUENCE_NBR
+        ,PROCEDURE_ADJ_CODE
+        ,DATA_HUB_UNIVERSAL_CLAIM_ID
+        ,CLAIM_PAYSTATUS_CODE
+        ,CLAIM_PAYSTATUS_DESC
+        ,CHECK_NBR
+        ,TRANSACTION_TYPE_CODE
+        ,TRANSACTION_TYPE_DESC
+        ,CLEAN_CLAIM_IND
+        ,SERVICE_STATUS_CODE
+        ,SERVICE_STATUS_DESC
+        ,TOOTH_ID
+        ,TOOTH_SURFACE_ID
+        ,TOOTH_SURFACE_02
+        ,TOOTH_SURFACE_03
+        ,TOOTH_SURFACE_04
+        ,TOOTH_SURFACE_05
+        ,QUADRANT_ARCH_ID
+        ,QUADRANT_ARCH_DESC
+        ,TOOTH_QUADRANT_CODE
+        ,TOOTH_QUADRANT_DESC
+        ,TOOTH_ARCH_CODE
+        ,TOOTH_ARCH_DESC
+        ,BENEFIT_LEVEL_CODE
+        ,BENEFIT_LEVEL_DESC
+        ,BENEFIT_LEVEL_PAYMENT_TYPE_NAME
+        ,BENEFIT_CATEGORY_CODE
+        ,BENEFIT_CATEGORY_DESC
+        ,SOURCE_SYSTEM
+        ,SOURCE_ID
+        ,AUTHORIZATION_NBR
+        ,AUTHORIZATION_LINE_NBR
+        ,CMS_CURRENT_ITERATION_FLAG
+        FROM STAGEDATA.DIM_CLAIM_DETAIL
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME        
+        ,CLAIM_NBR
+        ,CLAIM_LINE_NBR
+        ,CLAIM_SEQUENCE_NBR
+        ,PROCEDURE_ADJ_CODE
+        ,DATA_HUB_UNIVERSAL_CLAIM_ID
+        ,CLAIM_PAYSTATUS_CODE
+        ,CLAIM_PAYSTATUS_DESC
+        ,CHECK_NBR
+        ,TRANSACTION_TYPE_CODE
+        ,TRANSACTION_TYPE_DESC
+        ,CLEAN_CLAIM_IND
+        ,SERVICE_STATUS_CODE
+        ,SERVICE_STATUS_DESC
+        ,TOOTH_ID
+        ,TOOTH_SURFACE_ID
+        ,TOOTH_SURFACE_02
+        ,TOOTH_SURFACE_03
+        ,TOOTH_SURFACE_04
+        ,TOOTH_SURFACE_05
+        ,QUADRANT_ARCH_ID
+        ,QUADRANT_ARCH_DESC
+        ,TOOTH_QUADRANT_CODE
+        ,TOOTH_QUADRANT_DESC
+        ,TOOTH_ARCH_CODE
+        ,TOOTH_ARCH_DESC
+        ,BENEFIT_LEVEL_CODE
+        ,BENEFIT_LEVEL_DESC
+        ,BENEFIT_LEVEL_PAYMENT_TYPE_NAME
+        ,BENEFIT_CATEGORY_CODE
+        ,BENEFIT_CATEGORY_DESC
+        ,SOURCE_SYSTEM
+        ,SOURCE_ID
+        ,AUTHORIZATION_NBR
+        ,AUTHORIZATION_LINE_NBR
+        ,CMS_CURRENT_ITERATION_FLAG
+        FROM DIMDATA.DIM_CLAIM_DETAIL
+    ) AS src
+ON (tgt.TPA_CLIENT_ID = src.TPA_CLIENT_ID
+AND tgt.TPA_ID = src.TPA_ID
+AND tgt.TPA_DIV_ID = src.TPA_DIV_ID
+AND tgt.DATA_SOURCE_NAME = src.DATA_SOURCE_NAME
+AND tgt.CLAIM_NBR=src.CLAIM_NBR
+AND tgt.CLAIM_LINE_NBR = src.CLAIM_LINE_NBR
+AND tgt.CLAIM_SEQUENCE_NBR = src.CLAIM_SEQUENCE_NBR
+AND tgt.PROCEDURE_ADJ_CODE = src.PROCEDURE_ADJ_CODE)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.DATA_HUB_UNIVERSAL_CLAIM_ID = src.DATA_HUB_UNIVERSAL_CLAIM_ID,
+    tgt.CLAIM_PAYSTATUS_CODE = src.CLAIM_PAYSTATUS_CODE,
+    tgt.CLAIM_PAYSTATUS_DESC = src.CLAIM_PAYSTATUS_DESC,
+    tgt.CHECK_NBR = src.CHECK_NBR,
+    tgt.TRANSACTION_TYPE_CODE = src.TRANSACTION_TYPE_CODE,
+    tgt.TRANSACTION_TYPE_DESC = src.TRANSACTION_TYPE_DESC,
+    tgt.CLEAN_CLAIM_IND = src.CLEAN_CLAIM_IND,
+    tgt.SERVICE_STATUS_CODE = src.SERVICE_STATUS_CODE,
+    tgt.SERVICE_STATUS_DESC = src.SERVICE_STATUS_DESC,
+    tgt.TOOTH_ID = src.TOOTH_ID,
+    tgt.TOOTH_SURFACE_ID = src.TOOTH_SURFACE_ID,
+    tgt.TOOTH_SURFACE_02 = src.TOOTH_SURFACE_02,
+    tgt.TOOTH_SURFACE_03 = src.TOOTH_SURFACE_03,
+    tgt.TOOTH_SURFACE_04 = src.TOOTH_SURFACE_04,
+    tgt.TOOTH_SURFACE_05 = src.TOOTH_SURFACE_05,
+    tgt.QUADRANT_ARCH_ID = src.QUADRANT_ARCH_ID,
+    tgt.QUADRANT_ARCH_DESC = src.QUADRANT_ARCH_DESC,
+    tgt.TOOTH_QUADRANT_CODE = src.TOOTH_QUADRANT_CODE,
+    tgt.TOOTH_QUADRANT_DESC = src.TOOTH_QUADRANT_DESC,
+    tgt.TOOTH_ARCH_CODE = src.TOOTH_ARCH_CODE,
+    tgt.TOOTH_ARCH_DESC = src.TOOTH_ARCH_DESC,
+    tgt.BENEFIT_LEVEL_CODE = src.BENEFIT_LEVEL_CODE,
+    tgt.BENEFIT_LEVEL_DESC = src.BENEFIT_LEVEL_DESC,
+    tgt.BENEFIT_LEVEL_PAYMENT_TYPE_NAME = src.BENEFIT_LEVEL_PAYMENT_TYPE_NAME,
+    tgt.BENEFIT_CATEGORY_CODE = src.BENEFIT_CATEGORY_CODE,
+    tgt.BENEFIT_CATEGORY_DESC = src.BENEFIT_CATEGORY_DESC,
+    tgt.SOURCE_SYSTEM = src.SOURCE_SYSTEM,
+    tgt.SOURCE_ID = src.SOURCE_ID,
+    tgt.AUTHORIZATION_NBR = src.AUTHORIZATION_NBR,
+    tgt.AUTHORIZATION_LINE_NBR = src.AUTHORIZATION_LINE_NBR,
+    tgt.CMS_CURRENT_ITERATION_FLAG = src.CMS_CURRENT_ITERATION_FLAG
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_CLAIM_DETAIL_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,CLAIM_NBR
+        ,CLAIM_LINE_NBR
+        ,CLAIM_SEQUENCE_NBR
+        ,PROCEDURE_ADJ_CODE
+        ,DATA_HUB_UNIVERSAL_CLAIM_ID
+        ,CLAIM_PAYSTATUS_CODE
+        ,CLAIM_PAYSTATUS_DESC
+        ,CHECK_NBR
+        ,TRANSACTION_TYPE_CODE
+        ,TRANSACTION_TYPE_DESC
+        ,CLEAN_CLAIM_IND
+        ,SERVICE_STATUS_CODE
+        ,SERVICE_STATUS_DESC
+        ,TOOTH_ID
+        ,TOOTH_SURFACE_ID
+        ,TOOTH_SURFACE_02
+        ,TOOTH_SURFACE_03
+        ,TOOTH_SURFACE_04
+        ,TOOTH_SURFACE_05
+        ,QUADRANT_ARCH_ID
+        ,QUADRANT_ARCH_DESC
+        ,TOOTH_QUADRANT_CODE
+        ,TOOTH_QUADRANT_DESC
+        ,TOOTH_ARCH_CODE
+        ,TOOTH_ARCH_DESC
+        ,BENEFIT_LEVEL_CODE
+        ,BENEFIT_LEVEL_DESC
+        ,BENEFIT_LEVEL_PAYMENT_TYPE_NAME
+        ,BENEFIT_CATEGORY_CODE
+        ,BENEFIT_CATEGORY_DESC
+        ,SOURCE_SYSTEM
+        ,SOURCE_ID
+        ,AUTHORIZATION_NBR
+        ,AUTHORIZATION_LINE_NBR
+        ,CMS_CURRENT_ITERATION_FLAG
+    )
+VALUES 
+    (
+        (SELECT IFNULL(MAX(DIM_CLAIM_DETAIL_KEY), 1000) FROM DIMDATA.DIM_CLAIM_DETAIL) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.TPA_CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.DATA_SOURCE_NAME        
+        ,src.CLAIM_NBR
+        ,src.CLAIM_LINE_NBR
+        ,src.CLAIM_SEQUENCE_NBR
+        ,src.PROCEDURE_ADJ_CODE
+        ,src.DATA_HUB_UNIVERSAL_CLAIM_ID
+        ,src.CLAIM_PAYSTATUS_CODE
+        ,src.CLAIM_PAYSTATUS_DESC
+        ,src.CHECK_NBR
+        ,src.TRANSACTION_TYPE_CODE
+        ,src.TRANSACTION_TYPE_DESC
+        ,src.CLEAN_CLAIM_IND
+        ,src.SERVICE_STATUS_CODE
+        ,src.SERVICE_STATUS_DESC
+        ,src.TOOTH_ID
+        ,src.TOOTH_SURFACE_ID
+        ,src.TOOTH_SURFACE_02
+        ,src.TOOTH_SURFACE_03
+        ,src.TOOTH_SURFACE_04
+        ,src.TOOTH_SURFACE_05
+        ,src.QUADRANT_ARCH_ID
+        ,src.QUADRANT_ARCH_DESC
+        ,src.TOOTH_QUADRANT_CODE
+        ,src.TOOTH_QUADRANT_DESC
+        ,src.TOOTH_ARCH_CODE
+        ,src.TOOTH_ARCH_DESC
+        ,src.BENEFIT_LEVEL_CODE
+        ,src.BENEFIT_LEVEL_DESC
+        ,src.BENEFIT_LEVEL_PAYMENT_TYPE_NAME
+        ,src.BENEFIT_CATEGORY_CODE
+        ,src.BENEFIT_CATEGORY_DESC
+        ,src.SOURCE_SYSTEM
+        ,src.SOURCE_ID
+        ,src.AUTHORIZATION_NBR
+        ,src.AUTHORIZATION_LINE_NBR
+        ,src.CMS_CURRENT_ITERATION_FLAG
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+// The >999 is done to not update any of the static data, inserts start at 1000 from autoincrement
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_CLAIM_DETAIL
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_CLAIM_DETAIL_KEY IN
+(
+    SELECT DIM_CLAIM_DETAIL.DIM_CLAIM_DETAIL_KEY
+    FROM DIMDATA.DIM_CLAIM_DETAIL
+        LEFT OUTER JOIN 
+            (SELECT TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, DATA_SOURCE_NAME, CLAIM_NBR, CLAIM_LINE_NBR, CLAIM_SEQUENCE_NBR, PROCEDURE_ADJ_CODE
+            FROM STAGEDATA.DIM_CLAIM_DETAIL
+            ) STAGE_DATA
+        ON (STAGE_DATA.TPA_CLIENT_ID = DIM_CLAIM_DETAIL.TPA_CLIENT_ID
+        AND STAGE_DATA.TPA_ID = DIM_CLAIM_DETAIL.TPA_ID
+        AND STAGE_DATA.TPA_DIV_ID = DIM_CLAIM_DETAIL.TPA_DIV_ID
+        AND STAGE_DATA.DATA_SOURCE_NAME = DIM_CLAIM_DETAIL.DATA_SOURCE_NAME
+        AND STAGE_DATA.CLAIM_NBR = DIM_CLAIM_DETAIL.CLAIM_NBR
+        AND STAGE_DATA.CLAIM_LINE_NBR = DIM_CLAIM_DETAIL.CLAIM_LINE_NBR
+        AND STAGE_DATA.CLAIM_SEQUENCE_NBR = DIM_CLAIM_DETAIL.CLAIM_SEQUENCE_NBR
+        AND STAGE_DATA.PROCEDURE_ADJ_CODE = DIM_CLAIM_DETAIL.PROCEDURE_ADJ_CODE)
+    WHERE STAGE_DATA.CLAIM_NBR IS NULL
+    AND DIM_CLAIM_DETAIL.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_CLAIM_DETAIL.DIM_CLAIM_DETAIL_KEY > 2
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Stage source data to temp table to be reused later.
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.DIM_CLAIM_DETAIL`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_CLAIM_DETAIL`;    
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_CLAIM_DETAIL`;    
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

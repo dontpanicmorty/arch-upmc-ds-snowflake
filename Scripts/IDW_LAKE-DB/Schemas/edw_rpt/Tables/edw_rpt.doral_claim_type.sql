@@ -1,0 +1,22 @@
+CREATE OR REPLACE TABLE EDW_RPT.DORAL_CLAIM_TYPE
+(
+DORAL_CLAIM_TYPE_KEY             NUMBER,
+DORAL_CLAIM_TYPE_CODE           VARCHAR,
+ADJUSTMENT_CODE                 VARCHAR,
+ADJUSTMENT_DESC                 VARCHAR,
+EXCEPTION_CODE                  VARCHAR,
+EXCEPTION_DESC                  VARCHAR,
+ANSI_CODE                       VARCHAR,
+LOAD_DATE                 TIMESTAMP_NTZ,
+REASON_CODE_1                   VARCHAR,
+REASON_DESC_1                   VARCHAR,
+REASON_CODE_SUFFIX_1            VARCHAR,
+REASON_CODE_2                   VARCHAR,
+REASON_DESC_2                   VARCHAR,
+REASON_CODE_SUFFIX_2            VARCHAR,
+TRANSACTION_TYPE                VARCHAR,
+TRANSACTION_DESC                VARCHAR,
+CLAIM_SOURCE_IND                VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

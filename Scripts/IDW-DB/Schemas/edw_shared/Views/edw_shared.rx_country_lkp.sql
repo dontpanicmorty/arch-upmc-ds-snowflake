@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_SHARED.RX_COUNTRY_LKP
+AS
+SELECT
+COUNTRY_CODE,
+COUNTRY_NAME,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_SHARED.RX_COUNTRY_LKP;
+!set variable_substitution=false;

@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_HIT
+(
+HCID                 VARCHAR,
+CC_COUNT             DOUBLE,
+TABLE_DATE           VARCHAR,
+HIT_MONTH            VARCHAR
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

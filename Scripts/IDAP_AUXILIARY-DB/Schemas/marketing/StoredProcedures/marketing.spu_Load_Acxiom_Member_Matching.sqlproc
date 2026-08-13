@@ -1,0 +1,141 @@
+CREATE OR REPLACE PROCEDURE MARKETING.SPU_LOAD_ACXIOM_MEMBER_MATCHING() 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var d = new Date();
+var datePart = d.toISOString().split('T')[0].replace(/-/g, '');
+var timePart = d.toTimeString().split(' ')[0]; 
+var JOB_ID = 'ACXIOM_MATCH_' + datePart + '_' + timePart;
+
+snowflake.execute({
+    sqlText: `INSERT INTO LOGDATA.JOB_LOG (JOB_ID, START_TIME, PROCEDURE_NAME)
+              VALUES (:1, CURRENT_TIMESTAMP(), 'MARKETING.SPU_LOAD_ACXIOM_MEMBER_MATCHING')`,
+    binds: [JOB_ID]
+});
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `MARKETING.ACXIOM_MEMBER_MATCHING`;
+
+
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    // create a snowflake statement to run sql command against the JOB_ID
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //truncate table
+
+    snowflake.execute({sqlText: "TRUNCATE TABLE MARKETING.ACXIOM_MEMBER_MATCHING"});
+    
+    //end truncate
+    let levelNumber = 1;
+    while (levelNumber <= 13)
+    {
+        var levelStartTime = new Date().toISOString();
+        
+        // FIX: Dynamic View Naming Logic
+        var sourceViewName = `MARKETING.ACXIOM_MEMBER_MATCHING_LEVEL_${levelNumber}_SELECT_VW`;
+        
+        // Level 13 has a special name with "UNMATCHED"
+        if (levelNumber == 13) {
+            sourceViewName = `MARKETING.ACXIOM_MEMBER_MATCHING_LEVEL_13_UNMATCHED_SELECT_VW`;
+        }
+
+        var sqlCommand =
+        `
+        INSERT INTO MARKETING.ACXIOM_MEMBER_MATCHING
+            (ACXIOM_PERSON_ID, INSERT_DATETIME, MASTER_MEMBER_ID, MATCH_TYPE_ID, MATCH_TYPE_NAME, MMI_STATUS)
+        SELECT
+            ACXIOM_PERSON_ID
+            ,:1
+            ,MASTER_MEMBER_ID
+            ,MATCH_TYPE_ID
+            ,MATCH_TYPE_NAME
+            ,MMI_STATUS
+        FROM ${sourceViewName}
+        WHERE  (
+        ACXIOM_PERSON_ID NOT IN (SELECT ACXIOM_PERSON_ID FROM MARKETING.ACXIOM_MEMBER_MATCHING)
+            AND MASTER_MEMBER_ID NOT IN (SELECT MASTER_MEMBER_ID FROM MARKETING.ACXIOM_MEMBER_MATCHING)
+            )
+        ;`;
+    
+       
+        var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds:[loadDatetime]});
+        sfStatement.execute();
+        var endTime = new Date().toISOString();
+        var result = "Succeeded";
+
+        //Log results to table
+        snowflake.execute
+        (
+            {
+            sqlText: sqlLogCommand,
+            binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(),                        sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+            }
+        );
+        
+        levelNumber = levelNumber + 1
+    }
+        snowflake.execute({
+        sqlText: `UPDATE LOGDATA.JOB_LOG SET END_TIME = CURRENT_TIMESTAMP() WHERE JOB_ID = :1`,
+        binds: [JOB_ID]
+    });
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    ); 
+    snowflake.execute({
+        sqlText: `UPDATE LOGDATA.JOB_LOG SET END_TIME = CURRENT_TIMESTAMP() WHERE JOB_ID = :1`,
+        binds: [JOB_ID]
+    });
+    throw result;
+}
+
+return result;
+$$
+;

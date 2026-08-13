@@ -1,0 +1,33 @@
+CREATE OR REPLACE VIEW DBO.FactClaimImport_VW
+AS 
+SELECT 	$1:AgeKey::NUMBER(38, 0) AS AgeKey, 
+		$1:BenefitPlanKey::NUMBER(38, 0) AS BenefitPlanKey, 
+		$1:BillingAttributeKey::NUMBER(38, 0) AS BillingAttributeKey, 
+		$1:ClaimTypeKey::NUMBER(38, 0) AS ClaimTypeKey, 
+		$1:ClientKey::NUMBER(38, 0) AS ClientKey, 
+		$1:CountyKey::NUMBER(38, 0) AS CountyKey, 
+		$1:DateCleanClaimKey::NUMBER(38, 0) AS DateCleanClaimKey, 
+		$1:DateOfServiceKey::NUMBER(38, 0) AS DateOfServiceKey, 
+		$1:DateReceivedKey::NUMBER(38, 0) AS DateReceivedKey, 
+		$1:DomainSourceKey::NUMBER(38, 0) AS DomainSourceKey, 
+		$1:EnrolleeKey::NUMBER(38, 0) AS EnrolleeKey, 
+		$1:LocationKey::NUMBER(38, 0) AS LocationKey, 
+		$1:PremiumGroupKey::NUMBER(38, 0) AS PremiumGroupKey, 
+		$1:ProcessingStateKey::NUMBER(38, 0) AS ProcessingStateKey, 
+		$1:ProviderKey::NUMBER(38, 0) AS ProviderKey, 
+		$1:RecordSourceKey::NUMBER(38, 0) AS RecordSourceKey, 
+		$1:RecordSourceSubTypeKey::NUMBER(38, 0) AS RecordSourceSubTypeKey, 
+		$1:RelationshipKey::NUMBER(38, 0) AS RelationshipKey, 
+		$1:TaxEntityKey::NUMBER(38, 0) AS TaxEntityKey, 
+		$1:CLAIM_ID::NUMBER(38, 0) AS CLAIM_ID, 
+		$1:ENCOUNTER_ID::VARCHAR AS ENCOUNTER_ID, 
+		$1:SUBSCRIBER_ID::VARCHAR AS SUBSCRIBER_ID, 
+		$1:MEMBER_ID::VARCHAR AS MEMBER_ID, 
+		$1:ORIGINAL_CLAIM_ID::NUMBER(38, 0) AS ORIGINAL_CLAIM_ID, 
+		$1:CLIENT_CLAIM_ID::VARCHAR AS CLIENT_CLAIM_ID, 
+		$1:EIM_JOB_ID::NUMBER(38, 0) AS EIM_JOB_ID, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime--, 
+		--$1:DW_Hash::VARCHAR AS DW_Hash
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactClaimImport/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

@@ -1,0 +1,7 @@
+{
+  "CATALOG_PATTERN": "%",
+  "SCHEMA_PATTERN": "EDW_RPT",
+  "OBJECT_PATTERN": "%",
+  "TEST_INDEX": 4,
+  "INCLUDE": 0
+}

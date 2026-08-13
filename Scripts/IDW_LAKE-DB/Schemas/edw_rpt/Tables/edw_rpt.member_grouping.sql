@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE EDW_RPT.MEMBER_GROUPING
+(
+MEMBER_GROUPING_KEY                  NUMBER(38),
+PRIMARY_ALT_CARRIER_TYPE_DESC           VARCHAR,
+LOAD_DATE                         TIMESTAMP_NTZ,
+UPDATE_DATE                       TIMESTAMP_NTZ,
+CCBH_RISK_CODE                          VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

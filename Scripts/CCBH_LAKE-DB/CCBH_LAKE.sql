@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS CCBH_LAKE 
+COMMENT = 'CCBH_LAKE production database'
+;

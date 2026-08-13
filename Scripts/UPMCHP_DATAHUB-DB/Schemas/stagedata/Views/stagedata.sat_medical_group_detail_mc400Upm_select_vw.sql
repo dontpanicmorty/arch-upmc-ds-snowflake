@@ -1,0 +1,30 @@
+CREATE OR REPLACE VIEW STAGEDATA.SAT_MEDICAL_GROUP_DETAIL_MC400UPM_SELECT_VW
+COMMENT = 'This is a SAT View containing Medical Group Details'
+AS
+SELECT
+Providers.TPACLIENT AS TPA_CLIENT_ID
+,Providers.TPAIDOFCLIENT AS TPA_ID
+,Providers.TPADIVISION AS TPA_DIV_ID
+,'MC400Upm' AS DATA_SOURCE_NAME
+,Providers.ProviderNbr AS MEDICAL_GROUP_ID
+,IFNULL(Providers.ProviderName, Providers.Name) AS MEDICAL_GROUP_NAME
+,IFF(TRIM(IFNULL(Providers.AlternateProviderNo,'')) = '', NULL, TRIM(Providers.AlternateProviderNo)) AS TAX_ID_NBR --yes, AlternateProviderNo is TIN
+,IFF(TRIM(IFNULL(Providers.EmailAddress,'')) = '', NULL, TRIM(Providers.EmailAddress)) AS EMAIL_ADDRESS
+,IFF(TRIM(IFNULL(Providers.NationalProviderNbr,'')) = '', NULL, TRIM(Providers.NationalProviderNbr)) AS NPI_NBR
+,NULL AS MEDICAL_GROUP_START_DATE
+,NULL AS MEDICAL_GROUP_ACTIVE_IND
+,UTIL.FXN_ARRAY_HASH([TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, DATA_SOURCE_NAME, MEDICAL_GROUP_ID]) AS HUB_MEDICAL_GROUP_HKEY
+,UTIL.FXN_ARRAY_HASH(
+    [
+    MEDICAL_GROUP_NAME
+    ,TAX_ID_NBR
+    ,EMAIL_ADDRESS
+    ,NPI_NBR
+    ,MEDICAL_GROUP_START_DATE
+    ,MEDICAL_GROUP_ACTIVE_IND
+    ]
+) AS HASH_DIFF
+
+FROM RAWDATA.MC400_DWOAO_PROVIDERS Providers
+WHERE UPPER(SUBSTR(Providers.ProviderNbr,1,1)) = 'V' --MC400 Business logic for medical groups
+;

@@ -1,0 +1,28 @@
+CREATE OR REPLACE TABLE GPSUPPORT.MA_MATERNITY_835
+(
+MOTHER_LAST_NAME            VARCHAR,
+MOTHER_FIRST_NAME           VARCHAR,
+MOTHER_CIS                  VARCHAR,
+NEW_BORN1_CIS               VARCHAR,
+NEW_BORN2_CIS               VARCHAR,
+NEW_BORN1_DOB               VARCHAR,
+COUNTY                      VARCHAR,
+PROCEDURE_MOD               VARCHAR,
+PAYMENT                      NUMBER,
+FACILITY_MPI                VARCHAR,
+FACILITY_NAME               VARCHAR,
+ADMIT_DATE                  VARCHAR,
+DISCHARGE_DATE              VARCHAR,
+PRIMARY_DIAG                VARCHAR,
+NEW_BORN1_GENDER            VARCHAR,
+MC400_CLAIM                 VARCHAR,
+PROMISE_ICN                 VARCHAR,
+FILE_DATE                   VARCHAR,
+FILE_TYPE                   VARCHAR,
+DT_NEW_BORN1_DOB      TIMESTAMP_NTZ,
+DT_ADMIT_DATE         TIMESTAMP_NTZ,
+DT_DISCHARGE_DATE     TIMESTAMP_NTZ,
+DT_FILE_DATE          TIMESTAMP_NTZ
+)
+COMMENT='Created for GPSUPPORT Migration'
+;

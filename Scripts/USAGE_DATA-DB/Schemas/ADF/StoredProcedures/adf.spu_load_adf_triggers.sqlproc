@@ -1,0 +1,53 @@
+CREATE OR REPLACE PROCEDURE ADF.SPU_LOAD_ADF_TRIGGERS()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+    // truncate previous data
+    var sql = `
+        TRUNCATE TABLE ADF.TRIGGERS_RAW;
+    `  
+    var stmt = snowflake.createStatement({sqlText: sql});
+    var rs = stmt.execute();
+    
+    // copy new file into table
+    sql = `
+        COPY INTO ADF.TRIGGERS_RAW (raw, filename)
+        FROM (
+            SELECT
+                $1,
+                METADATA$FILENAME
+            FROM @UTIL.SNOWFLAKEDATA_USAGE_DATA_DB_EXTRACT/triggers/
+        )
+        FILE_FORMAT = (FORMAT_NAME = 'ADF.TRIGGERS_JSON_FILE_FORMAT')
+        ON_ERROR = 'CONTINUE';
+    `
+    stmt = snowflake.createStatement({sqlText: sql});
+    rs = stmt.execute();
+
+    var colCount = rs.getColumnCount();
+    var colNames = [];
+    for (var i = 1; i <= colCount; i++) {
+      colNames.push(rs.getColumnName(i));
+    }
+
+
+    var rows = [];
+    while (rs.next()) {
+      var r = {};
+      for (var i = 1; i <= colCount; i++) {
+        r[colNames[i-1]] = rs.getColumnValue(i);
+      }
+      rows.push(r);
+    }
+
+
+    var summary = { rows_loaded: 0, errors_seen: 0, files_processed: rows.length };
+    rows.forEach(r => {
+      if (r.ROWS_LOADED) summary.rows_loaded += Number(r.ROWS_LOADED);
+      if (r.ERRORS_SEEN) summary.errors_seen += Number(r.ERRORS_SEEN);
+    });
+
+    return JSON.stringify({summary, columns: colNames, rows}, null, 2);
+$$;

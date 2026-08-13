@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_SVCDENSITY_M
+(
+HCID                      VARCHAR,
+MEM_MONTH                 VARCHAR,
+SVC_DENSITY                NUMBER(33,5),
+SVC_CNT                    NUMBER(33,5),
+TIME_DIFF_TOTAL            NUMBER(33,5),
+DATE_UPDATED        TIMESTAMP_NTZ
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

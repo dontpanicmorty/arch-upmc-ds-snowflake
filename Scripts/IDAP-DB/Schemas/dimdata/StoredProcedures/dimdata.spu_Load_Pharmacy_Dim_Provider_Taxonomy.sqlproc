@@ -1,0 +1,173 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_PHARMACY_DIM_PROVIDER_TAXONOMY()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_PROVIDER_TAXONOMY`;
+
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TRANSIENT TABLE STAGEDATA.PHARMACY_DIM_PROVIDER_TAXONOMY
+AS
+SELECT * FROM STAGEDATA.PHARMACY_DIM_PROVIDER_TAXONOMY_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_PROVIDER_TAXONOMY AS tgt
+USING (
+        SELECT
+        FALSE AS IS_LOGICAL_DELETE_FLAG,
+        TAXONOMY_CODE,
+        TAXONOMY_TYPE,
+        TAXONOMY_CLASS,
+        TAXONOMY_SPECIALIZATION
+        FROM STAGEDATA.PHARMACY_DIM_PROVIDER_TAXONOMY
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,TAXONOMY_CODE
+        ,TAXONOMY_TYPE
+        ,TAXONOMY_CLASS
+        ,TAXONOMY_SPECIALIZATION
+        FROM DIMDATA.DIM_PROVIDER_TAXONOMY
+    ) AS src
+ON (tgt.TAXONOMY_CODE = src.TAXONOMY_CODE)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.TAXONOMY_TYPE = src.TAXONOMY_TYPE,
+    tgt.TAXONOMY_CLASS = src.TAXONOMY_CLASS,
+    tgt.TAXONOMY_SPECIALIZATION = src.TAXONOMY_SPECIALIZATION
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_PROVIDER_TAXONOMY_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,TAXONOMY_CODE
+        ,TAXONOMY_TYPE
+        ,TAXONOMY_CLASS
+        ,TAXONOMY_SPECIALIZATION
+    )
+VALUES 
+    (
+        (SELECT IFNULL(MAX(DIM_PROVIDER_TAXONOMY_KEY), 1000) FROM DIMDATA.DIM_PROVIDER_TAXONOMY) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.TAXONOMY_CODE
+        ,src.TAXONOMY_TYPE
+        ,src.TAXONOMY_CLASS
+        ,src.TAXONOMY_SPECIALIZATION
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+// The >999 is done to not update any of the static data, inserts start at 1000 from autoincrement
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_PROVIDER_TAXONOMY
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_PROVIDER_TAXONOMY_KEY IN
+(
+    SELECT DIM_PROVIDER_TAXONOMY.DIM_PROVIDER_TAXONOMY_KEY
+    FROM DIMDATA.DIM_PROVIDER_TAXONOMY
+        LEFT OUTER JOIN 
+            (SELECT TAXONOMY_CODE
+            FROM STAGEDATA.PHARMACY_DIM_PROVIDER_TAXONOMY
+            ) STAGE_DATA
+        ON (STAGE_DATA.TAXONOMY_CODE = DIM_PROVIDER_TAXONOMY.TAXONOMY_CODE)
+    WHERE STAGE_DATA.TAXONOMY_CODE IS NULL
+    AND DIM_PROVIDER_TAXONOMY.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_PROVIDER_TAXONOMY.DIM_PROVIDER_TAXONOMY_KEY > 2
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Stage source data to temp table to be reused later.
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.DIM_PROVIDER_TAXONOMY`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_PROVIDER_TAXONOMY`;    
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_PROVIDER_TAXONOMY`;    
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

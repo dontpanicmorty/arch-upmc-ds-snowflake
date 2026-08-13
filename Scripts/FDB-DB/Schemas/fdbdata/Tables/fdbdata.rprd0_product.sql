@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE FDBDATA.RPRD0_PRODUCT (
+	FDB_PRODUCT_ID NUMERIC(11, 0) NOT NULL,
+	FDB_PRODUCT_STATUS_CD VARCHAR(8) NOT NULL,
+	GCN_SEQNO NUMERIC(6, 0) NOT NULL,
+	LBLRID VARCHAR(6) NOT NULL,
+	LABEL_NAME VARCHAR(255) NOT NULL,
+	FDB_PRODUCT_FIRST_DELIVERY_DT VARCHAR(8) NOT NULL,
+	FDB_PRODUCT_OBSOLETE_DT VARCHAR(8) NULL,
+	CONSTRAINT PK_RPRD0_PRODUCT PRIMARY KEY (FDB_PRODUCT_ID)
+)
+COMMENT = 'Provides attributes of a First Databank Product Identifier, including status, clinical formulation, label name and the date range when these data elements are being actively maintained in FDB content. The VARCHAR(8) format is YYYYMMDD.'
+;

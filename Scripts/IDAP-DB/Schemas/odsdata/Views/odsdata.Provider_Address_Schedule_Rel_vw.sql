@@ -1,0 +1,16 @@
+CREATE OR REPLACE VIEW ODSDATA.PROVIDER_ADDRESS_SCHEDULE_REL_VW
+COMMENT = 'Replicated from Azure SQL DB'
+AS
+SELECT
+ProviderAddressScheduleRel.$1::NUMBER(38,0) AS PROVIDER_ADDRESS_SCHEDULE_REL_KEY
+,ProviderAddressScheduleRel.$2::NUMBER(38,0) AS PROVIDER_ADDRESS_KEY
+,ProviderAddressScheduleRel.$3::NUMBER(38,0) AS SCHEDULE_TYPE_KEY
+,ProviderAddressScheduleRel.$4::NUMBER(38,0) AS OPEN_WEEK_DAY_KEY
+,ProviderAddressScheduleRel.$5::NUMBER(38,0) AS OPEN_TIME_KEY
+,ProviderAddressScheduleRel.$6::NUMBER(38,0) AS CLOSE_WEEK_DAY_KEY
+,ProviderAddressScheduleRel.$7::NUMBER(38,0) AS CLOSE_TIME_KEY
+,ProviderAddressScheduleRel.$8::DATETIME AS LAST_UPDATED_DATETIME
+,ProviderAddressScheduleRel.$9::DATETIME AS INSERT_DATETIME
+FROM @ODSDATA.HPDSDATALAKE_IDAPSQL/providerods/ProviderAddressScheduleRel.txt
+(FILE_FORMAT => 'ODSDATA.PROVIDER_ODS_FILE_FORMAT')ProviderAddressScheduleRel
+;

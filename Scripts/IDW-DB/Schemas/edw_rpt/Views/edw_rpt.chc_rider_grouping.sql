@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.CHC_RIDER_GROUPING
+AS
+SELECT
+CHC_MEMBER_MONTH_KEY,
+RIDER_KEY,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_RPT.CHC_RIDER_GROUPING;
+!set variable_substitution=false;

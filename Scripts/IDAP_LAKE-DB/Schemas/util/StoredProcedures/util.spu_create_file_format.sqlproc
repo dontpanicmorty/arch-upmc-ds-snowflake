@@ -1,0 +1,141 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_CREATE_FILE_FORMAT(
+    SRC_FILE_TYPE VARCHAR, 
+    SRC_COLUMN_DELIMITER VARCHAR, 
+    SRC_ROW_DELIMITER VARCHAR,
+    SRC_QUOTE_CHAR VARCHAR,
+    SRC_NULLIF_VALUE VARCHAR,
+    TGT_DB_NAME VARCHAR,
+    TGT_SCHEMA_NAME VARCHAR,
+    TGT_FF_NAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT='Procedure to Automatically Create a File Format for File/View Loading, used with spu_infer_file_ddl.sqlproc.'
+EXECUTE AS CALLER
+AS 
+$$
+
+    // INPUTS
+    let srcFileType        = SRC_FILE_TYPE; 
+    let srcColumnDelimiter = SRC_COLUMN_DELIMITER; 
+    let srcRowDelimiter    = SRC_ROW_DELIMITER; 
+    let srcQuoteChar       = SRC_QUOTE_CHAR;
+    let srcNullIfVal       = SRC_NULLIF_VALUE;
+    let tgtDbName          = TGT_DB_NAME;
+    let tgtSchemaName      = TGT_SCHEMA_NAME;
+    let tgtFfName          = TGT_FF_NAME;
+
+    
+    //-------   
+    let logTable  = 'LOGDATA.INFER_FILE_DDL_HISTORY';
+    let procName  = Object.keys(this).find(a => a.startsWith('SPU'));
+    let startTime = new Date();
+
+    let ffName = tgtDbName +'.'+ tgtSchemaName +'.'+ tgtFfName;
+    let resultSet, ffDdlSql;
+    
+    //--------------------------------------
+
+    //-----------------------
+    // Build File Format DDL
+    //-----------------------
+    
+    ffDdlSql = 'CREATE OR REPLACE FILE FORMAT ' + ffName + '\n\t TYPE = ' + srcFileType;
+    
+    if (srcFileType !== 'JSON' || srcFileType !== 'PARQUET')
+    {   ffDdlSql += '\n\t PARSE_HEADER = TRUE'; 
+        };
+    if (srcColumnDelimiter.length > 0)
+    {   ffDdlSql += '\n\t FIELD_DELIMITER = \'' +  srcColumnDelimiter + '\'';  
+        };
+    if (srcRowDelimiter.length > 0)
+    {   ffDdlSql += '\n\t RECORD_DELIMITER = \'' + srcRowDelimiter + '\'';
+        };
+    if (srcQuoteChar.length > 0)
+    {   ffDdlSql += '\n\t FIELD_OPTIONALLY_ENCLOSED_BY = \'' + srcQuoteChar + '\'';
+        };
+    if (srcNullIfVal.length > 0)
+    {   ffDdlSql += '\n\t NULL_IF = ' + srcNullIfVal ;
+        }
+    else
+    {   ffDdlSql += '\n\t NULL_IF = \'NULL\'';
+        };
+ 
+
+try
+{ 
+    
+	resultSet = snowflake.execute({sqlText: ffDdlSql});
+    resultSet.next();
+    
+    
+    // Log success
+	let endTime = new Date();	
+    let result = 'SUCCESS';
+	let logSuccess = `
+		INSERT INTO ${logTable} (
+		   NAME
+		  ,TYPE
+		  ,START_TIME
+		  ,END_TIME
+		  ,RESULT_TEXT
+          ,DDL_CREATED
+          ,SQL_STATEMENT
+		) VALUES (
+			'${procName}',
+			'PROCEDURE',
+			'${startTime.toISOString()}',
+			'${endTime.toISOString()}',
+			'${result}',
+            '${ffDdlSql.replace(/'/g, "''")}',
+            '${ffDdlSql.replace(/'/g, "''")}'
+			)`;
+	
+    snowflake.execute({sqlText: logSuccess});    
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+	
+    result = 'FAILED';
+	
+	let endTime = new Date();
+    
+	//Log on Error 
+	let logError = `
+		INSERT INTO ${logTable} (
+			NAME
+			,TYPE
+			,START_TIME
+			,END_TIME
+			,RESULT_TEXT
+			,SQL_STATEMENT
+			,ERROR_CODE
+			,ERROR_STATE
+			,ERROR_MESSAGE
+			,ERROR_STACK_TRACE_TEXT
+		) VALUES (
+			  '${procName}',
+			  'PROCEDURE',
+			  '${startTime.toISOString()}',
+			  '${endTime.toISOString()}',
+			  '${result}',
+			  '${sqlText}',
+			  '${code}',
+			  '${state}',
+			  '${message}',
+			  '${stack}'
+			)`;
+		
+	snowflake.execute({sqlText: logError});
+	throw err;
+}
+
+
+return ffDdlSql;
+
+$$
+;

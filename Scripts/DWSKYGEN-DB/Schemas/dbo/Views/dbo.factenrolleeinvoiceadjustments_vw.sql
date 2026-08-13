@@ -1,0 +1,13 @@
+CREATE OR REPLACE VIEW DBO.FactEnrolleeInvoiceAdjustments_VW
+AS 
+SELECT 	$1:EnrolleeKey::NUMBER(38, 0) AS EnrolleeKey, 
+		$1:ClientKey::NUMBER(38, 0) AS ClientKey, 
+		$1:DateCreateKey::NUMBER(38, 0) AS DateCreateKey, 
+		$1:InvoiceItemTypeKey::NUMBER(38, 0) AS InvoiceItemTypeKey, 
+		$1:ENROLLEE_INVOICE_ADJUSTMENT_ID::NUMBER(38, 0) AS ENROLLEE_INVOICE_ADJUSTMENT_ID, 
+		$1:ADJUSTMENT_AMOUNT::NUMBER(19, 4) AS ADJUSTMENT_AMOUNT, 
+		$1:ONE_TIME_ADJUSTMENT_FLAG::BOOLEAN AS ONE_TIME_ADJUSTMENT_FLAG, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactEnrolleeInvoiceAdjustments/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

@@ -1,0 +1,16 @@
+{
+    "isActive": true,
+    "isCloneFlag": false,
+    "isCopyIntoFlag": true,
+    "dataDomain": "claim",
+    "dataSourceName": "FDB",
+    "targetTableName": "RAWDATA.FDB_RMIDFID1_ROUTED_DOSE_FORM_MED",
+    "sourceCloneTableName": null,
+    "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+    "sourceFilePath": "/drug/firstdatabank/",
+    "sourceFileFormatName": "RAWDATA.IDAPLAKE_FDB_FILE_FORMAT",
+    "sourceFilePattern": "drug/firstdatabank/\\\\d{4}/\\\\d{2}/\\\\d{2}/NDDF Plus DB/NDDF Descriptive and Pricing/NDDF MEDNAMES 3.0/RMIDFID1_ROUTED_DOSE_FORM_MED",
+    "sourceFileDelimitedColumnCount": 5,
+    "sourceFileFixedWidthMapping": null,
+    "validateDataFlag": false
+  }

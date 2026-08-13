@@ -1,0 +1,3 @@
+CREATE SCHEMA IF NOT EXISTS UTIL
+COMMENT = 'Datahub Utility Schema'
+;

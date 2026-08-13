@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE STAGING.MC4_NDC_LKP
+(
+NDC                   VARCHAR,
+LN                    VARCHAR,
+EFFDATE               VARCHAR,
+TERMDATE              VARCHAR,
+LOAD_DATE       TIMESTAMP_NTZ,
+UPDATE_DATE     TIMESTAMP_NTZ
+)
+COMMENT='Created for STAGING Migration'
+;

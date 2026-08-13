@@ -1,0 +1,38 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CLIENT_INSURANCE_COMMERCIAL_ONLY
+(
+ID                                     INT,
+CLIENT_ID                              INT,
+UUID                               VARCHAR,
+CREATED_DATE                 TIMESTAMP_NTZ,
+UPDATED_DATE                 TIMESTAMP_NTZ,
+COMPANY                            VARCHAR,
+GROUP_NUMBER                       VARCHAR,
+GROUP_NAME                         VARCHAR,
+SUBGROUP                           VARCHAR,
+COVERAGE_TYPE                      VARCHAR,
+PLAN_ID                            VARCHAR,
+PLAN_NAME                          VARCHAR,
+SUBSCRIBER_ID                      VARCHAR,
+EFFECTIVE_DATE               TIMESTAMP_NTZ,
+TERMINATION_DATE             TIMESTAMP_NTZ,
+COB_ID                                 INT,
+SUBSCRIBER_RELATIONSHIP            VARCHAR,
+SUBSCRIBER_FIRST_NAME              VARCHAR,
+SUBSCRIBER_LAST_NAME               VARCHAR,
+SUBSCRIBER_DATE_OF_BIRTH     TIMESTAMP_NTZ,
+SUBSCRIBER_SSN                     VARCHAR,
+SPAN_ID                            VARCHAR,
+SYSRULES_DISABLE_FLAG                  INT,
+MERGE_ID                           VARCHAR,
+MARKET                             VARCHAR,
+LOB                                VARCHAR,
+SERVICE_AREA                       VARCHAR,
+BENEFIT                                INT,
+FORMULARY_ID                           INT,
+TERMINATION_REASON_ID                  INT,
+PRODUCT_TYPE_ID                        INT,
+GROUP_ID                           VARCHAR,
+ENROLLMENT_DATE              TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

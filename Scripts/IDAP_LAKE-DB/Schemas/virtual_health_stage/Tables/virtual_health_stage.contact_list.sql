@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CONTACT_LIST
+(
+ID                         INT,
+FROM_ID                    INT,
+TO_ID                      INT,
+ACCEPTED                   INT,
+MESSAGE                VARCHAR,
+IGNORED                    INT,
+CREATED_DATE     TIMESTAMP_NTZ,
+UPDATED_DATE     TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

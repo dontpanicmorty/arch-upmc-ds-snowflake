@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "ESI",
+  "targetTableName": "RAWDATA.CLAIM_CMS_HISTORICAL_NPI_PHARMACY",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/cms/",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_CLAIM_CMS_HISTORICAL_NPI_FILE_FORMAT",
+  "sourceFilePattern": "claim/cms/npi/cms_historical_npi_pharmacy.*",
+  "sourceFileDelimitedColumnCount": 12,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

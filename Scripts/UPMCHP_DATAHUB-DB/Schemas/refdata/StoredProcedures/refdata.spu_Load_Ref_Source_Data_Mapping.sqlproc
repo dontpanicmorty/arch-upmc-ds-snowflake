@@ -1,0 +1,206 @@
+CREATE OR REPLACE PROCEDURE REFDATA.SPU_LOAD_REF_SOURCE_DATA_MAPPING(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `REFDATA.SOURCE_DATA_MAPPING`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO REFDATA.SOURCE_DATA_MAPPING tgt
+USING (
+    SELECT
+        SOURCE_DATA_MAPPING_HKEY
+        ,DATA_DOMAIN_NAME
+        ,REFERENCE_SET_NAME
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,SOURCE_VALUE
+        ,SOURCE_VERSION_NBR
+        ,TARGET_VALUE
+        ,EFFECTIVE_START_DATE
+        ,EFFECTIVE_END_DATE
+        ,DATA_STEWARD_NAME
+        FROM ${SOURCE_VIEW_NAME}
+    MINUS
+        SELECT
+        SOURCE_DATA_MAPPING_HKEY
+        ,DATA_DOMAIN_NAME
+        ,REFERENCE_SET_NAME
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,SOURCE_VALUE
+        ,SOURCE_VERSION_NBR
+        ,TARGET_VALUE
+        ,EFFECTIVE_START_DATE
+        ,EFFECTIVE_END_DATE
+        ,DATA_STEWARD_NAME
+    FROM REFDATA.SOURCE_DATA_MAPPING
+    ) src
+
+ON (tgt.SOURCE_DATA_MAPPING_HKEY = src.SOURCE_DATA_MAPPING_HKEY)  
+
+WHEN MATCHED
+THEN UPDATE
+    SET
+        tgt.LAST_UPDATED_DATETIME = :1
+        ,tgt.TARGET_VALUE = src.TARGET_VALUE
+        ,tgt.EFFECTIVE_START_DATE = src.EFFECTIVE_START_DATE
+        ,tgt.EFFECTIVE_END_DATE = src.EFFECTIVE_END_DATE
+        ,tgt.DATA_STEWARD_NAME = src.DATA_STEWARD_NAME
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        SOURCE_DATA_MAPPING_HKEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,DATA_DOMAIN_NAME
+        ,REFERENCE_SET_NAME
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,SOURCE_VALUE
+        ,SOURCE_VERSION_NBR
+        ,TARGET_VALUE
+        ,EFFECTIVE_START_DATE
+        ,EFFECTIVE_END_DATE
+        ,DATA_STEWARD_NAME
+    )
+ VALUES 
+    (
+        src.SOURCE_DATA_MAPPING_HKEY
+        ,:1
+        ,:1
+        ,src.DATA_DOMAIN_NAME
+        ,src.REFERENCE_SET_NAME
+        ,src.TPA_CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.DATA_SOURCE_NAME
+        ,src.SOURCE_VALUE
+        ,src.SOURCE_VERSION_NBR
+        ,src.TARGET_VALUE
+        ,src.EFFECTIVE_START_DATE
+        ,src.EFFECTIVE_END_DATE
+        ,src.DATA_STEWARD_NAME
+    )
+;`;
+
+// Delete command to remove any entries not in the source data but need to ensure none source data is perserved.
+var sqlDeleteCommand =
+`
+DELETE FROM REFDATA.SOURCE_DATA_MAPPING
+WHERE SOURCE_DATA_MAPPING_HKEY NOT IN (SELECT SOURCE_DATA_MAPPING_HKEY FROM ${SOURCE_VIEW_NAME})
+;
+`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    };
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        };
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Delete Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

@@ -1,0 +1,10 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_SHARED.RX_STATE_LKP
+AS
+SELECT
+STATE_CODE,
+STATE_NAME,
+STATE_TYPE_CODE,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_SHARED.RX_STATE_LKP;
+!set variable_substitution=false;

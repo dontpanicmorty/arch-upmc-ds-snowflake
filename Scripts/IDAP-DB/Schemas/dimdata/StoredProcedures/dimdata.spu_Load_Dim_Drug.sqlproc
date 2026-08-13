@@ -1,0 +1,387 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_DRUG()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_DRUG`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_DRUG AS tgt
+USING (
+        SELECT 
+        FALSE AS IS_LOGICAL_DELETE_FLAG,
+        NDC_DRUG_CODE,
+        DOSAGE_METHOD_CODE,
+        BRAND_DRUG_NAME,
+        DOSAGE_METHOD_DESC,
+        GENERIC_DRUG_NAME,
+        DRUG_STRENGTH_DESC,
+        THER_CLASS_AHFS_CODE,
+        THER_CLASS_AHFS_DESC,
+        THER_CLASS_GEN_CODE,
+        THER_CLASS_GEN_DESC,
+        DRUG_CLASS_CODE,
+        DRUG_CLASS_DESC,
+        ABUSE_RATING_CODE,
+        ABUSE_RATING_DESC,
+        DRUG_FORM_CODE,
+        DRUG_FORM_DESC,
+        ROUTE_CODE,
+        ROUTE_DESC,
+        GCN_CODE,
+        DRUG_LABEL_NAME,
+        GENERIC_PRICE_CODE,
+        GENERIC_PRICE_DESC,
+        HIC3_CODE,
+        HIC3_DESC,
+        GENERIC_SOURCE_CODE,
+        GENERIC_SOURCE_DESC,
+        INNOVATOR_IND,
+        NEW_DRUG_APPLICATOR_IND,
+        GENERIC_THERAPEUTIC_IND,
+        GENERIC_MANUFACTURER_IND,
+        MAINTENANCE_DRUG_IND,
+        MED_ID,
+        MED_DESC,
+        MED_NAME_ID,
+        MED_NAME,
+        WHOLESALE_ACQUISIT_COST_DATE,
+        WHOLESALE_ACQUISIT_COST_PRICE,
+        GSN_CODE,
+        SPECIALTY_DRUG_IND,
+        MEDISPAN_GPI_CODE,
+        MEDISPAN_GPI_DESC,
+        MANUFACTURER_NAME
+        FROM STAGEDATA.DIM_DRUG_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG,
+        NDC_DRUG_CODE,
+        DOSAGE_METHOD_CODE,
+        BRAND_DRUG_NAME,
+        DOSAGE_METHOD_DESC,
+        GENERIC_DRUG_NAME,
+        DRUG_STRENGTH_DESC,
+        THER_CLASS_AHFS_CODE,
+        THER_CLASS_AHFS_DESC,
+        THER_CLASS_GEN_CODE,
+        THER_CLASS_GEN_DESC,
+        DRUG_CLASS_CODE,
+        DRUG_CLASS_DESC,
+        ABUSE_RATING_CODE,
+        ABUSE_RATING_DESC,
+        DRUG_FORM_CODE,
+        DRUG_FORM_DESC,
+        ROUTE_CODE,
+        ROUTE_DESC,
+        GCN_CODE,
+        DRUG_LABEL_NAME,
+        GENERIC_PRICE_CODE,
+        GENERIC_PRICE_DESC,
+        HIC3_CODE,
+        HIC3_DESC,
+        GENERIC_SOURCE_CODE,
+        GENERIC_SOURCE_DESC,
+        INNOVATOR_IND,
+        NEW_DRUG_APPLICATOR_IND,
+        GENERIC_THERAPEUTIC_IND,
+        GENERIC_MANUFACTURER_IND,
+        MAINTENANCE_DRUG_IND,
+        MED_ID,
+        MED_DESC,
+        MED_NAME_ID,
+        MED_NAME,
+        WHOLESALE_ACQUISIT_COST_DATE,
+        WHOLESALE_ACQUISIT_COST_PRICE,
+        GSN_CODE,
+        SPECIALTY_DRUG_IND,
+        MEDISPAN_GPI_CODE,
+        MEDISPAN_GPI_DESC,
+        MANUFACTURER_NAME
+        FROM DIMDATA.DIM_DRUG
+    ) AS src
+ON (tgt.NDC_DRUG_CODE = src.NDC_DRUG_CODE)
+
+WHEN MATCHED AND
+    (
+        tgt.IS_LOGICAL_DELETE_FLAG = TRUE
+        OR NOT EQUAL_NULL(tgt.DOSAGE_METHOD_CODE, src.DOSAGE_METHOD_CODE)
+        OR NOT EQUAL_NULL(tgt.BRAND_DRUG_NAME, src.BRAND_DRUG_NAME)
+        OR NOT EQUAL_NULL(tgt.DOSAGE_METHOD_DESC, src.DOSAGE_METHOD_DESC)
+        OR NOT EQUAL_NULL(tgt.GENERIC_DRUG_NAME, src.GENERIC_DRUG_NAME)
+        OR NOT EQUAL_NULL(tgt.DRUG_STRENGTH_DESC, src.DRUG_STRENGTH_DESC)
+        OR NOT EQUAL_NULL(tgt.THER_CLASS_AHFS_CODE, src.THER_CLASS_AHFS_CODE)
+        OR NOT EQUAL_NULL(tgt.THER_CLASS_AHFS_DESC, src.THER_CLASS_AHFS_DESC)
+        OR NOT EQUAL_NULL(tgt.THER_CLASS_GEN_CODE, src.THER_CLASS_GEN_CODE)
+        OR NOT EQUAL_NULL(tgt.THER_CLASS_GEN_DESC, src.THER_CLASS_GEN_DESC)
+        OR NOT EQUAL_NULL(tgt.DRUG_CLASS_CODE, src.DRUG_CLASS_CODE)
+        OR NOT EQUAL_NULL(tgt.DRUG_CLASS_DESC, src.DRUG_CLASS_DESC)
+        OR NOT EQUAL_NULL(tgt.ABUSE_RATING_CODE, src.ABUSE_RATING_CODE)
+        OR NOT EQUAL_NULL(tgt.ABUSE_RATING_DESC, src.ABUSE_RATING_DESC)
+        OR NOT EQUAL_NULL(tgt.DRUG_FORM_CODE, src.DRUG_FORM_CODE)
+        OR NOT EQUAL_NULL(tgt.DRUG_FORM_DESC, src.DRUG_FORM_DESC)
+        OR NOT EQUAL_NULL(tgt.ROUTE_CODE, src.ROUTE_CODE)
+        OR NOT EQUAL_NULL(tgt.ROUTE_DESC, src.ROUTE_DESC)
+        OR NOT EQUAL_NULL(tgt.GCN_CODE, src.GCN_CODE)
+        OR NOT EQUAL_NULL(tgt.DRUG_LABEL_NAME, src.DRUG_LABEL_NAME)
+        OR NOT EQUAL_NULL(tgt.GENERIC_PRICE_CODE, src.GENERIC_PRICE_CODE)
+        OR NOT EQUAL_NULL(tgt.GENERIC_PRICE_DESC, src.GENERIC_PRICE_DESC)
+        OR NOT EQUAL_NULL(tgt.HIC3_CODE, src.HIC3_CODE)
+        OR NOT EQUAL_NULL(tgt.HIC3_DESC, src.HIC3_DESC)
+        OR NOT EQUAL_NULL(tgt.GENERIC_SOURCE_CODE, src.GENERIC_SOURCE_CODE)
+        OR NOT EQUAL_NULL(tgt.GENERIC_SOURCE_DESC, src.GENERIC_SOURCE_DESC)
+        OR NOT EQUAL_NULL(tgt.INNOVATOR_IND, src.INNOVATOR_IND)
+        OR NOT EQUAL_NULL(tgt.NEW_DRUG_APPLICATOR_IND, src.NEW_DRUG_APPLICATOR_IND)
+        OR NOT EQUAL_NULL(tgt.GENERIC_THERAPEUTIC_IND, src.GENERIC_THERAPEUTIC_IND)
+        OR NOT EQUAL_NULL(tgt.GENERIC_MANUFACTURER_IND, src.GENERIC_MANUFACTURER_IND)
+        OR NOT EQUAL_NULL(tgt.MAINTENANCE_DRUG_IND, src.MAINTENANCE_DRUG_IND)
+        OR NOT EQUAL_NULL(tgt.MED_ID, src.MED_ID)
+        OR NOT EQUAL_NULL(tgt.MED_DESC, src.MED_DESC)
+        OR NOT EQUAL_NULL(tgt.MED_NAME_ID, src.MED_NAME_ID)
+        OR NOT EQUAL_NULL(tgt.MED_NAME, src.MED_NAME)
+        OR NOT EQUAL_NULL(tgt.WHOLESALE_ACQUISIT_COST_DATE, src.WHOLESALE_ACQUISIT_COST_DATE)
+        OR NOT EQUAL_NULL(tgt.WHOLESALE_ACQUISIT_COST_PRICE, src.WHOLESALE_ACQUISIT_COST_PRICE)
+        OR NOT EQUAL_NULL(tgt.GSN_CODE, src.GSN_CODE)
+        OR NOT EQUAL_NULL(tgt.SPECIALTY_DRUG_IND, src.SPECIALTY_DRUG_IND)
+        OR NOT EQUAL_NULL(tgt.MEDISPAN_GPI_CODE, src.MEDISPAN_GPI_CODE)
+        OR NOT EQUAL_NULL(tgt.MEDISPAN_GPI_DESC, src.MEDISPAN_GPI_DESC)
+        OR NOT EQUAL_NULL(tgt.MANUFACTURER_NAME, src.MANUFACTURER_NAME)
+    )
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.DOSAGE_METHOD_CODE = src.DOSAGE_METHOD_CODE,
+    tgt.BRAND_DRUG_NAME = src.BRAND_DRUG_NAME,
+    tgt.DOSAGE_METHOD_DESC = src.DOSAGE_METHOD_DESC,
+    tgt.GENERIC_DRUG_NAME = src.GENERIC_DRUG_NAME,
+    tgt.DRUG_STRENGTH_DESC = src.DRUG_STRENGTH_DESC,
+    tgt.THER_CLASS_AHFS_CODE = src.THER_CLASS_AHFS_CODE,
+    tgt.THER_CLASS_AHFS_DESC = src.THER_CLASS_AHFS_DESC,
+    tgt.THER_CLASS_GEN_CODE = src.THER_CLASS_GEN_CODE,
+    tgt.THER_CLASS_GEN_DESC = src.THER_CLASS_GEN_DESC,
+    tgt.DRUG_CLASS_CODE = src.DRUG_CLASS_CODE,
+    tgt.DRUG_CLASS_DESC = src.DRUG_CLASS_DESC,
+    tgt.ABUSE_RATING_CODE = src.ABUSE_RATING_CODE,
+    tgt.ABUSE_RATING_DESC = src.ABUSE_RATING_DESC,
+    tgt.DRUG_FORM_CODE = src.DRUG_FORM_CODE,
+    tgt.DRUG_FORM_DESC = src.DRUG_FORM_DESC,
+    tgt.ROUTE_CODE = src.ROUTE_CODE,
+    tgt.ROUTE_DESC = src.ROUTE_DESC,
+    tgt.GCN_CODE = src.GCN_CODE,
+    tgt.DRUG_LABEL_NAME = src.DRUG_LABEL_NAME,
+    tgt.GENERIC_PRICE_CODE = src.GENERIC_PRICE_CODE,
+    tgt.GENERIC_PRICE_DESC = src.GENERIC_PRICE_DESC,
+    tgt.HIC3_CODE = src.HIC3_CODE,
+    tgt.HIC3_DESC = src.HIC3_DESC,
+    tgt.GENERIC_SOURCE_CODE = src.GENERIC_SOURCE_CODE,
+    tgt.GENERIC_SOURCE_DESC = src.GENERIC_SOURCE_DESC,
+    tgt.INNOVATOR_IND = src.INNOVATOR_IND,
+    tgt.NEW_DRUG_APPLICATOR_IND = src.NEW_DRUG_APPLICATOR_IND,
+    tgt.GENERIC_THERAPEUTIC_IND = src.GENERIC_THERAPEUTIC_IND,
+    tgt.GENERIC_MANUFACTURER_IND = src.GENERIC_MANUFACTURER_IND,
+    tgt.MAINTENANCE_DRUG_IND = src.MAINTENANCE_DRUG_IND,
+    tgt.MED_ID = src.MED_ID,
+    tgt.MED_DESC = src.MED_DESC,
+    tgt.MED_NAME_ID = src.MED_NAME_ID,
+    tgt.MED_NAME = src.MED_NAME,
+    tgt.WHOLESALE_ACQUISIT_COST_DATE = src.WHOLESALE_ACQUISIT_COST_DATE,
+    tgt.WHOLESALE_ACQUISIT_COST_PRICE = src.WHOLESALE_ACQUISIT_COST_PRICE,
+    tgt.GSN_CODE = src.GSN_CODE,
+    tgt.SPECIALTY_DRUG_IND = src.SPECIALTY_DRUG_IND,
+    tgt.MEDISPAN_GPI_CODE = src.MEDISPAN_GPI_CODE,
+    tgt.MEDISPAN_GPI_DESC = src.MEDISPAN_GPI_DESC,
+    tgt.MANUFACTURER_NAME = src.MANUFACTURER_NAME
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_DRUG_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,NDC_DRUG_CODE
+        ,DOSAGE_METHOD_CODE
+        ,BRAND_DRUG_NAME
+        ,DOSAGE_METHOD_DESC
+        ,GENERIC_DRUG_NAME
+        ,DRUG_STRENGTH_DESC
+        ,THER_CLASS_AHFS_CODE
+        ,THER_CLASS_AHFS_DESC
+        ,THER_CLASS_GEN_CODE
+        ,THER_CLASS_GEN_DESC
+        ,DRUG_CLASS_CODE
+        ,DRUG_CLASS_DESC
+        ,ABUSE_RATING_CODE
+        ,ABUSE_RATING_DESC
+        ,DRUG_FORM_CODE
+        ,DRUG_FORM_DESC
+        ,ROUTE_CODE
+        ,ROUTE_DESC
+        ,GCN_CODE
+        ,DRUG_LABEL_NAME
+        ,GENERIC_PRICE_CODE
+        ,GENERIC_PRICE_DESC
+        ,HIC3_CODE
+        ,HIC3_DESC
+        ,GENERIC_SOURCE_CODE
+        ,GENERIC_SOURCE_DESC
+        ,INNOVATOR_IND
+        ,NEW_DRUG_APPLICATOR_IND
+        ,GENERIC_THERAPEUTIC_IND
+        ,GENERIC_MANUFACTURER_IND
+        ,MAINTENANCE_DRUG_IND
+        ,MED_ID
+        ,MED_DESC
+        ,MED_NAME_ID
+        ,MED_NAME
+        ,WHOLESALE_ACQUISIT_COST_DATE
+        ,WHOLESALE_ACQUISIT_COST_PRICE
+        ,GSN_CODE
+        ,SPECIALTY_DRUG_IND
+        ,MEDISPAN_GPI_CODE
+        ,MEDISPAN_GPI_DESC
+        ,MANUFACTURER_NAME
+    )
+    
+VALUES 
+    (
+        (SELECT IFNULL(MAX(DIM_DRUG_KEY), 1000) FROM DIMDATA.DIM_DRUG) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,NDC_DRUG_CODE
+        ,DOSAGE_METHOD_CODE
+        ,BRAND_DRUG_NAME
+        ,DOSAGE_METHOD_DESC
+        ,GENERIC_DRUG_NAME
+        ,DRUG_STRENGTH_DESC
+        ,THER_CLASS_AHFS_CODE
+        ,THER_CLASS_AHFS_DESC
+        ,THER_CLASS_GEN_CODE
+        ,THER_CLASS_GEN_DESC
+        ,DRUG_CLASS_CODE
+        ,DRUG_CLASS_DESC
+        ,ABUSE_RATING_CODE
+        ,ABUSE_RATING_DESC
+        ,DRUG_FORM_CODE
+        ,DRUG_FORM_DESC
+        ,ROUTE_CODE
+        ,ROUTE_DESC
+        ,GCN_CODE
+        ,DRUG_LABEL_NAME
+        ,GENERIC_PRICE_CODE
+        ,GENERIC_PRICE_DESC
+        ,HIC3_CODE
+        ,HIC3_DESC
+        ,GENERIC_SOURCE_CODE
+        ,GENERIC_SOURCE_DESC
+        ,INNOVATOR_IND
+        ,NEW_DRUG_APPLICATOR_IND
+        ,GENERIC_THERAPEUTIC_IND
+        ,GENERIC_MANUFACTURER_IND
+        ,MAINTENANCE_DRUG_IND
+        ,MED_ID
+        ,MED_DESC
+        ,MED_NAME_ID
+        ,MED_NAME
+        ,WHOLESALE_ACQUISIT_COST_DATE
+        ,WHOLESALE_ACQUISIT_COST_PRICE
+        ,GSN_CODE
+        ,SPECIALTY_DRUG_IND
+        ,MEDISPAN_GPI_CODE
+        ,MEDISPAN_GPI_DESC
+        ,MANUFACTURER_NAME
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_DRUG
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_DRUG_KEY IN
+(
+    SELECT DIM_DRUG.DIM_DRUG_KEY
+    FROM DIMDATA.DIM_DRUG
+        LEFT OUTER JOIN 
+            (SELECT
+            NDC_DRUG_CODE
+            FROM STAGEDATA.DIM_DRUG_SELECT_VW
+            ) STAGEDATA
+        ON STAGEDATA.NDC_DRUG_CODE = DIM_DRUG.NDC_DRUG_CODE
+    WHERE STAGEDATA.NDC_DRUG_CODE IS NULL
+    AND DIM_DRUG.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_DRUG.DIM_DRUG_KEY > 999
+)
+;`    
+
+try 
+{
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

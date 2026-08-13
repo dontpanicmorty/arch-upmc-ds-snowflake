@@ -1,0 +1,22 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_SET_JOB_ID(PROCEDURE_NAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var startTime = new Date().toISOString();
+
+//insert the record so Snowflake can auto-increment a new JOB_ID
+var sqlCommand=`INSERT INTO LOGDATA.JOB_LOG (START_TIME, PROCEDURE_NAME) 
+    VALUES ('${startTime}', '${PROCEDURE_NAME}')`;
+snowflake.execute({sqlText: sqlCommand});
+
+//grab the JOB_ID to use everywhere else
+var sqlCommand=`SELECT JOB_ID FROM LOGDATA.JOB_LOG WHERE START_TIME = '${startTime}' AND PROCEDURE_NAME = '${PROCEDURE_NAME}'`
+var resultSet = snowflake.execute({sqlText: sqlCommand});
+resultSet.next();
+var jobId = resultSet.getColumnValue('JOB_ID');
+
+return jobId;
+$$
+;

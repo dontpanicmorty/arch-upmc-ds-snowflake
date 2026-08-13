@@ -1,0 +1,30 @@
+CREATE OR REPLACE VIEW DBO.FactTelephoneStats_VW
+AS 
+SELECT 	$1:BenefitPlanKey::NUMBER(38, 0) AS BenefitPlanKey, 
+		$1:CallerTypeKey::NUMBER(38, 0) AS CallerTypeKey, 
+		$1:DateKey::NUMBER(38, 0) AS DateKey, 
+		$1:TimeKey::NUMBER(38, 0) AS TimeKey, 
+		$1:DialedNumberIdentificationServiceId::NUMBER(38, 0) AS DialedNumberIdentificationServiceId, 
+		$1:ProductType::VARCHAR AS ProductType, 
+		$1:TotalCallCount::NUMBER(38, 0) AS TotalCallCount, 
+		$1:AnsweredCallCount::NUMBER(38, 0) AS AnsweredCallCount, 
+		$1:AnsweredCallWithinServiceLevelAgreementCount::NUMBER(38, 0) AS AnsweredCallWithinServiceLevelAgreementCount, 
+		$1:AbandonedCallCount::NUMBER(38, 0) AS AbandonedCallCount, 
+		$1:AbandonedCallOver10SecondsCount::NUMBER(38, 0) AS AbandonedCallOver10SecondsCount, 
+		$1:AbandonedCallWaitTimeSum::NUMBER(38, 0) AS AbandonedCallWaitTimeSum, 
+		$1:HoldCount::NUMBER(38, 0) AS HoldCount, 
+		$1:HoldTimeSum::NUMBER(38, 0) AS HoldTimeSum, 
+		$1:InterflowedCallCount::NUMBER(38, 0) AS InterflowedCallCount, 
+		$1:TalkTimeSum::NUMBER(38, 0) AS TalkTimeSum, 
+		$1:TalkTimeMax::NUMBER(38, 0) AS TalkTimeMax, 
+		$1:TimeUntilAnsweredSum::NUMBER(38, 0) AS TimeUntilAnsweredSum, 
+		$1:TimeUntilAnsweredMax::NUMBER(38, 0) AS TimeUntilAnsweredMax, 
+		$1:TransferredCount::NUMBER(38, 0) AS TransferredCount, 
+		$1:QueuedCallCount::NUMBER(38, 0) AS QueuedCallCount, 
+		$1:WaitTimeSum::NUMBER(38, 0) AS WaitTimeSum, 
+		$1:WaitTimeInQueueSum::NUMBER(38, 0) AS WaitTimeInQueueSum, 
+		--$1:DW_Hash::VARCHAR AS DW_Hash, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactTelephoneStats/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

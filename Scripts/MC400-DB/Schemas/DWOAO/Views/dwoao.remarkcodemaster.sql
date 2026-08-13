@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWOAO.RemarkCodeMaster
+AS
+SELECT * FROM CDC_Merge.dbo.RemarkCodeMaster WHERE TPADIVISION !='0002'
+;

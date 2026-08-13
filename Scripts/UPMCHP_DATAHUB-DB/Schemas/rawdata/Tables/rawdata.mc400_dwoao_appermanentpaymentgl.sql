@@ -1,0 +1,6 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_APPERMANENTPAYMENTGL 
+LIKE &{CDC_MERGE}.DBO.APPERMANENTPAYMENTGL
+;
+!set variable_substitution=false;

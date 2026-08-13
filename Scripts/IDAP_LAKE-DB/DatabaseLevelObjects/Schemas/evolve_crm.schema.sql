@@ -1,0 +1,1 @@
+  CREATE SCHEMA IF NOT EXISTS EVOLVE_CRM Comment = 'Evolve CRM Files'

@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_ENTITYASSIGNMENTS
+LIKE &{CACTUS}.VISUALCACTUS.ENTITYASSIGNMENTS
+;
+
+!set variable_substitution=false;

@@ -1,0 +1,8 @@
+CREATE OR REPLACE TABLE FDBDATA.RDDIMAG0_AGENT (
+	DDI_CODEX NUMERIC(5, 0) NOT NULL,
+	DDI_AGSN NUMERIC(3, 0) NOT NULL,
+	DDI_AGD VARCHAR(41) NULL,
+	CONSTRAINT PK_RDDIMAG0_AGENT PRIMARY KEY (DDI_CODEX, DDI_AGSN)
+)
+COMMENT = 'Relates the Drug-Drug Expanded Interaction Code to the specific agents involved in the interaction.'
+;

@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE WPDW.IDP_RISK_BUILD
+(
+UNIQUE_ID                 VARCHAR,
+UNIQUE_ID_DESCR           VARCHAR,
+RISK_ID                   VARCHAR,
+RISK_DESCR                VARCHAR,
+RISK_DATE           TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

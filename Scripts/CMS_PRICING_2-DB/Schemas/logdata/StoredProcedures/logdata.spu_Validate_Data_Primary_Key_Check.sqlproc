@@ -1,0 +1,73 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(JOB_ID VARCHAR, TABLE_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+/*
+Intended to be a general purpose dupe check with multiple use-cases.
+JOB_ID must be generated first by the top level caller so we can tie together the outputs.
+TABLE_NAME is actually SCHEMA.TABLE_NAME due to how dimdata sprocs were created. 
+    - splitting apart to specify schema as a new parameter may be a good idea at some point
+*/
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var columnList = 'not set';
+
+//get the list of PK columns to check as a comma separated list
+sqlCommand = `SELECT LISTAGG(PK_COLUMN,',') AS PK_COLUMNS FROM TABLE(LOGDATA.FXN_GET_PK_COLUMNS(GET_DDL('TABLE', '${TABLE_NAME}'))) WHERE PK_COLUMN <> ''`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+resultSet.next();
+columnList = resultSet.getColumnValue('PK_COLUMNS');
+
+//build the query to check for dupes
+sqlCommand = `SELECT COUNT(*) AS RESULT_COUNT FROM (
+SELECT ${columnList} FROM ${TABLE_NAME} GROUP BY ${columnList} HAVING COUNT(*) > 1)`;
+
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+resultSet.next(); 
+var resultCount = resultSet.getColumnValue('RESULT_COUNT');
+    
+//insert the results to the logdata table for future reference
+var sqlCountInsert = `INSERT INTO LOGDATA.DATA_VALIDATION_RESULT 
+    (JOB_ID, TABLE_NAME, VALIDATION_PROCEDURE_NAME, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR) 
+    VALUES (${JOB_ID},'${TABLE_NAME}','${procedureName}', ${resultCount}, 0)`;
+snowflake.execute({sqlText: sqlCountInsert});
+
+if(resultCount === 0){
+    var result = `PASS: All validation checks successed`
+}
+else {
+    var result = `FAIL: Validation failed because of ${resultCount} duplicates in ${TABLE_NAME}'`;
+    throw result;
+};
+
+var endTime = new Date().toISOString();
+
+//log results to table
+var sqlLogCommand = `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+    VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+snowflake.execute
+(
+    {sqlText: sqlLogCommand, binds: 
+        [
+        procedureName
+        ,"Procedure"
+        ,startTime
+        ,endTime
+        ,result
+        ,procedureName
+        ]
+    }
+); 
+return result;
+$$
+;

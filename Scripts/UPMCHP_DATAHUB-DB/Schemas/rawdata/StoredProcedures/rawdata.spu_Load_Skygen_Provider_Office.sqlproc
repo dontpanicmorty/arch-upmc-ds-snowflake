@@ -1,0 +1,225 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_SKYGEN_PROVIDER_OFFICE(JOB_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `RAWDATA.DWSKYGEN_PROVIDER_OFFICE`
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE RAWDATA.DWSKYGEN_PROVIDER_OFFICE_TMP
+AS
+SELECT * FROM RAWDATA.DWSKYGEN_PROVIDER_OFFICE_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO RAWDATA.DWSKYGEN_PROVIDER_OFFICE AS tgt
+USING (
+		SELECT 
+        OFFICE_ID,
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        OFFICE_NAME,
+        ADDRESS_LINE_1,
+        ADDRESS_LINE_2,
+        CITY_NAME,
+        ZIP_5,
+        ZIP_4,
+        STATE_ABBREV_NAME,
+        COUNTY_NAME,
+        OFFICE_PHONE_NBR,
+        OFFICE_FAX_NBR,
+        OFFICE_EMAIL,
+        SPECIAL_NEEDS_PATIENT_FLAG,
+        HANDICAP_ACCESS_FLAG
+        FROM RAWDATA.DWSKYGEN_PROVIDER_OFFICE_TMP
+    MINUS
+		SELECT 
+        OFFICE_ID,
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        OFFICE_NAME,
+        ADDRESS_LINE_1,
+        ADDRESS_LINE_2,
+        CITY_NAME,
+        ZIP_5,
+        ZIP_4,
+        STATE_ABBREV_NAME,
+        COUNTY_NAME,
+        OFFICE_PHONE_NBR,
+        OFFICE_FAX_NBR,
+        OFFICE_EMAIL,
+        SPECIAL_NEEDS_PATIENT_FLAG,
+        HANDICAP_ACCESS_FLAG
+        FROM RAWDATA.DWSKYGEN_PROVIDER_OFFICE
+    ) AS src /*returns everything in the source that is not a match in the target*/
+ON (tgt.OFFICE_ID = src.OFFICE_ID
+AND tgt.TPA_CLIENT_ID = src.TPA_CLIENT_ID
+AND tgt.TPA_ID = src.TPA_ID
+AND tgt.TPA_DIV_ID = src.TPA_DIV_ID
+) /*key columns to determine if this is a new record or an update*/
+
+WHEN NOT MATCHED
+THEN INSERT
+    (
+		DWSKYGEN_PROVIDER_OFFICE_KEY
+		,INSERT_DATETIME
+		,LAST_UPDATED_DATETIME
+        ,OFFICE_ID
+		,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,OFFICE_NAME
+        ,ADDRESS_LINE_1
+        ,ADDRESS_LINE_2
+        ,CITY_NAME
+        ,ZIP_5
+        ,ZIP_4
+        ,STATE_ABBREV_NAME
+        ,COUNTY_NAME
+        ,OFFICE_PHONE_NBR
+        ,OFFICE_FAX_NBR
+        ,OFFICE_EMAIL
+        ,SPECIAL_NEEDS_PATIENT_FLAG
+        ,HANDICAP_ACCESS_FLAG		
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DWSKYGEN_PROVIDER_OFFICE_KEY), 1000) FROM RAWDATA.DWSKYGEN_PROVIDER_OFFICE) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,src.OFFICE_ID
+		,src.TPA_CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.OFFICE_NAME
+        ,src.ADDRESS_LINE_1
+        ,src.ADDRESS_LINE_2
+        ,src.CITY_NAME
+        ,src.ZIP_5
+        ,src.ZIP_4
+        ,src.STATE_ABBREV_NAME
+        ,src.COUNTY_NAME
+        ,src.OFFICE_PHONE_NBR
+        ,src.OFFICE_FAX_NBR
+        ,src.OFFICE_EMAIL
+        ,src.SPECIAL_NEEDS_PATIENT_FLAG
+        ,src.HANDICAP_ACCESS_FLAG
+    )
+
+WHEN MATCHED
+THEN UPDATE SET
+        tgt.OFFICE_NAME = src.OFFICE_NAME
+        ,tgt.ADDRESS_LINE_1 = src.ADDRESS_LINE_1
+        ,tgt.ADDRESS_LINE_2 = src.ADDRESS_LINE_2
+        ,tgt.CITY_NAME = src.CITY_NAME
+        ,tgt.ZIP_5 = src.ZIP_5
+        ,tgt.ZIP_4 = src.ZIP_4
+        ,tgt.STATE_ABBREV_NAME = src.STATE_ABBREV_NAME
+        ,tgt.COUNTY_NAME = src.COUNTY_NAME
+        ,tgt.OFFICE_PHONE_NBR = src.OFFICE_PHONE_NBR
+        ,tgt.OFFICE_FAX_NBR = src.OFFICE_FAX_NBR
+        ,tgt.OFFICE_EMAIL = src.OFFICE_EMAIL
+        ,tgt.SPECIAL_NEEDS_PATIENT_FLAG = src.SPECIAL_NEEDS_PATIENT_FLAG
+        ,tgt.HANDICAP_ACCESS_FLAG = src.HANDICAP_ACCESS_FLAG
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+DELETE FROM RAWDATA.DWSKYGEN_PROVIDER_OFFICE 
+WHERE DWSKYGEN_PROVIDER_OFFICE_KEY IN 
+(
+    SELECT DWSKYGEN_PROVIDER_OFFICE.DWSKYGEN_PROVIDER_OFFICE_KEY
+    FROM RAWDATA.DWSKYGEN_PROVIDER_OFFICE
+        LEFT OUTER JOIN  RAWDATA.DWSKYGEN_PROVIDER_OFFICE_TMP
+            ON (DWSKYGEN_PROVIDER_OFFICE.OFFICE_ID = DWSKYGEN_PROVIDER_OFFICE_TMP.OFFICE_ID
+            AND DWSKYGEN_PROVIDER_OFFICE.TPA_ID = DWSKYGEN_PROVIDER_OFFICE_TMP.TPA_ID
+            AND DWSKYGEN_PROVIDER_OFFICE.TPA_CLIENT_ID = DWSKYGEN_PROVIDER_OFFICE_TMP.TPA_CLIENT_ID
+            AND DWSKYGEN_PROVIDER_OFFICE.TPA_DIV_ID = DWSKYGEN_PROVIDER_OFFICE_TMP.TPA_DIV_ID)
+    WHERE DWSKYGEN_PROVIDER_OFFICE_TMP.OFFICE_ID IS NULL
+);`;
+
+try 
+{
+	//Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

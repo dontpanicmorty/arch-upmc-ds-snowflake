@@ -1,0 +1,251 @@
+{
+  "outputSchema": "PROVIDER",
+  "outputTable": "UPMC_FOR_KIDS",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "UPMC_FOR_KIDS_FILE_FORMAT_HEADER",
+  "fileFormat": "UPMC_FOR_KIDS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "Company",
+          "outputField": "COMPANY"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "TPA ID",
+          "outputField": "TPA_ID"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "Product",
+          "outputField": "PRODUCT"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "Product Key",
+          "outputField": "PRODUCT_KEY"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "Region",
+          "outputField": "REGION"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "Directory Section",
+          "outputField": "DIRECTORY_SECTION"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "Directory Section Sort",
+          "outputField": "DIRECTORY_SECTION_SORT"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "Section Subcategory",
+          "outputField": "SECTION_SUBCATEGORY"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "Section Subcategory Sort",
+          "outputField": "SECTION_SUBCATEGORY_SORT"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "Provider Type",
+          "outputField": "PROVIDER_TYPE"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "Provider ID",
+          "outputField": "PROVIDER_ID"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "Full Name",
+          "outputField": "FULL_NAME"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "Last Name",
+          "outputField": "LAST_NAME"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "First Name",
+          "outputField": "FIRST_NAME"
+        },
+        {
+          "columnOrder": 15,
+          "inputField": "Suffix",
+          "outputField": "SUFFIX"
+        },
+        {
+          "columnOrder": 16,
+          "inputField": "Degree",
+          "outputField": "DEGREE"
+        },
+        {
+          "columnOrder": 17,
+          "inputField": "Gender",
+          "outputField": "GENDER"
+        },
+        {
+          "columnOrder": 18,
+          "inputField": "Specialty",
+          "outputField": "SPECIALTY"
+        },
+        {
+          "columnOrder": 19,
+          "inputField": "Board Certification",
+          "outputField": "BOARD_CERTIFICATION"
+        },
+        {
+          "columnOrder": 20,
+          "inputField": "Limitations",
+          "outputField": "LIMITATIONS"
+        },
+        {
+          "columnOrder": 21,
+          "inputField": "Open Closed",
+          "outputField": "OPEN_CLOSED"
+        },
+        {
+          "columnOrder": 22,
+          "inputField": "Recognition",
+          "outputField": "RECOGNITION"
+        },
+        {
+          "columnOrder": 23,
+          "inputField": "Medicaid Indicator",
+          "outputField": "MEDICAID_INDICATOR"
+        },
+        {
+          "columnOrder": 24,
+          "inputField": "Language",
+          "outputField": "LANGUAGE"
+        },
+        {
+          "columnOrder": 25,
+          "inputField": "Hospital Privileges",
+          "outputField": "HOSPITAL_PRIVILEGES"
+        },
+        {
+          "columnOrder": 26,
+          "inputField": "Location ID",
+          "outputField": "LOCATION_ID"
+        },
+        {
+          "columnOrder": 27,
+          "inputField": "Location Name",
+          "outputField": "LOCATION_NAME"
+        },
+        {
+          "columnOrder": 28,
+          "inputField": "Address 1",
+          "outputField": "ADDRESS_1"
+        },
+        {
+          "columnOrder": 29,
+          "inputField": "Address 2",
+          "outputField": "ADDRESS_2"
+        },
+        {
+          "columnOrder": 30,
+          "inputField": "CIty",
+          "outputField": "CITY"
+        },
+        {
+          "columnOrder": 31,
+          "inputField": "State",
+          "outputField": "STATE"
+        },
+        {
+          "columnOrder": 32,
+          "inputField": "Zip",
+          "outputField": "ZIP"
+        },
+        {
+          "columnOrder": 33,
+          "inputField": "County",
+          "outputField": "COUNTY"
+        },
+        {
+          "columnOrder": 34,
+          "inputField": "Phone",
+          "outputField": "PHONE"
+        },
+        {
+          "columnOrder": 35,
+          "inputField": "Toll Free Phone",
+          "outputField": "TOLL_FREE_PHONE"
+        },
+        {
+          "columnOrder": 36,
+          "inputField": "TTY Phone",
+          "outputField": "TTY_PHONE"
+        },
+        {
+          "columnOrder": 37,
+          "inputField": "Handicapped Accessible",
+          "outputField": "HANDICAPPED_ACCESSIBLE"
+        },
+        {
+          "columnOrder": 38,
+          "inputField": "E-Prescribe",
+          "outputField": "E_PRESCRIBE"
+        },
+        {
+          "columnOrder": 39,
+          "inputField": "Longitude",
+          "outputField": "LONGITUDE"
+        },
+        {
+          "columnOrder": 40,
+          "inputField": "Latitude",
+          "outputField": "LATITUDE"
+        },
+        {
+          "columnOrder": 41,
+          "inputField": "Monday Hours",
+          "outputField": "MONDAY_HOURS"
+        },
+        {
+          "columnOrder": 42,
+          "inputField": "Tuesday Hours",
+          "outputField": "TUESDAY_HOURS"
+        },
+        {
+          "columnOrder": 43,
+          "inputField": "Wednesday Hours",
+          "outputField": "WEDNESDAY_HOURS"
+        },
+        {
+          "columnOrder": 44,
+          "inputField": "Thursday Hours",
+          "outputField": "THURSDAY_HOURS"
+        },
+        {
+          "columnOrder": 45,
+          "inputField": "Friday Hours",
+          "outputField": "FRIDAY_HOURS"
+        },
+        {
+          "columnOrder": 46,
+          "inputField": "Saturday Hours",
+          "outputField": "SATURDAY_HOURS"
+        },
+        {
+          "columnOrder": 47,
+          "inputField": "Sunday Hours",
+          "outputField": "SUNDAY_HOURS"
+        }
+      ]
+    }
+  }
+}

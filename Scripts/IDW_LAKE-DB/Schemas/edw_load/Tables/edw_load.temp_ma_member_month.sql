@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE EDW_LOAD.TEMP_MA_MEMBER_MONTH
+(
+MA_MEMBER_MONTH_KEY                   NUMBER,
+MEMBER_DEMOGRAPHIC_KEY                NUMBER,
+MEMBERSHIP_DATE                TIMESTAMP_NTZ,
+ELIGIBILITY_EFFECTIVE_DATE     TIMESTAMP_NTZ,
+REPORT_EFFECTIVE_DATE          TIMESTAMP_NTZ,
+PROVIDER_PCP_KEY                      NUMBER,
+MA_PLAN_KEY                           NUMBER,
+MA_MEMBER_KEY                         NUMBER,
+MEMBER_CNT                         NUMBER(1),
+MEMBERSHIP_DAY_CNT                 NUMBER(3),
+LOAD_DATE                      TIMESTAMP_NTZ,
+MEMBER_GROUPING_KEY                   NUMBER,
+MONTH_CNT                          NUMBER(1)
+)
+COMMENT='Created for EDW_LOAD Migration'
+;

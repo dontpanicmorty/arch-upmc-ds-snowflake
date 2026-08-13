@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE EDW_RPT.DENTAL_UNRESOLVED
+(
+DENTAL_UNRESOLVED_KEY            NUMBER,
+DENTAL_CLAIM_NBR                VARCHAR,
+DENTAL_CLAIM_LINE_NBR           VARCHAR,
+TOOTH_NBR                       VARCHAR,
+CHECK_NBR                       VARCHAR,
+LOAD_DATE                 TIMESTAMP_NTZ,
+UPDATE_DATE               TIMESTAMP_NTZ,
+LOB_CODE                        VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

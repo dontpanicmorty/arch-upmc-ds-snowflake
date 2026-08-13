@@ -1,0 +1,272 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_LNK_PROVIDER_CONTRACT(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.LNK_PROVIDER_CONTRACT`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.LNK_PROVIDER_CONTRACT_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`    
+MERGE INTO HUBDATA.LNK_PROVIDER_CONTRACT TGT
+USING (
+    SELECT
+        LNK_PROVIDER_CONTRACT_HKEY,
+        HUB_PROVIDER_HKEY,
+        HUB_PROVIDER_CONTRACT_HKEY,
+        P_TPA_CLIENT_ID,
+        P_TPA_ID,
+        P_TPA_DIV_ID,
+        P_DATA_SOURCE_NAME,
+        P_PROVIDER_ID,
+        PC_TPA_CLIENT_ID,
+        PC_TPA_ID,
+        PC_TPA_DIV_ID,
+        PC_DATA_SOURCE_NAME,
+        PC_PROVIDER_CONTRACT_ID
+    FROM STAGEDATA.LNK_PROVIDER_CONTRACT_TMP
+) SRC  
+ON (
+    TGT.LNK_PROVIDER_CONTRACT_HKEY = SRC.LNK_PROVIDER_CONTRACT_HKEY
+    AND TGT.IS_CURRENT_ROW_FLAG = TRUE
+)
+
+WHEN NOT MATCHED 
+
+THEN INSERT
+    (
+        LNK_PROVIDER_CONTRACT_HKEY,
+        HUB_PROVIDER_HKEY,
+        HUB_PROVIDER_CONTRACT_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        P_TPA_CLIENT_ID,
+        P_TPA_ID,
+        P_TPA_DIV_ID,
+        P_DATA_SOURCE_NAME,
+        P_PROVIDER_ID,
+        PC_TPA_CLIENT_ID,
+        PC_TPA_ID,
+        PC_TPA_DIV_ID,
+        PC_DATA_SOURCE_NAME,
+        PC_PROVIDER_CONTRACT_ID
+    )
+VALUES 
+    (
+        SRC.LNK_PROVIDER_CONTRACT_HKEY,
+        SRC.HUB_PROVIDER_HKEY,
+        SRC.HUB_PROVIDER_CONTRACT_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+        SRC.P_TPA_CLIENT_ID,
+        SRC.P_TPA_ID,
+        SRC.P_TPA_DIV_ID,
+        SRC.P_DATA_SOURCE_NAME,
+        SRC.P_PROVIDER_ID,
+        SRC.PC_TPA_CLIENT_ID,
+        SRC.PC_TPA_ID,
+        SRC.PC_TPA_DIV_ID,
+        SRC.PC_DATA_SOURCE_NAME,
+        SRC.PC_PROVIDER_CONTRACT_ID
+       
+    )
+;`;
+
+// Create update statement to be executed.
+var sqlUpdateCommand =
+`
+UPDATE HUBDATA.LNK_PROVIDER_CONTRACT TGT
+    SET ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1), IS_CURRENT_ROW_FLAG = FALSE
+    WHERE (HUB_PROVIDER_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+        SELECT
+            HUB_PROVIDER_HKEY,
+            ROW_EFFECTIVE_DATETIME
+        FROM (
+            SELECT
+                HUBDATA.HUB_PROVIDER_HKEY,
+                HUBDATA.ROW_EFFECTIVE_DATETIME,
+                ROW_NUMBER() OVER (PARTITION BY HUBDATA.HUB_PROVIDER_HKEY, HUBDATA.HUB_PROVIDER_CONTRACT_HKEY ORDER BY HUBDATA.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+            FROM
+                HUBDATA.LNK_PROVIDER_CONTRACT AS HUBDATA
+            JOIN
+                STAGEDATA.LNK_PROVIDER_CONTRACT_TMP AS STAGEDATA
+                ON (HUBDATA.HUB_PROVIDER_HKEY = STAGEDATA.HUB_PROVIDER_HKEY
+                AND HUBDATA.HUB_PROVIDER_CONTRACT_HKEY = STAGEDATA.HUB_PROVIDER_CONTRACT_HKEY)
+            WHERE HUBDATA.IS_CURRENT_ROW_FLAG = TRUE
+        )
+        WHERE RNUM >= 2
+    )
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.LNK_PROVIDER_CONTRACT
+    SET ROW_EXPIRATION_DATETIME = :1, IS_CURRENT_ROW_FLAG = FALSE
+    WHERE (LNK_PROVIDER_CONTRACT_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+        SELECT
+            HUBDATA.LNK_PROVIDER_CONTRACT_HKEY,
+            HUBDATA.ROW_EFFECTIVE_DATETIME
+        FROM
+            HUBDATA.LNK_PROVIDER_CONTRACT AS HUBDATA
+        LEFT OUTER JOIN
+            STAGEDATA.LNK_PROVIDER_CONTRACT_TMP AS STAGEDATA
+            ON (HUBDATA.LNK_PROVIDER_CONTRACT_HKEY = STAGEDATA.LNK_PROVIDER_CONTRACT_HKEY)
+        WHERE
+            HUBDATA.IS_CURRENT_ROW_FLAG = TRUE
+            AND HUBDATA.HUB_PROVIDER_HKEY IS NULL
+            AND HUBDATA.P_DATA_SOURCE_NAME IN (SELECT DISTINCT PC_DATA_SOURCE_NAME FROM STAGEDATA.LNK_PROVIDER_CONTRACT_TMP)
+    )
+;`;
+    
+var sqlLogCommand =
+`
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+    VALUES
+        (:1, :2, :3, :4::timestamp_ltz, :5::timestamp_ltz, :6, :7, :8, :9, :10, :11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    targetTableName = `STAGEDATA.LNK_PROVIDER_CONTRACT_TMP`;
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );    
+
+    //Execute Merge Command
+    targetTableName = `HUBDATA.LNK_PROVIDER_CONTRACT`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Update Command
+    targetTableName = `HUBDATA.LNK_PROVIDER_CONTRACT`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Delete Command
+    targetTableName = `HUBDATA.LNK_PROVIDER_CONTRACT`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand =
+    `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES
+            (:1, :2, :3, :4::timestamp_ltz, :5::timestamp_ltz, :6, :7, :8, :9, :10, :11, :12)
+    ;`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

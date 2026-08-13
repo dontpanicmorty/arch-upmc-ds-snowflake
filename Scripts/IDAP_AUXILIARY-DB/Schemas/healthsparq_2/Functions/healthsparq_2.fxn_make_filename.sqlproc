@@ -1,0 +1,28 @@
+CREATE OR REPLACE FUNCTION HEALTHSPARQ_2.FXN_MAKE_FILENAME(
+    FILENAME VARCHAR,
+    YMD VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+AS
+$$
+// Util function
+const addZero = num => num > 9 ? num : '0' + num;
+
+// If a YMD param is passed in, assume that it's TIC_DATE and we should remove
+// all dashes from it
+if (YMD) {
+    YMD = YMD.replace(/-/g, '')
+}
+// If one isn't provided, make one for the current date
+else {
+    const now = new Date();
+    YMD = `${now.getUTCFullYear()}${addZero(now.getUTCMonth() + 1)}${addZero(now.getUTCDate())}`;
+}
+
+// We're just hardcoding HHMMSS to always be noon. It's easier, even if we switch
+// back to current date for YMD.
+const dateComponent = `${YMD}_120000`;
+return `UPMC_${FILENAME}_${dateComponent}.txt`;
+$$
+;

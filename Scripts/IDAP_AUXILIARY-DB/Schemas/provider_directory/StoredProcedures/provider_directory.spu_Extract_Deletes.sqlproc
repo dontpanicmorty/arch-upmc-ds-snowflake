@@ -1,0 +1,74 @@
+// generic delete procedure that accepts 3 params to build out the copy command dynamically
+CREATE OR REPLACE PROCEDURE PROVIDER_DIRECTORY.SPU_EXTRACT_DELETES(VIEW_NAME VARCHAR, COLUMN_NAME VARCHAR, TARGET_FOLDER VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `@PROVIDER_DIRECTORY.DIRECTORY_OUTBOUNDDATA/${TARGET_FOLDER}/delete_`;
+
+// Create COPY statement with delete_ prefix on the files
+var sqlCommand =
+`
+COPY INTO @PROVIDER_DIRECTORY.DIRECTORY_OUTBOUNDDATA/${TARGET_FOLDER}/delete_
+FROM 
+(
+        SELECT ${COLUMN_NAME} 
+        FROM PROVIDER_DIRECTORY.${VIEW_NAME}
+)
+OVERWRITE = TRUE
+SINGLE = FALSE
+FILE_FORMAT =
+(
+        TYPE = 'JSON',
+        STRIP_OUTER_ARRAY = FALSE --leave this false and ADF will split it automaticaly in the COPY to Cosmos
+        COMPRESSION = NONE
+)
+;
+`;
+
+try
+{
+    //Execute SQL Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds: [targetTableName, "FILE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[targetTableName, "FILE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+    throw result;
+}
+return result;
+$$
+;

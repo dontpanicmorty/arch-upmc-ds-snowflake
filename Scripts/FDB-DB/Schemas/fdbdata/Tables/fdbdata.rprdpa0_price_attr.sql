@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE FDBDATA.RPRDPA0_PRICE_ATTR (
+	FDB_PRODUCT_ID NUMERIC(11, 0) NOT NULL,
+	PRICE_TYPE_ID NUMERIC(3, 0) NOT NULL,
+	PRICE_EFFECTIVE_DT VARCHAR(8) NOT NULL,
+	PRICE_ATTRIBUTE_CD VARCHAR(8) NOT NULL,
+	PRICE_ATTRIBUTE_SN NUMERIC(4, 0) NOT NULL,
+	PRICE_ATTRIBUTE_VALUE_SN NUMERIC(4, 0) NOT NULL,
+	PRICE_ATTRIBUTE_VALUE VARCHAR(255) NOT NULL,
+	CONSTRAINT PK_RPRDPA0_PRICE_ATTR PRIMARY KEY (FDB_PRODUCT_ID, PRICE_TYPE_ID, PRICE_EFFECTIVE_DT, PRICE_ATTRIBUTE_CD, PRICE_ATTRIBUTE_SN, PRICE_ATTRIBUTE_VALUE_SN)
+)
+COMMENT = 'Provides additional attributes for a product price that supplement the information provided within the Product Price Table (RPRDPP0_PRODUCT_PRICE). The First Databank Product Identifier, the Price Type Identifier, Price Effective date and Price Attribute Code form a composite key for navigation to the associated product price.'
+;

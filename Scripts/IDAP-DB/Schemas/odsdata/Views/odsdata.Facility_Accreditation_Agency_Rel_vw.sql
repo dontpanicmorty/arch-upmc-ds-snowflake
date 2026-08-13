@@ -1,0 +1,13 @@
+CREATE OR REPLACE VIEW ODSDATA.FACILITY_ACCREDITATION_AGENCY_REL_VW
+COMMENT = 'Replicated from Azure SQL DB'
+AS
+SELECT
+FacilityAccreditationAgencyRel.$1::NUMBER(38,0) AS FACILITY_ACCREDITATION_AGENCY_REL_KEY
+,FacilityAccreditationAgencyRel.$2::NUMBER(38,0) AS FACILITY_KEY
+,FacilityAccreditationAgencyRel.$3::NUMBER(38,0) AS ACCREDITATION_AGENCY_KEY
+,FacilityAccreditationAgencyRel.$4::DATETIME AS LAST_UPDATED_DATETIME
+,FacilityAccreditationAgencyRel.$5::DATETIME AS INSERT_DATETIME
+,FacilityAccreditationAgencyRel.$6::VARCHAR AS ACCREDITATION_AGENCY_URL
+FROM @ODSDATA.HPDSDATALAKE_IDAPSQL/providerods/FacilityAccreditationAgencyRel.txt
+(FILE_FORMAT => 'ODSDATA.PROVIDER_ODS_FILE_FORMAT')FacilityAccreditationAgencyRel
+;

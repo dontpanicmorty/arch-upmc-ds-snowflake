@@ -1,0 +1,17 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_RX_BRAND_VS_GENERIC_NOCOV
+(
+CORPORATION_ID           VARCHAR,
+GROUP_ID                 VARCHAR,
+DIVISION_ID              VARCHAR,
+PLAN_NBR                 VARCHAR,
+SERVICE_DATE       TIMESTAMP_NTZ,
+PAYMENT_DATE       TIMESTAMP_NTZ,
+GENERIC                   NUMBER(33,5),
+BRAND                     NUMBER(33,5),
+SPECIALTY                 NUMBER(33,5),
+GENERIC_PD                NUMBER(33,5),
+BRAND_PD                  NUMBER(33,5),
+SPECIALTY_PD              NUMBER(33,5)
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

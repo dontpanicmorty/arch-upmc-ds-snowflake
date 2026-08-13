@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE MEDHOK.ADDRESS_AUDIT
+(
+MHK_MBR_ADDRESS_INT_ID           VARCHAR,
+ADDRESS_TYPE                     VARCHAR,
+ADDRESS1                         VARCHAR,
+ADDRESS2                         VARCHAR,
+ADDRESS3                         VARCHAR,
+CITY                             VARCHAR,
+STATE                            VARCHAR,
+ZIP                              VARCHAR,
+COUNTY                           VARCHAR,
+ISLAND                           VARCHAR,
+EFFECTIVE_DATE             TIMESTAMP_NTZ,
+TERM_DATE                  TIMESTAMP_NTZ,
+HOME_PHONE                       VARCHAR,
+CELL_PHONE                       VARCHAR,
+WORK_PHONE                       VARCHAR,
+EMAIL                            VARCHAR,
+OTHER_PHONE                      VARCHAR,
+FIRST_NAME                       VARCHAR,
+LAST_NAME                        VARCHAR,
+CREATED_AT                 TIMESTAMP_NTZ,
+UPDATED_AT                 TIMESTAMP_NTZ,
+TIME_ZONE                        VARCHAR,
+MHK_MBR_INT_ID                   VARCHAR,
+MBR_ADDRESS_EXT_ID               VARCHAR,
+MBR_EXT_ID                       VARCHAR,
+FAX                              VARCHAR,
+COUNTRY                          VARCHAR,
+MBR_ADDRESS_EXT_ID2              VARCHAR,
+CLIENT_ID                        VARCHAR,
+TPA_ID                           VARCHAR,
+TPA_DIV                          VARCHAR
+)
+COMMENT='Created for MEDHOK Migration'
+;

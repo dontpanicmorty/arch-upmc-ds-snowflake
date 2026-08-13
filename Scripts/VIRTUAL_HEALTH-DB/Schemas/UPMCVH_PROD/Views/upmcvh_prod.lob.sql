@@ -1,0 +1,14 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW UPMCVH_PROD.LOB
+AS
+SELECT
+ID,
+NAME,
+LOCKED,
+SYSTEM_ID,
+IS_DELETED,
+LAST_UPDATED_BY,
+UUID,
+POSITION
+FROM &{IDAP_LAKE}.VIRTUAL_HEALTH_STAGE.LOB;
+!set variable_substitution=false;

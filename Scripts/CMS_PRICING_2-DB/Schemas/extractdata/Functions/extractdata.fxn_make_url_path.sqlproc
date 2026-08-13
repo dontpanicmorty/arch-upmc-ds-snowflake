@@ -1,0 +1,15 @@
+-- XXXX-XX-XX prefix must be replaced in all stored procs that use this
+CREATE OR REPLACE FUNCTION EXTRACTDATA.FXN_MAKE_URL_PATH(SCHEMA_FILETYPE VARCHAR, PUBLIC_FILENAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+AS
+$$
+// TOC requires a specific syntax, so return that only
+if (SCHEMA_FILETYPE === 'table-of-contents') {
+  return `/${SCHEMA_FILETYPE}/XXXX-XX-XX_${PUBLIC_FILENAME}.json`;
+}
+
+// Otherwise, prepend with date and append filetype again for disambiguation
+return `/XXXX-XX-XX/${SCHEMA_FILETYPE}/${PUBLIC_FILENAME}-${SCHEMA_FILETYPE}.json`;
+$$
+;

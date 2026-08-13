@@ -1,0 +1,12 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW SACA.STAFF_ASSIGN_VW
+AS
+SELECT
+OFFICEID,
+TIN,
+PAE,
+STAFF_USER_ID,
+PCP_SITE,
+MAX_ASSIGN_DATE
+FROM &{IDW_LAKE}.SACA.STAFF_ASSIGN_VW;
+!set variable_substitution=false;

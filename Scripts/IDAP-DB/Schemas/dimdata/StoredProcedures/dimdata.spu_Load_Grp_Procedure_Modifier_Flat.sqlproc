@@ -1,0 +1,131 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_GRP_PROCEDURE_MODIFIER_FLAT()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.GRP_PROCEDURE_MODIFIER_FLAT`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.GRP_PROCEDURE_MODIFIER_FLAT AS TGT
+USING (SELECT 
+        GRP_PROCEDURE_MODIFIER_KEY
+        ,LAST_UPDATED_DATETIME
+        ,PROCEDURE_MODIFIER_01
+        ,PROCEDURE_MODIFIER_02
+        ,PROCEDURE_MODIFIER_03
+        ,PROCEDURE_MODIFIER_04
+        FROM STAGEDATA.GRP_PROCEDURE_MODIFIER_FLAT_SELECT_VW
+        --ONLY LOOK AT RECORDS THAT HAVE BEEN CHANGED SINCE WE LAST UPDATED THE TARGET TABLE
+        WHERE GRP_PROCEDURE_MODIFIER_FLAT_SELECT_VW.LAST_UPDATED_DATETIME > (SELECT IFNULL(MAX(LAST_UPDATED_DATETIME), '1/1/1900 12:00:00') FROM DIMDATA.GRP_PROCEDURE_MODIFIER_FLAT)
+        ) AS SRC
+ON (SRC.GRP_PROCEDURE_MODIFIER_KEY = TGT.GRP_PROCEDURE_MODIFIER_KEY) --SINCE WE ARE ONLY GRABBING THE DELTA, USING ONLY KEYS HERE TO DETERMINE IF WE NEED INSERT OR UPDATE
+
+WHEN MATCHED
+THEN UPDATE
+    SET 
+    TGT.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+    ,TGT.IS_LOGICAL_DELETE_FLAG = FALSE
+    ,TGT.PROCEDURE_MODIFIER_01 = SRC.PROCEDURE_MODIFIER_01
+    ,TGT.PROCEDURE_MODIFIER_02 = SRC.PROCEDURE_MODIFIER_02
+    ,TGT.PROCEDURE_MODIFIER_03 = SRC.PROCEDURE_MODIFIER_03
+    ,TGT.PROCEDURE_MODIFIER_04 = SRC.PROCEDURE_MODIFIER_04
+WHEN NOT MATCHED
+THEN INSERT
+    (GRP_PROCEDURE_MODIFIER_KEY
+    ,INSERT_DATETIME
+    ,LAST_UPDATED_DATETIME
+    ,IS_LOGICAL_DELETE_FLAG
+    ,PROCEDURE_MODIFIER_01
+    ,PROCEDURE_MODIFIER_02
+    ,PROCEDURE_MODIFIER_03
+    ,PROCEDURE_MODIFIER_04
+    )
+VALUES
+    (
+    SRC.GRP_PROCEDURE_MODIFIER_KEY
+    ,CURRENT_TIMESTAMP()
+    ,CURRENT_TIMESTAMP()
+    ,FALSE
+    ,SRC.PROCEDURE_MODIFIER_01
+    ,SRC.PROCEDURE_MODIFIER_02
+    ,SRC.PROCEDURE_MODIFIER_03
+    ,SRC.PROCEDURE_MODIFIER_04
+    );
+`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.GRP_PROCEDURE_MODIFIER_FLAT
+    SET LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+    ,IS_LOGICAL_DELETE_FLAG = TRUE
+WHERE GRP_PROCEDURE_MODIFIER_KEY NOT IN (SELECT DISTINCT GRP_PROCEDURE_MODIFIER_KEY FROM DIMDATA.GRP_PROCEDURE_MODIFIER);
+`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

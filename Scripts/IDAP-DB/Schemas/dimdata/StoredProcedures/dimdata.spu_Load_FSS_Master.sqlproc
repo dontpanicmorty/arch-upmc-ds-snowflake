@@ -1,0 +1,287 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_FSS_MASTER("START_DATE" DATE DEFAULT DATE_ADDDAYSTODATE(-1, CURRENT_DATE()), "END_DATE" DATE DEFAULT CURRENT_DATE())
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS '
+var procedureName = Object.keys(this)[0];
+
+// Helper function to get a date string from SQL
+function getDateString(sqlText) {
+    var stmt = snowflake.createStatement({sqlText: sqlText});
+    var rs = stmt.execute();
+    rs.next();
+    return rs.getColumnValue(1);  // Should be a string like "2025-10-22"
+}
+
+// Handle NULLs passed from ADF
+var startDateStr = START_DATE ? START_DATE.toISOString().split("T")[0] : getDateString("SELECT TO_CHAR(DATEADD(day, -1, CURRENT_DATE()), ''YYYY-MM-DD'')");
+var endDateStr = END_DATE ? END_DATE.toISOString().split("T")[0] : getDateString("SELECT TO_CHAR(CURRENT_DATE(), ''YYYY-MM-DD'')");
+
+// STAGEDATA.SPU_LOAD_FSS_CLAIMS_DATA
+sqlClaimsCommand = `CALL STAGEDATA.SPU_LOAD_FSS_CLAIMS_DATA(''${startDateStr}'', ''${endDateStr}'');`;
+
+ // DELETE EXISTING STAGEDATA.FSS_DECISION_DATA RECORDS THAT NO LONGER EXIST IN DIMDATA.FACT_CLAIM_LINE/DIMDATA.DIM_CLAIM_DETAIL
+sqlDeleteCommand = `DELETE
+              FROM STAGEDATA.FSS_DECISION_DATA 
+              WHERE DIM_CLAIM_DETAIL_KEY NOT IN (SELECT DIM_CLAIM_DETAIL.DIM_CLAIM_DETAIL_KEY
+                                                 FROM IDAP.DIMDATA.FACT_CLAIM_LINE
+                                                 JOIN IDAP.DIMDATA.DIM_CLAIM_DETAIL
+                                                    ON FACT_CLAIM_LINE.DIM_CLAIM_DETAIL_KEY = DIM_CLAIM_DETAIL.DIM_CLAIM_DETAIL_KEY
+                                                    AND DIM_CLAIM_DETAIL.IS_LOGICAL_DELETE_FLAG = FALSE
+                                                )`;
+
+// STAGEDATA.SPU_FSS_DECISION_ALGORITHM_NON_CHC_PART1
+sqlNonCHC1Command = `CALL STAGEDATA.SPU_FSS_DECISION_ALGORITHM_NON_CHC_PART1();`;
+
+ // STAGEDATA.SPU_FSS_DECISION_ALGORITHM_NON_CHC_PART2
+sqlNonCHC2Command = `CALL STAGEDATA.SPU_FSS_DECISION_ALGORITHM_NON_CHC_PART2();`;
+
+// STAGEDATA.SPU_FSS_DECISION_ALGORITHM_CHC_PART1
+sqlCHC1Command = `CALL STAGEDATA.SPU_FSS_DECISION_ALGORITHM_CHC_PART1();`;
+
+ // STAGEDATA.SPU_FSS_DECISION_ALGORITHM_CHC_PART2
+sqlCHC2Command = `CALL STAGEDATA.SPU_FSS_DECISION_ALGORITHM_CHC_PART2();`;
+
+// DIM_FINANCIAL_SERVICE_CATEGORY
+sqlFSCategoryCommand = `CALL DIMDATA.SPU_LOAD_DIM_FINANCIAL_SERVICE_CATEGORY();`;
+
+// SPU_SET_JOB_ID
+sqlValidateCommand = `CALL LOGDATA.SPU_SET_JOB_ID(''${procedureName}'')`;
+resultSet = snowflake.execute({sqlText: sqlValidateCommand});
+resultSet.next();
+var jobId = resultSet.getColumnValue(1);
+
+// SPU_VALIDATE_DATA_DUPE_CHECK
+sqlValidateDupeCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(''${jobId}'', ''DIMDATA.DIM_FINANCIAL_SERVICE_CATEGORY'');`;
+
+//SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK
+sqlValidatePrimaryCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(''${jobId}'', ''DIMDATA.DIM_FINANCIAL_SERVICE_CATEGORY'');`;
+
+// DIMDATA.SPU_LOAD_BRIDGE_CLAIM_DETAIL_FINANCIAL_SERVICE_CATEGORY
+sqlMergeCommand = `CALL DIMDATA.SPU_LOAD_BRIDGE_CLAIM_DETAIL_FINANCIAL_SERVICE_CATEGORY();`;
+
+    try {
+
+    // Execute SPU_LOAD_FSS_CLAIMS_DATA stored procedure
+    startTime = new Date().toISOString();
+    targetTableName = `STAGEDATA.FSS_CLAIMS_DATA`;
+    sfStatement = snowflake.createStatement({sqlText: sqlClaimsCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    // Log results to table
+    snowflake.execute({
+        sqlText: `
+            INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+            VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+        `,
+    binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute DELETE from STAGEDATA.FSS_DECISION_DATA NULL FACT_CLAIM_LINE DIM_CLAIM_DETAIL records
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.FSS_DECISION_DATA`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+            `,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+
+    //Execute FSS_NON_CHC_1 stored procedure
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.FSS_DECISION_DATA`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlNonCHC1Command});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+            `,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+    //Execute FSS_NON_CHC_1 stored procedure
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.FSS_DECISION_DATA`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlNonCHC2Command});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+            `,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+    //Execute FSS_CHC_1 stored procedure
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.FSS_DECISION_DATA`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCHC1Command});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+            `,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+
+    //Execute FSS_CHC_2 stored procedure
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.FSS_DECISION_DATA`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCHC2Command});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+            `,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+
+    //Execute FINANCIAL_SERVICE_CATEGORY stored procedure
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_FINANCIAL_SERVICE_CATEGORY`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlFSCategoryCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);
+            `,
+        binds: [procedureName, "Procedure", startTime, endTime, result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+    //Execute SPU_SET_JOB_ID stored procedure 
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_FINANCIAL_SERVICE_CATEGORY`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlValidateCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);
+            `,
+        binds: [procedureName, "Procedure", startTime, endTime, result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+    //Execute SPU_VALIDATE_DATA_DUPE_CHECK stored procedure 
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_FINANCIAL_SERVICE_CATEGORY`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlValidateDupeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);
+            `,
+        binds: [procedureName, "Procedure", startTime, endTime, result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+    //Execute SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK stored procedure 
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_FINANCIAL_SERVICE_CATEGORY`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlValidatePrimaryCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);
+            `,
+        binds: [procedureName, "Procedure", startTime, endTime, result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+
+
+    //Execute BRIDGE_CLAIM_DETAIL_FINANCIAL_SERVICE_CATEGORY stored procedure
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.BRIDGE_CLAIM_DETAIL_FINANCIAL_SERVICE_CATEGORY`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+        // Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);
+            `,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        });
+}
+
+    catch (err) {
+        var result = "Failed";
+        endTime = new Date().toISOString();
+
+        //Log results to table
+        snowflake.execute({
+            sqlText: `
+                INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+                (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);
+            `,
+            binds:[
+                targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        });       
+
+        throw result;
+    }
+
+    return result;
+';

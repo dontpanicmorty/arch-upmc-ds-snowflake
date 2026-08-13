@@ -1,0 +1,22 @@
+{
+  "outputSchema": "PROVIDER",
+  "outputTable": "PRV414_RAW",
+  "hasHeader": true,
+  "hasTrailer": true,
+  "fileType": "fixed",
+  "headerFormat": "PRV414_FILE_FORMAT_HEADER",
+  "fileFormat": "PRV414_FILE_FORMAT",
+  "truncReload": false,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "outputField": "RECORD",
+          "startPos": 1,
+          "length": 2000
+        }
+      ]
+    }
+  }
+}

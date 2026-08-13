@@ -1,0 +1,95 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_BUILD_GET_RESULTS(BUILD_NBR VARCHAR, BATCH_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+//hard-coded query to fetch any validation failures that got logged + the baseline record proving the process ran 
+sqlCommand = `SELECT SUM(RESULT_COUNT) AS RESULT_COUNT FROM (
+SELECT COUNT(*) AS RESULT_COUNT  FROM LOGDATA.BUILD_VALIDATION_RESULT 
+WHERE BUILD_NBR = '${BUILD_NBR}' AND BATCH_ID = '${BATCH_ID}' AND VALIDATION_RESULT_NBR <> EXPECTED_RESULT_NBR
+UNION 
+SELECT COUNT(*) AS RESULT_COUNT  FROM LOGDATA.BUILD_VALIDATION_RESULT 
+WHERE BUILD_NBR = '${BUILD_NBR}' AND BATCH_ID = '${BATCH_ID}' AND VALIDATION_PROCEDURE_NAME = 'BASELINE RECORD')`;
+
+try 
+{
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    var resultSet = sfStatement.execute();
+    resultSet.next(); 
+
+    //If the validation table only has a single record in it for this build + batch, that means no failures were recorded.
+    //The calling sproc inserts a baseline record after all other valdiation sprocs have run so we can do a positive assertion
+    if(resultSet == '1'){
+        var result = `PASS: All validation checks successed`
+    }
+    else {
+        var result = `FAIL: Validation failed. Look at LOGDATA.BUILD_VALIDATION_RESULT where BUILD_NBR = '${BUILD_NBR}' and BATCH_ID = '${BATCH_ID}'`
+        throw {
+            code:"-1",
+            message: result,
+            state: "00000",
+            stackTraceTxt: new Error().stack
+        }
+    };
+
+    var endTime = new Date().toISOString();
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed to execute";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

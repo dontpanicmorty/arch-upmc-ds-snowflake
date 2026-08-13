@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_CROSSWALK
+(
+HOS                               VARCHAR,
+HOS_FULL_NAME                     VARCHAR,
+LOCATION_CODE                     VARCHAR,
+LOCATION_DESCRIPTION              VARCHAR,
+MERGED_UNITS                      VARCHAR,
+PEOPLESOFT_DEPT                   VARCHAR,
+LOCATION_CODE_AND_DESCRIPTION     VARCHAR,
+NHSN_LOCATION_CODE                VARCHAR
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

@@ -1,0 +1,110 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_CLONE_ARCHIVE_DB (
+  TIC_DATE VARCHAR -- YYYY-MM-DD
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let resultSet, result, sqlText, CMS_DB_NAME;
+
+try 
+{
+    // If a date wasn't provided:
+    if (!TIC_DATE) {
+      sqlText = `SELECT EXTRACTDATA.FXN_GET_CURRENT_TIC_DATE() AS TIC_DATE;`;
+      resultSet = snowflake.execute({sqlText});
+      resultSet.next();
+      TIC_DATE = resultSet.getColumnValueAsString('TIC_DATE');
+    }
+    // Otherwise, validate that it matches a basic regex
+    else if (!TIC_DATE.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)) {
+      throw new Error('EXTRACTDATA.WRITE_EXTRACT_FILES called with a TIC_DATE parameter that did not match YYYY-MM-DD.');
+    }
+
+    const hyphenlessDate = TIC_DATE.replace(/-/g, '');
+
+    // Clone the DB
+    sqlText = `SELECT CURRENT_DATABASE() AS CMS_DB_NAME;`;
+    resultSet = snowflake.execute({sqlText});
+    resultSet.next();
+    CMS_DB_NAME = resultSet.getColumnValueAsString('CMS_DB_NAME');
+
+    sqlText = `CREATE DATABASE IF NOT EXISTS ${CMS_DB_NAME}_ARCHIVE_${hyphenlessDate} CLONE ${CMS_DB_NAME}
+      COMMENT = 'CMS Pricing Extract Run for ${TIC_DATE}';`;
+  
+    let sfStatement = snowflake.createStatement({sqlText});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    // Ensure DS people have access to the DB
+    sqlText = `GRANT USAGE ON DATABASE ${CMS_DB_NAME}_ARCHIVE_${hyphenlessDate} TO ROLE DS_ANALYST_ROLE`;
+
+    sfStatement = snowflake.createStatement({sqlText});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    result = 'Successful';
+    
+    const endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,INSERT_COUNT
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '0',
+      '${result}',
+      '${sqlText}'
+    )`;
+    snowflake.execute({sqlText});
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    
+    result = 'Failed';
+    let endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+        ,ERROR_CODE
+        ,ERROR_STATE
+        ,ERROR_MESSAGE
+        ,ERROR_STACK_TRACE_TEXT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${result}',
+      '${sqlText}',
+      '${code}',
+      '${state}',
+      '${message}',
+      '${stack}'
+    )`;
+    snowflake.execute({sqlText});
+    throw err;
+}
+return result;
+
+$$;

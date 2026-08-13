@@ -1,0 +1,1282 @@
+/*----------------------------------------------------------------------------------------------------------
+ This is the master deployment procedure for the database. Only the items in this script will be 
+ deployed to the target database.
+ 
+ Connection options for deployment via SnowSQL:
+ -f IDAP_Deployment.sql 
+ --variable build_number="<your build number>" 
+ --variable environment="<DEV, TST, PRD>" 
+ -o log_level=debug 
+ -o timing=false 
+ -o header=false 
+ -o echo=true 
+ -o exit_on_error=true 
+ -o output_file=IDAP_Deployment.log
+ ----------------------------------------------------------------------------------------------------------*/
+--***************************************************************************
+--***** This sets the SnowSQL variables that are used for cross db queries
+!set variable_substitution=true;
+!load &{tokenFilePath}
+
+--***************************************************************************
+-- Create deployment shell database
+CREATE OR REPLACE DATABASE &{sourceDB} 
+DATA_RETENTION_TIME_IN_DAYS=0 
+COMMENT='CLI CI/CD Deployment Compare Database for build.'
+;
+!set variable_substitution=false;
+--***************************************************************************
+--***** THE ORDER OF EXECUTION IS BASED OFF OF DATABASE DEPENDENCIES!! ******
+--***************************************************************************
+----------------------------------------------------------------------------------------------------------
+-- Schemas
+----------------------------------------------------------------------------------------------------------
+!load ../Schemas/DatabaseLevelObjects/util.schema.sql;
+!load ../Schemas/DatabaseLevelObjects/logdata.schema.sql;
+!load ../Schemas/DatabaseLevelObjects/refdata.schema.sql;
+!load ../Schemas/DatabaseLevelObjects/rawdata.schema.sql;
+!load ../Schemas/DatabaseLevelObjects/stagedata.schema.sql;
+!load ../Schemas/DatabaseLevelObjects/hubdata.schema.sql;
+!load ../Schemas/DatabaseLevelObjects/extractdata.schema.sql;
+
+----------------------------------------------------------------------------------------------------------
+-- File Formats
+----------------------------------------------------------------------------------------------------------
+-- rawdata 
+!load ../Schemas/rawdata/FileFormats/rawdata.avesis_claim_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.avesis_provider_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.empi_daily_global_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_claim_nva_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_claim_cms_historical_npi_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_claim_esi_weekly_financial_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_claim_pharmacy_npi_lkp_historical_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_cms_npi_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_provider_nva_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_claim_esi_weekly_financial_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_referencedata_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_referencedata_optum_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_esi_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_esi_historical_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_fdb_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_medispan_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_member_restricted_individual_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_planexpand_rx_spending_accounts_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_provider_nucc_taxonomy_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_envolve_claim_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.idaplake_envolve_provider_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.skygen_claim_file_format.sql;
+!load ../Schemas/rawdata/FileFormats/rawdata.skygen_provider_file_format.sql;
+
+
+--util
+!load ../Schemas/util/FileFormats/util.rawdata_load_control_file_format.sql;
+
+
+----------------------------------------------------------------------------------------------------------
+-- Stages  (These will need added in, just need to figure out how to update storage locations as part of build)
+----------------------------------------------------------------------------------------------------------
+-- rawdata 
+!load ../Schemas/rawdata/Stages/rawdata.hpdsdatalake_dbextract.sql;
+!load ../Schemas/rawdata/Stages/rawdata.hpdsdatalake_idaplake.sql;
+
+----------------------------------------------------------------------------------------------------------
+-- Sequences
+----------------------------------------------------------------------------------------------------------
+--<schemaname>
+--<schemaname>
+--<schemaname>
+--<schemaname>
+----------------------------------------------------------------------------------------------------------
+-- Tables
+----------------------------------------------------------------------------------------------------------
+--refdata
+!load ../Schemas/refdata/Tables/refdata.claim_adjudication_pharmacy_class_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_adjustment_type_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_accumulator_threshold.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_admission_source.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_admission_type.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_awp_indication_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_benefit_category.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_billing_type.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_cob_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_compound_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_drug_discount_applicable_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_drug_discount_exclusion_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_generic_price_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_diagnosis_related_group.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_discharge_status.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_dispense_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_electronic_type.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_esi_funded_ind.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_fill_method_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_formulary_flag_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_icd_class.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_icd_diagnosis_category.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_icd_diagnosis_poa.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_icd_diagnosis_qualifier.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_icd_diagnosis.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_icd_procedure.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_location_type.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_low_income_subsidy_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_m3p_origin.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_manufacturer_discount_type.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_not_covered_reason.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_other_coverage_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_partial_fill_status_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_patient_residence_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_pay_status.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_dispense_pharmacy_type_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_place_of_service_location_type_rel.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_place_of_service.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_prescription_origin_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_price_source_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_pricing_used_ind.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_procedure_category.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_procedure_modifier.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_procedure.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_processing_reason.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_type_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_quad_arch.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_revenue_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_service_type.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_supplemental_coverage_troop_qualification.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_transaction_type_code.sql;
+!load ../Schemas/refdata/Tables/refdata.claim_transaction_adjustment_type_code.sql;
+!load ../Schemas/refdata/Tables/refdata.data_source.sql;
+!load ../Schemas/refdata/Tables/refdata.gender.sql;
+!load ../Schemas/refdata/Tables/refdata.line_of_business.sql;
+!load ../Schemas/refdata/Tables/refdata.lob_plan_type.sql;
+!load ../Schemas/refdata/Tables/refdata.member_relationships.sql;
+!load ../Schemas/refdata/Tables/refdata.provider_nucc_taxonomy.sql;
+!load ../Schemas/refdata/Tables/refdata.plan_benefit_level.sql;
+!load ../Schemas/refdata/Tables/refdata.rider_formulary_code.sql;
+!load ../Schemas/refdata/Tables/refdata.rider_type.sql;
+!load ../Schemas/refdata/Tables/refdata.source_data_mapping.sql;
+
+!load ../Schemas/refdata/Tables/refdata.provdir_vision_product_crosswalk.sql;
+!load ../Schemas/refdata/Tables/refdata.provdir_membernetwork_plantype_exclusion.sql;
+!load ../Schemas/refdata/Tables/refdata.provdir_membernetwork_plancode_exclusion.sql;
+!load ../Schemas/refdata/Tables/refdata.provdir_dental_corpid_product_crosswalk.sql;
+!load ../Schemas/refdata/Tables/refdata.membernetwork_ridertypecodelobsubproduct_crosswalk.sql;
+!load ../Schemas/refdata/Tables/refdata.membernetwork_ridercodesubproduct_crosswalk.sql;
+!load ../Schemas/refdata/Tables/refdata.membernetwork_plancodesubproduct_crosswalk.sql;
+!load ../Schemas/refdata/Tables/refdata.membernetwork_pharmacylobsubproduct_crosswalk.sql;
+!load ../Schemas/refdata/Tables/refdata.membernetwork_corporateidsubproduct_override.sql;
+!load ../Schemas/refdata/Tables/refdata.provider_network_crosswalk.sql;
+--stagedata
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_authorization_member_skygen.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_member_avesis.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_member_nva.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_member_skygen.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_pharmacy_claim.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_pharmacy_detail.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_pharmacy_member.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_pharmacy_prescriber_detail.sql;
+!load ../Schemas/stagedata/Tables/stagedata.lkp_claim_member_envolve.sql;
+
+
+--hubdata
+
+!load ../Schemas/hubdata/Tables/hubdata.hub_accumulator_codeset.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_address_query.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_claim_authorization.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_claim_authorization_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_claim_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_claim.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_drug.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_marketing_cutlog.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_marketing_outbound_comm_fullfillment.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_medical_group_contract.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_medical_group.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_member_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_membership_group.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_office_hours.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_plan.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_plan_accumulator.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_product.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_provider_contract.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_plan_segment.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_rider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.hub_standard_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_address_query_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_address_query_standard_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_assigned_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_attending_physician.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_authorization_detail_claim_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_authorization_detail_rendering_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_authorization_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_authorization_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_authorization_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_authorization_submitting_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_billing_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_detail_drug.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_detail_pharmacy.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_detail_rendering_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_membership_group.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_plan.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_prescriber.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_referring_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_claim_rider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_cutlog_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_medical_group_contract.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_medical_group_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_member_member_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_membership_group_rider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_ocf_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_office_hours_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_plan_accumulator_codeset.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_plan_accumulator_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_provider_contract.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_provider_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_plan_accumulator_membership_group.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_plan_accumulator_plan.sql;
+!load ../Schemas/hubdata/Tables/hubdata.lnk_plan_plan_segment.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_accumulator_codeset.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_authorization_detail_amount.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_authorization_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_authorization.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_header.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_icd_diagnosis.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_icd_procedure.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line_amount.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line_not_covered_reason.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line_procedure_category.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line_procedure_modifier.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line_processing_reason.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_claim_line_pharmacy.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_drug_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_marketing_cutlog.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_marketing_outbound_comm_fullfillment.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_attribute.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_contract_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_contract_status.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_identifier.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_ownership_status.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_member_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_member_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_member_current_attribute.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_member_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_member_identifier.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_membership_group_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_office_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_office_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_office_hours_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_plan_accumulator.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_plan_accumulator_threshold.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_plan_accumulator_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_plan_detail_aca.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_plan_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_attribute.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_contract_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_contract_status.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_plan_segment_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_detail.sql;
+
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_identifier.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_rider_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_standard_address_detail.sql;
+
+--*********************************************************************
+--Effective SATS need to be at the end because of referential integrity
+--*********************************************************************
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_accumulator_codeset.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_address_query.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_claim_authorization.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_claim_authorization_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_claim_header.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_claim_line.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_drug.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_marketing_cutlog.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_marketing_outbound_comm_fullfillment.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_medical_group_contract.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_medical_group.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_member_address.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_member.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_membership_group.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_office_hours.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_office.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_plan_accumulator.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_plan_segment.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_plan.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_plan_accumulator.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_provider_contract.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_provider.sql;
+!load ../Schemas/hubdata/Tables/hubdata.eff_sat_rider.sql;
+
+--logdata
+!load ../Schemas/logdata/Tables/logdata.job_log.sql;
+!load ../Schemas/logdata/Tables/logdata.table_load_history.sql;
+!load ../Schemas/logdata/Tables/logdata.Data_Validation_Result.sql;
+
+--util
+!load ../Schemas/util/Tables/util.allowed_value_control.sql;
+!load ../Schemas/util/Tables/util.datahub_load_control.sql;
+!load ../Schemas/util/Tables/util.extractdata_load_control.sql;
+!load ../Schemas/util/Tables/util.rawdata_load_control.sql;
+
+--rawdata
+
+!load ../Schemas/rawdata/Tables/rawdata.avesis_paid_claim_extracts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.avesis_provider.sql;
+!load ../Schemas/rawdata/Tables/rawdata.bpl_rider_network_crosswalk.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_addresses.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_auditlog_fieldlevel.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_auditlog_recordlevel.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_auditlog.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_country.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_credentialinggroup.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_crossreference.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_entityassignments.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_groupaddress.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_groupaddressid.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_groupid.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_groups.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_groupsprovidersaddresses.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_institutions.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_languagereferences.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_provideraddresses.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_provideraddressspecialty.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_provideraffiliations.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providerboards.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providereducation.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providerid.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providerinsurance.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providerlanguages.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providerlicenses.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providers.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_providerspecialties.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_referencemaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_reftable.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_servicecategoryreferences.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cactus_zipcodes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.claim_cms_historical_npi_pharmacy.sql;
+!load ../Schemas/rawdata/Tables/rawdata.claim_cms_historical_npi_prescriber.sql;
+!load ../Schemas/rawdata/Tables/rawdata.claim_pharmacy_npi_lkp_historical.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cms_mmr.sql;
+!load ../Schemas/rawdata/Tables/rawdata.cms_npi.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_claim_authorization_detail.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_claim_authorization.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_claim_detail.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_claim_header.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_plan_accumulator.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_provider_detail.sql;
+!load ../Schemas/rawdata/Tables/rawdata.dwskygen_provider_office.sql;
+!load ../Schemas/rawdata/Tables/rawdata.empi_daily_global.sql;
+!load ../Schemas/rawdata/Tables/rawdata.envolve_claim_extracts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.envolve_provider.sql;
+!load ../Schemas/rawdata/Tables/rawdata.greenback_rx_claim_history.sql;
+!load ../Schemas/rawdata/Tables/rawdata.healthplanet_app_dbo_bd_enrollee.sql;
+!load ../Schemas/rawdata/Tables/rawdata.healthplanet_rs_dbo_mtn_flag_category.sql;
+!load ../Schemas/rawdata/Tables/rawdata.healthplanet_rs_dbo_olap_cms_flag.sql;
+!load ../Schemas/rawdata/Tables/rawdata.hp_analytics_ia_aca_plans.sql;
+!load ../Schemas/rawdata/Tables/rawdata.hp_analytics_productLookup.sql;
+!load ../Schemas/rawdata/Tables/rawdata.hp_analytics_sg_aca_plans.sql;
+!load ../Schemas/rawdata/Tables/rawdata.idw_uwpr_companyiddata.sql;
+!load ../Schemas/rawdata/Tables/rawdata.lob_plan_type.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_groups.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_members.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_planmaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_plantype.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_premiums.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_relationshipdescriptions.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_ridermaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_riders.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwdnv_subgroups.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_accountspayable.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_adjustmentreason.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_alternateaddressdetail.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_alternateaddressheader.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_appermanentpayment.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_appermanentpaymentgl.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_apwork.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_apworkgl.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_benefitadjudicationrules.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_benefitcategory.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_claims.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_claimsdetail.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_contracts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_copayreason.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_countytype.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_deductiblereasonmaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_diagnosiscodes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_diagnosistypes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_eligibilityhistory.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_eligibilitystatuscodes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_genericcodes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_gldistributioncode.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_groupnetworkrelationship.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_groups.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_hixmembermaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_hixmemberstatus.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_hrahsagroup.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_ipa.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_legalfilename.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_mastermemberid.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_memberemail.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_memberhipaaprivacydata.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_memberothereligibility.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_members.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_microfilmdocuments.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_notcoveredreason.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_plancodebenefitsmaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_plancodesegmentidmaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_planmaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_plantype.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_policyholdercob.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_premiums.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_procedurecodes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_proceduremodifier.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_proceduretypes.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_provideraddresses.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_provideraffiliation.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_providers.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_providersubpart.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_racecode.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_relationshipdescriptions.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_ridermaster.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_riders.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_servicereason.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_stoplossthreshold.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_subgroups.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_subscriberprofile.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_terminationreasons.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_tpacustomer.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_ub92fieldvalidation.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_vendors.sql;
+!load ../Schemas/rawdata/Tables/rawdata.nva_paid_claim_extracts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.nva_provider.sql;
+!load ../Schemas/rawdata/Tables/rawdata.provider_network_crosswalk.sql
+!load ../Schemas/rawdata/Tables/rawdata.esi_claim_weekly.sql;
+!load ../Schemas/rawdata/Tables/rawdata.esi_claim_weekly_historical.sql;
+!load ../Schemas/rawdata/Tables/rawdata.esi_claim_weekly_adj.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_historical_ndc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rlblrid3_lblr_desc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rahfsd1_desc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rahfsgc1_gcnseqno_link.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rapplsl0_fda_ndc_nda_anda.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rdosed2_dose_desc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rgcn0_gcn_gcnseqno_link.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rgcnseq4_gcnseqno_mstr.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rgtcd0_gen_therap_class_desc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rhic3d3_hic_therap_class_desc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rhiclsq1_hiclseqno_mstr.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rmidfid1_routed_dose_form_med.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rmiid1_med.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rmindc1_ndc_medid.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rminmid1_med_name.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rmirmid1_routed_med.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rndc14_ndc_mstr.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rnp2_ndc_price.sql;
+!load ../Schemas/rawdata/Tables/rawdata.fdb_rrouted3_route_desc.sql;
+!load ../Schemas/rawdata/Tables/rawdata.medispan.sql;
+!load ../Schemas/rawdata/Tables/rawdata.member_restricted_individual.sql;
+!load ../Schemas/rawdata/Tables/rawdata.planexpand_rx_spending_accounts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.skygen_authorization_extracts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.skygen_paid_claim_extracts.sql;
+!load ../Schemas/rawdata/Tables/rawdata.skygen_provider.sql;
+!load ../Schemas/rawdata/Tables/rawdata.mc400_dwoao_premiumbillinghistory.sql;
+!load ../Schemas/rawdata/Tables/rawdata.wrk_address_query_batch.sql;
+!load ../Schemas/rawdata/Tables/rawdata.wrk_address_query_response.sql;
+
+
+--extractdata
+!load ../Schemas/extractdata/Tables/extractdata.claim_header_billing_provider.sql;
+!load ../Schemas/extractdata/Tables/extractdata.claim_header_referring_provider.sql;
+!load ../Schemas/extractdata/Tables/extractdata.claim_header_rider_array.sql;
+!load ../Schemas/extractdata/Tables/extractdata.claim_json.sql;
+!load ../Schemas/extractdata/Tables/extractdata.member_address_base.sql;
+!load ../Schemas/extractdata/Tables/extractdata.member_detail_base.sql;
+!load ../Schemas/extractdata/Tables/extractdata.plan_base.sql;
+
+
+----------------------------------------------------------------------------------------------------------
+-- FUNCTIONS
+----------------------------------------------------------------------------------------------------------
+--logdata
+!load ../Schemas/logdata/Functions/logdata.fxn_get_pk_columns.sqlproc;
+!load ../Schemas/logdata/Functions/logdata.fxn_get_uk_columns.sqlproc;
+
+--stagedata
+!load ../Schemas/stagedata/Functions/stagedata.fxn_build_claim_group_code_array.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_get_claim_line_nbr_mc400.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_get_claim_line_procedure_adj_code_mc400.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_get_icd_group_version.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_get_location_code_mc400.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_get_service_cnt_mc400.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_get_service_type_code_mc400.sqlproc;
+!load ../Schemas/stagedata/Functions/stagedata.fxn_parse_claim_overpunch.sqlproc;
+
+--util
+!load ../Schemas/util/Functions/util.fxn_array_hash(variant).sqlproc;
+!load ../Schemas/util/Functions/util.fxn_string_or_null.sqlproc;
+!load ../Schemas/util/Functions/util.fxn_string_to_number.sqlproc;
+
+
+----------------------------------------------------------------------------------------------------------
+-- VIEWS
+----------------------------------------------------------------------------------------------------------
+--rawdata
+!load ../Schemas/rawdata/Views/rawdata.cms_npi_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_claim_authorization_detail_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_claim_authorization_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_claim_detail_denial_reason_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_claim_detail_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_claim_header_diagnosis_code_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_claim_header_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_plan_accumulator_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_provider_detail_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.dwskygen_provider_office_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.empi_daily_global_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_hra_hia_audit_historical_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_nva_medical_group_select_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_claim_esi_weekly_financial_l4ga_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_claim_esi_weekly_financial_pm4a_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_claim_esi_weekly_financial_pmda_l4ya_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.claim_esi_weekly_financial_validation_count_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_authorization_determination_status_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_authorization_service_determination_status_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_diagnosis_related_group_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_authorization_status_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_electronic_type_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_icd_class_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_icd_diagnosis_qualifier_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_location_type_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_cpt_base_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_dental_base_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_hcpcs_base_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_icd10cm_base_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_icd10cm_hac_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_icd10cm_ip_indicators_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_icd10pcs_base_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_optum_modifier_flag_eff_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_pay_status_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_pharmacy_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_place_of_service_location_type_rel_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_place_of_service_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_quad_arch_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_revenue_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_claim_service_type_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_data_source_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_adjudication_pharmacy_class_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_adjustment_type_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_claim_cob_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_claim_type_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_compound_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_drug_discount_applicable_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_drug_discount_exclusion_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_dispense_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_claim_generic_price_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_fill_method_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_formulary_flag_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_funded_ind_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_low_income_subsidy_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_m3p_origin_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_manufacturer_discount_type_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_other_coverage_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_partial_fill_status_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_patient_residence_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_dispense_pharmacy_type_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_prescription_origin_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_price_source_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_pricing_used_ind_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_specialty_drug_indicator_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_specialty_drug_indicator_exclusions_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_specialty_pharmacy_indicator_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_supplemental_coverage_troop_qualification_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_transaction_adjustment_type_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_esi_transaction_type_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_medispan_awp_indication_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_nva_not_covered_reason_codes_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_nva_processing_reason_codes_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_skygen_not_covered_reason_codes_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_provider_nucc_taxonomy_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_rider_formulary_code_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_gender_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_rider_type_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_source_data_mapping_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.nva_paid_claim_extracts_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.esi_file_batch_control_record_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.medispan_r01_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.planexpand_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.skygen_authorization_extracts_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.skygen_paid_claim_extracts_current_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_provdir_vision_product_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_provdir_membernetwork_plantype_exclusion_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_provdir_membernetwork_plancode_exclusion_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_provdir_dental_corpid_product_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_membernetwork_ridertypecodelobsubproduct_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_membernetwork_ridercodesubproduct_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_membernetwork_plancodesubproduct_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_membernetwork_pharmacylobsubproduct_crosswalk_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_membernetwork_corporateidsubproduct_override_vw.sql;
+!load ../Schemas/rawdata/Views/rawdata.idaplake_referencedata_provider_network_crosswalk_vw.sql;
+
+--stagedata
+----- need to be at top for dependency
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_authorization_member_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_member_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_member_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_member_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_member_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_pharmacy_claim_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_pharmacy_detail_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_pharmacy_member_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_pharmacy_prescriber_detail_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_drug_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lkp_claim_member_envolve_select_vw.sql;
+----------
+!load ../Schemas/stagedata/Views/stagedata.hub_accumulator_codeset_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_address_query_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_address_query_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_authorization_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_authorization_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_claim_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_drug_fdb_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_marketing_cutlog_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_marketing_outbound_comm_fullfillment_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_contract_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_medical_group_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_office_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_office_hours_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_office_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_member_address_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_member_address_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_member_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_member_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_membership_group_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_membership_group_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_office_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_office_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_plan_accumulator_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_plan_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_plan_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_product_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_plan_segment_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_contract_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_provider_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_standard_address_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_address_query_office_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_address_query_office_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_address_query_standard_address_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_rider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.hub_rider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_assigned_provider_mc400upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_attending_physician_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_authorization_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_authorization_detail_claim_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_authorization_detail_rendering_provider_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_authorization_member_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_authorization_office_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_authorization_submitting_provider_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_billing_provider_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_billing_provider_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_billing_provider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_billing_provider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_billing_provider_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_billing_provider_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_drug_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_pharmacy_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_rendering_provider_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_member_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_membership_group_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_office_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_office_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_plan_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_prescriber_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_referring_provider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_referring_provider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_claim_rider_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_cutlog_member_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_medical_group_contract_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_medical_group_office_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_medical_group_office_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_member_member_address_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_member_member_address_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_membership_group_rider_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_membership_group_rider_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_ocf_member_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_office_hours_office_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_provider_contract_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_provider_office_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_provider_office_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_plan_accumulator_codeset_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_plan_accumulator_member_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_plan_accumulator_membership_group_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_plan_accumulator_plan_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.lnk_plan_plan_segment_mc400Upm_select_vw.sql;
+
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_adjudication_pharmacy_class_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_adjustment_type_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_awp_indication_code_medispan_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_accumulator_threshold_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_admission_source_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_admission_type_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_benefit_category_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_benefit_category_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_billing_type_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_billing_type_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_cob_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_compound_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_diagnosis_related_group_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_discharge_status_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_dispense_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_drug_discount_applicable_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_drug_discount_exclusion_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_generic_price_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_electronic_type_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_formulary_flag_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_esi_funded_ind_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_class_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_diagnosis_category_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_diagnosis_category_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_diagnosis_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_diagnosis_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_diagnosis_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_diagnosis_qualifier_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_icd_procedure_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_location_type_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_low_income_subsidy_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_m3p_origin_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_manufacturer_discount_type_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_not_covered_reason_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_not_covered_reason_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_not_covered_reason_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_not_covered_reason_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_not_covered_reason_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_not_covered_reason_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_other_coverage_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_partial_fill_status_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_patient_residence_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_dispense_pharmacy_type_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_fill_method_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_pay_status_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_place_of_service_location_type_rel_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_place_of_service_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_prescription_origin_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_price_source_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_pricing_used_ind_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_category_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_category_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_category_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_modifier_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_modifier_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_modifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_modifier_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_modifier_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_procedure_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_processing_reason_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_processing_reason_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_processing_reason_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_processing_reason_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_processing_reason_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_processing_reason_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_type_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_quad_arch_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_revenue_code_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_service_type_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_supplemental_coverage_troop_qualification_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_transaction_adjustment_type_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_claim_transaction_type_code_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_data_source_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_rider_formulary_code_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_gender_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_lob_plan_type_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_member_relationships_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_member_relationships_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_plan_benefit_level_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_plan_benefit_level_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_plan_benefit_level_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_provider_nucc_taxonomy_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_rider_type_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_provdir_vision_product_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_provdir_membernetwork_plantype_exclusion_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_provdir_membernetwork_plancode_exclusion_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_provdir_dental_corpid_product_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_membernetwork_ridertypecodelobsubproduct_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_membernetwork_ridercodesubproduct_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_membernetwork_plancodesubproduct_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_membernetwork_pharmacylobsubproduct_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_membernetwork_corporateidsubproduct_override_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_provider_network_crosswalk_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.ref_source_data_mapping_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_accumulator_codeset_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_authorization_detail_amount_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_authorization_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_authorization_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_header_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_diagnosis_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_diagnosis_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_diagnosis_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_diagnosis_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_diagnosis_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_diagnosis_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_icd_procedure_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_amount_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_amount_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_amount_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_amount_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_amount_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_amount_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_pharmacy_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_not_covered_reason_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_pharmacy_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_category_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_category_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_modifier_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_modifier_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_modifier_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_modifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_modifier_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_procedure_modifier_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_processing_reason_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_processing_reason_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_processing_reason_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_processing_reason_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_processing_reason_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_processing_reason_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_claim_line_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_drug_detail_fdb_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_marketing_cutlog_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_marketing_outbound_comm_fullfillment_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_attribute_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_attribute_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_contract_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_contract_status_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_identifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_ownership_status_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_address_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_address_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_address_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_address_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_address_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_current_attribute_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_current_attribute_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_identifier_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_member_identifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_membership_group_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_membership_group_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_address_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_address_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_detail_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_office_hours_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_accumulator_member_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_accumulator_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_accumulator_threshold_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_attribute_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_attribute_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_contract_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_contract_status_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_detail_aca_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_plan_segment_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_avesis_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_nva_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_envolve_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_skygen_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_identifier_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_identifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_standard_address_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.wrk_address_query_batch_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_identifier_esi_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_rider_detail_mc400Dnt_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_rider_detail_mc400Upm_select_vw.sql;
+
+--hubdata
+!load ../Schemas/hubdata/Views/hubdata.claim_header_billing_provider_vw.sql;
+!load ../Schemas/hubdata/Views/hubdata.claim_header_referring_provider_vw.sql;
+!load ../Schemas/hubdata/Views/hubdata.claim_header_rider_array_vw.sql;
+!load ../Schemas/hubdata/Views/hubdata.member_address_base_vw.sql;
+!load ../Schemas/hubdata/Views/hubdata.member_detail_base_vw.sql;
+!load ../Schemas/hubdata/Views/hubdata.plan_base_vw.sql;
+
+--extractdata
+!load ../Schemas/extractdata/Views/extractdata.claim_authorization_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_authorization_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_adjustment_reason_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_not_covered_reason_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_procedure_category_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_procedure_modifier_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_processing_reason_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_detail_service_reason_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_diagnosis_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_diagnosis_related_group_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_header_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_header_icd_diagnosis_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_header_icd_procedure_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.drug_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.deleted_claim_detail_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.deleted_claim_header_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.member_address_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.member_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.pharmacy_claim_header_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.pharmacy_claim_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.pharmacy_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.pharmacy_prescriber_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.plan_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.provider_detail_base_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.provider_indentifiers_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.refdata_claim_procedure_code_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.refdata_claim_revenue_code_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.refdata_skygen_not_covered_reasons_vw.sql;
+
+
+-- must be at the end, has dependencies
+!load ../Schemas/extractdata/Views/extractdata.claim_header_rider_codes_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_json_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.refdata_data_source_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.claim_plan_accumulators_vw.sql;
+!load ../Schemas/extractdata/Views/extractdata.rider_codes_vw.sql;
+
+
+
+----------------------------------------------------------------------------------------------------------
+-- STORED PROCEDURES
+----------------------------------------------------------------------------------------------------------
+--hubdata
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Eff_Sat_Table.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Accumulator_Codeset.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Address_Query.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Claim_Authorization.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Claim_Authorization_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Claim_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Claim.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Drug.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Marketing_Cutlog.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Marketing_Outbound_Comm_Fullfillment.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Medical_Group_Contract.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Medical_Group.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Member_Address.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Membership_Group.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Office_hours.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Plan_Accumulator.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Plan_Segment.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Plan.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Product.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Provider_Contract.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hub_Rider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Hubdata.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Address_Query_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Plan_Accumulator_Membership_Group.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Plan_Accumulator_Plan.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Plan_Plan_Segment.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Assigned_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Attending_Physician.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Authorization_Detail_Claim_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Authorization_Detail_Rendering_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Authorization_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Authorization_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Authorization_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Authorization_Submitting_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Billing_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Detail_Drug.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Detail_Pharmacy.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Detail_Rendering_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Membership_Group.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Plan.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Prescriber.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Referring_Provider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Claim_Rider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Cutlog_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Medical_Group_Contract.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Medical_Group_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_lnk_Member_Member_Address.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Membership_Group_Rider.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Ocf_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Office_Hours_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Plan_Accumulator_Codeset.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Plan_Accumulator_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Accumulator_Codeset.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Provider_Contract.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Lnk_Provider_Office.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Authorization_Detail_Amount.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Authorization_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Authorization.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Header.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Icd_Diagnosis.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Icd_Procedure.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line_Amount.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line_Not_Covered_Reason.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line_Procedure_Category.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line_Procedure_Modifier.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line_Processing_Reason.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Claim_Line_Pharmacy.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Drug_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Marketing_Cutlog.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Marketing_Outbound_Comm_Fullfillment.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Attribute.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Contract_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Contract_Status.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Identifier.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Ownership_Status.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Member_Address.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Member_Current_Attribute.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Member_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Member_Identifier.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Membership_Group_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Office_Address.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Office_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Office_Hours_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Accumulator.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Accumulator_Member.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Accumulator_Threshold.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Detail_Aca.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Address.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Attribute.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Contract_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Contract_Status.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Segment_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Identifier.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Rider_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Identifier.sqlproc;
+
+
+--refdata
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Adjudication_Pharmacy_Class_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Adjustment_Type_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Accumulator_Threshold.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Admission_Source.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Admission_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_AWP_Indication_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Benefit_Category.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Billing_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_COB_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Compound_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Diagnosis_Related_Group.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Discharge_Status.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Dispense_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Drug_Discount_Applicable_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Drug_Discount_Exclusion_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Generic_Price_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Electronic_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Fill_Method_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Formulary_Flag_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_ESI_Funded_Ind.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_ICD_Class.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_ICD_Diagnosis_Category.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_ICD_Diagnosis_Qualifier.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_ICD_Diagnosis.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_ICD_Procedure.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Location_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Low_Income_Subsidy_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_M3P_Origin.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Manufacturer_Discount_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Not_Covered_Reason.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Other_Coverage_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Partial_Fill_Status_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Patient_Residence_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Dispense_Pharmacy_Type_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Pay_Status.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Place_Of_Service_Location_Type_Rel.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Place_Of_Service.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Prescription_Origin_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Price_Source_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Pricing_Used_Ind.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Procedure_Category.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Procedure_Modifier.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Procedure.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Processing_Reason.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Type_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Quad_Arch.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Revenue_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Service_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Supplemental_Coverage_Troop_Qualification.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Transaction_Adjustment_Type_code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Claim_Transaction_Type_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Data_Source.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Rider_Formulary_Code.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Gender.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Lob_Plan_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Member_Relationship_Descriptions.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Plan_Benefit_Level.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Provider_NUCC_Taxonomy.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Rider_Type.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Source_Data_Mapping.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Provdir_Vision_Product_Crosswalk.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Provdir_MemberNetwork_PlanType_Exclusion.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Provdir_MemberNetwork_PlanCode_Exclusion.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Provdir_Dental_Corpid_Product_Crosswalk.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_MemberNetwork_RiderTypeCodeLOBSubProduct_Crosswalk.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_MemberNetwork_RiderCodeSubProduct_Crosswalk.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_MemberNetwork_PlanCodeSubProduct_Crosswalk.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_MemberNetwork_PharmacyLobSubProduct_Crosswalk.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_MemberNetwork_CorporateIdSubProduct_Override.sqlproc;
+!load ../Schemas/refdata/StoredProcedures/refdata.spu_Load_Ref_Provider_Network_Crosswalk.sqlproc;
+
+--rawdata
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_load_rawdata_table.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_load_rawdata.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Claim_Authorization_Detail.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Claim_Authorization.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Claim_Detail.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Claim_Header.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Plan_Accumulator.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Provider_Detail.sqlproc;
+!load ../Schemas/rawdata/StoredProcedures/rawdata.spu_Load_Skygen_Provider_Office.sqlproc;
+
+--logdata
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_set_job_id.sqlproc;
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_set_job_id_Endtime.sqlproc;
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_Validate_Data_Allowed_Value_Check.sqlproc;
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_Validate_Data_Dupe_Check.sqlproc;
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_Validate_Data_Foreign_Key_Check_Bulk.sqlproc;
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_Validate_Data_Foreign_Key_Check.sqlproc;
+!load ../Schemas/logdata/StoredProcedures/logdata.spu_Validate_Data_Primary_Key_Check.sqlproc;
+
+--extractdata
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Claim_Header_Billing_Provider.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Claim_Header_Referring_Provider.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Claim_Header_Rider_Array.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Claim_Json.sqlproc;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Extractdata.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Member_Address_Base.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Member_Detail_Base.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Load_Plan_Base.sql;
+!load ../Schemas/extractdata/StoredProcedures/extractdata.spu_Reset_Stream.sqlproc;
+
+--stagedata
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_InsertOverwrite_lkp_claim_authorization_member_skygen.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_InsertOverwrite_lkp_claim_member_avesis.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_InsertOverwrite_lkp_claim_member_envolve.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_InsertOverwrite_lkp_claim_member_nva.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_InsertOverwrite_lkp_claim_member_skygen.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_insertoverwrite_lkp_claim_pharmacy_claim.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_insertoverwrite_lkp_claim_pharmacy_detail.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_insertoverwrite_lkp_claim_pharmacy_member.sqlproc;
+!load ../Schemas/stagedata/StoredProcedures/stagedata.spu_insertoverwrite_lkp_claim_pharmacy_prescriber_detail.sqlproc;
+
+--util
+
+
+----------------------------------------------------------------------------------------------------------
+-- STREAMS
+----------------------------------------------------------------------------------------------------------
+--extractdata
+!load ../Schemas/extractdata/Streams/extractdata.claim_json_cosmos_stream.sql;
+
+
+----------------------------------------------------------------------------------------------------------
+-- CODE REVIEW SCRIPT
+----------------------------------------------------------------------------------------------------------
+--!load ../../ValidationScripts/CodeReview.sql;
+
+!exit

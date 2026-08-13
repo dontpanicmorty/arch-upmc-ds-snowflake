@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "PLANEXPAND",
+  "targetTableName": "RAWDATA.PLANEXPAND_RX_SPENDING_ACCOUNTS",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/esi/v_pharmacytransaction/",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_PLANEXPAND_RX_SPENDING_ACCOUNTS_FILE_FORMAT",
+  "sourceFilePattern": "claim/esi/v_pharmacytransaction/\\\\d{4}/\\\\d{2}/\\\\d{2}/dbo.v_pharmacytransaction.txt",
+  "sourceFileDelimitedColumnCount": 13,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

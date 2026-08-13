@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CLIENT_PRESCRIPTION_SOURCE_VALUE
+(
+ID                            INT,
+TITLE                     VARCHAR,
+LAST_UPDATED_BY               INT,
+IS_DELETED                    INT,
+CREATED_AT          TIMESTAMP_NTZ,
+UPDATED_AT          TIMESTAMP_NTZ
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

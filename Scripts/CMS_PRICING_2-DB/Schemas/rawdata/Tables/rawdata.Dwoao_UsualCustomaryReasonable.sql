@@ -1,0 +1,27 @@
+CREATE OR REPLACE TABLE RAWDATA.Dwoao_UsualCustomaryReasonable
+( GeographicArea varchar,
+    ProcedueCode varchar,
+    Modifier varchar,
+    EffectiveDate int,
+    TermDate int,
+    PercentileCatPrice25 decimal(7,2),
+    PercentileCatPrice30 decimal(7,2),
+    PercentileCatPrice35 decimal(7,2),
+    PercentileCatPrice40 decimal(7,2),
+    PercentileCatPrice50 decimal(7,2),
+    PercentileCatPrice60 decimal(7,2),
+    PercentileCatPrice70 decimal(7,2),
+    PercentileCatPrice75 decimal(7,2),
+    PercentileCatPrice80 decimal(7,2),
+    PercentileCatPrice85 decimal(7,2),
+    PercentileCatPrice90 decimal(7,2),
+    PercentileCatPrice95 decimal(7,2),
+    CHGUSER varchar,
+    CHGORIG datetime,
+    CHGLAST datetime,
+    LastUpdated datetime,
+    LastApplied datetime,
+    DeletedFlag datetime,
+    UsualCustomaryReasonableSeqNbr int
+)
+Comment = 'exact copy of the UsualCustomaryReasonable table from dwOAO';

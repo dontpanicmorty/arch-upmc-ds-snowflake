@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW ADL_PROD.MOD_PEM
+AS
+SELECT
+MMI,
+MEDICAL_12M_FCST,
+RX_12M_FCST,
+TOTAL_12M_FCST,
+LOAD_DATE
+FROM &{IDW_LAKE}.ADL_PROD.MOD_PEM;
+!set variable_substitution=false;

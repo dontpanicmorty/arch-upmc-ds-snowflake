@@ -1,0 +1,102 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_MERGE_CIGNA_URL_FROM_IDAP_LAKE ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+// Description used as "unique key" of sorts for the Cigna line
+// TODO: Will likely still need a link from PRICING_FILE to PRICING_PLAN
+const cignaDesc = 'Cigna in-network-rates file for UPMC';
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let resultSet, result, sqlText;
+
+try 
+{
+    /* Create MERGE statement to be run */
+    let sqlText = `MERGE INTO EXTRACTDATA.PRICING_FILE AS tgt
+    USING (
+        SELECT TOP 1 URL
+        FROM &{IDAP_LAKE}.PRICING.CIGNA_URL 
+        ORDER BY INSERT_DATETIME DESC
+    ) AS src
+    ON (
+        tgt.FILE_DESC = '${cignaDesc}'
+    )
+    WHEN MATCHED THEN
+        UPDATE SET FILE_LOCATION_URL = src.URL, LAST_UPDATED_ON_DATE = CURRENT_DATE()
+    WHEN NOT MATCHED THEN
+        INSERT (REPORTING_ENTITY_KEY, FILE_TYPE_NAME, FILE_DESC, FILE_LOCATION_URL, LAST_UPDATED_ON_DATE)
+        VALUES (3, 'in-network-rates', '${cignaDesc}', src.URL, CURRENT_DATE())
+    ;`;
+    /*Execute INSERT OVERRIDE Command */
+    const sfStatement = snowflake.createStatement({sqlText});
+    resultSet = sfStatement.execute();    
+    resultSet.next();
+
+    result = 'Successful';
+    
+    const endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,INSERT_COUNT
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${resultSet.getColumnValueAsString("number of rows inserted")}',
+      '${result}',
+      '${sqlText.replace(/'/g, "''")}'
+    )`;
+    snowflake.execute({sqlText});
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    
+    result = 'Failed';
+    let endTime = new Date();
+    sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+        NAME
+        ,TYPE
+        ,START_TIME
+        ,END_TIME
+        ,RESULT_TEXT
+        ,SQL_STATEMENT
+        ,ERROR_CODE
+        ,ERROR_STATE
+        ,ERROR_MESSAGE
+        ,ERROR_STACK_TRACE_TEXT
+    ) VALUES (
+      '${procName}',
+      'PROCEDURE',
+      '${startTime.toISOString()}',
+      '${endTime.toISOString()}',
+      '${result}',
+      '${sqlText}',
+      '${code}',
+      '${state}',
+      '${message}',
+      '${stack}'
+    )`;
+    snowflake.execute({sqlText});
+    throw err;
+}
+return result;
+
+$$;
+!set variable_substitution=false;

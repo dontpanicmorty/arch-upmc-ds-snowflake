@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.CHC_MEMBER_MMI_HOLD
+AS
+SELECT
+MEMBER_NBR,
+MASTER_MEMBER_ID,
+LOAD_DATE
+FROM &{IDW_LAKE}.STAGING.CHC_MEMBER_MMI_HOLD;
+!set variable_substitution=false;

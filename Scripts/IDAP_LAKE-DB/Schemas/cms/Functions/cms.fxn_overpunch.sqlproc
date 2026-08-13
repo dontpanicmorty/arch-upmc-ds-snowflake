@@ -1,0 +1,27 @@
+CREATE OR REPLACE FUNCTION CMS.FXN_OVERPUNCH("VALUE" VARCHAR)
+RETURNS DOUBLE
+LANGUAGE JAVASCRIPT
+AS '
+if (VALUE === null || VALUE.trim() === '''') {
+  return null;
+}
+ 
+const overpunchMap = {
+  ''{'': [''0'',  1],  ''A'': [''1'',  1],  ''B'': [''2'',  1],  ''C'': [''3'',  1],  ''D'': [''4'',  1],
+  ''E'': [''5'',  1],  ''F'': [''6'',  1],  ''G'': [''7'',  1],  ''H'': [''8'',  1],  ''I'': [''9'',  1],
+  ''}'': [''0'', -1],  ''J'': [''1'', -1],  ''K'': [''2'', -1],  ''L'': [''3'', -1],  ''M'': [''4'', -1],
+  ''N'': [''5'', -1],  ''O'': [''6'', -1],  ''P'': [''7'', -1],  ''Q'': [''8'', -1],  ''R'': [''9'', -1]
+};
+ 
+VALUE = VALUE.trim();
+const lastChar = VALUE.slice(-1).toUpperCase();
+const base = VALUE.slice(0, -1);
+ 
+if (!(lastChar in overpunchMap)) {
+  return parseFloat(VALUE) / 1000;
+}
+ 
+const [digit, sign] = overpunchMap[lastChar];
+const fullNumber = parseInt(base + digit, 10);
+return sign * (fullNumber / 100);
+';

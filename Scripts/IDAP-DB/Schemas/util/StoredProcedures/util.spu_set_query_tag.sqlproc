@@ -1,0 +1,18 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_SET_QUERY_TAG()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+    
+var sqlCommand="SELECT CONCAT(IFNULL(current_database(),''),'.',IFNULL(current_schema(),''));";
+var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+resultSet.next();
+var queryTag = resultSet.getColumnValue(1);
+
+sqlCommand = "ALTER SESSION SET QUERY_TAG = '"+ queryTag + "';";
+resultSet = snowflake.execute({sqlText: sqlCommand});
+return sqlCommand;
+$$
+;

@@ -1,0 +1,7 @@
+-- Must be secured views for security purposes
+CREATE OR REPLACE SECURE VIEW CORP_IT.EMPI_PROVIDER_VW
+AS
+SELECT
+*
+FROM IDAP.DIMDATA.EMPI_PROVIDER_VW
+;

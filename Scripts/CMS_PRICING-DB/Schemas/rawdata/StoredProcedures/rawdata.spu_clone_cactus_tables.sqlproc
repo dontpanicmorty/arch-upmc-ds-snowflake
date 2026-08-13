@@ -1,0 +1,38 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_CLONE_CACTUS_TABLES(ENVIRONMENT VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+    const validEnvs = ['DEV', 'TST', 'PRD'];
+    if (validEnvs.indexOf(ENVIRONMENT) === -1) {
+        throw new Error(`Environment ${ENVIRONMENT} not supported. Must be one of: ${validEnvs.join(', ')}`);
+    }
+
+    let cloneSource = 'CACTUS';
+    if (ENVIRONMENT === 'DEV') cloneSource += '_DEV';
+    if (ENVIRONMENT === 'TST') cloneSource += '_TST';
+    
+    /* Per Greg, `CREATE OR REPLACE TABLE ___ CLONE ____` in the DDLs doesn't 
+    work and we need the full defs in place. Andrew doesn't understand why, but 
+    has interpreted the solution as being this hardcoded list of tables we want 
+    to clone, and this sproc which runs on deploy.
+
+    Theoretically could list tables and find all that start with Cactus_, but
+    that feels a bit sketchy. May also come fom control table later.
+    
+    This runs on demand. */
+    const tables = [
+        'ADDRESSES', 'GROUPADDRESS', 'GROUPS', 
+        'GROUPSPROVIDERSADDRESSES', 'PROVIDERADDRESSES', 
+        'PROVIDERS', 'REFTABLE', 'GROUPID', 
+        'ENTITYASSIGNMENTS', 'SERVICECATEGORYREFERENCES', 
+        'PROVIDERSPECIALTIES'
+    ];
+    for (const table of tables) {
+        const sqlCommand = `CREATE OR REPLACE TABLE rawdata.Cactus_${table} CLONE ${cloneSource}.VISUALCACTUS.${table};`;
+        snowflake.execute({sqlText: sqlCommand});
+    }
+    return `Cloned ${tables.length} tables.`;
+$$
+;

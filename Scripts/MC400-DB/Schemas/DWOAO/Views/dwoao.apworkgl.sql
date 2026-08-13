@@ -1,0 +1,6 @@
+
+CREATE OR REPLACE VIEW DWOAO.APWorkGL
+AS
+SELECT * from cdc_merge.dbo.APWorkGL
+
+;

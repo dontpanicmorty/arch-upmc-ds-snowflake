@@ -1,0 +1,12 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.MC4_NDC_LKP
+AS
+SELECT
+NDC,
+LN,
+EFFDATE,
+TERMDATE,
+LOAD_DATE,
+UPDATE_DATE
+FROM &{IDW_LAKE}.STAGING.MC4_NDC_LKP;
+!set variable_substitution=false;

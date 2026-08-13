@@ -1,0 +1,86 @@
+{
+  "outputSchema": "PRICING",
+  "outputTable": "PRACTITIONER_FEE_SCHEDULE",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+  "fileFormat": "BUSINESS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "SCHEDULE_TYPE",
+          "outputField": "SCHEDULE_TYPE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "SEGMENT",
+          "outputField": "SEGMENT"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "SCHEDULE_DETAIL",
+          "outputField": "SCHEDULE_DETAIL"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "MATCH_STATE",
+          "outputField": "MATCH_STATE"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "STATE",
+          "outputField": "STATE"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "LOCATION",
+          "outputField": "LOCATION"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "CODE",
+          "outputField": "CODE"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "MOD",
+          "outputField": "MOD"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "CODE+MOD",
+          "outputField": "CODE_MOD_COMBO"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "EFF_DATE",
+          "outputField": "EFF_DATE"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "END_DATE",
+          "outputField": "END_DATE"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "RATE",
+          "outputField": "RATE"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "NEGOTIATION_TYPE",
+          "outputField": "NEGOTIATION_TYPE"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "FILE_DATE",
+          "outputField": "FILE_DATE"
+        }
+      ]
+    }
+  }
+}

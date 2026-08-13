@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_REFERENCEMASTER
+LIKE &{CACTUS}.VISUALCACTUS.REFERENCEMASTER
+;
+
+!set variable_substitution=false;

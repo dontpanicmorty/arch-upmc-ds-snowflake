@@ -1,0 +1,112 @@
+/**
+Creates the PRICE_CATEGORY table from all component tables. Needs to be run
+before anything else; grabs all the possible priceCategiries and inserts them 
+into the table with an integer key.
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_INSERT_OVERWRITE_PRACTITIONER_FEE_SCHEDULE ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+  sqlText = `INSERT OVERWRITE INTO STAGEDATA.PRACTITIONER_FEE_SCHEDULE_SELECT_HOLD
+(
+  SCHEDULE_TYPE,
+  SEGMENT,
+  SCHEDULE_DETAIL,
+  MATCH_STATE,
+  STATE,
+  LOCATION,
+  PLACE_OF_SERVICE_CODES,
+  BILLING_CODE,
+  NEGOTIATED_TYPE_NAME,
+  EXPIRATION_DATE,
+  NEGOTIATED_RATE_AMT,
+  BILLING_CODE_MODIFIERS
+)
+SELECT SCHEDULE_TYPE,
+  SEGMENT,
+  COALESCE(SCHEDULE_DETAIL, 'NONE') AS SCHEDULE_DETAIL, 
+  COALESCE(MATCH_STATE, 'N') AS MATCH_STATE,
+  STATE,  
+  PRACTITIONER_FEE_SCHEDULE.LOCATION,
+  PLACE_OF_SERVICE_CODES,
+  CODE AS BILLING_CODE,
+  NEGOTIATION_TYPE AS NEGOTIATED_TYPE_NAME, 
+  COALESCE(END_DATE, '12/31/9999') AS EXPIRATION_DATE,
+  REPLACE(RATE,',') AS NEGOTIATED_RATE_AMT,
+  ARRAY_AGG(DISTINCT MOD) WITHIN GROUP (ORDER BY MOD ASC) AS BILLING_CODE_MODIFIERS
+
+FROM &{IDAP_LAKE}.PRICING.PRACTITIONER_FEE_SCHEDULE
+INNER JOIN STAGEDATA.LOCATION_SELECT_VW ON
+    LOCATION_SELECT_VW.LOCATION = PRACTITIONER_FEE_SCHEDULE.LOCATION
+
+GROUP BY CODE, PRACTITIONER_FEE_SCHEDULE.LOCATION, PLACE_OF_SERVICE_CODES, NEGOTIATION_TYPE, END_DATE, RATE, SCHEDULE_TYPE, SEGMENT, SCHEDULE_DETAIL, MATCH_STATE, STATE`;
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;
+
+!set variable_substitution=false;

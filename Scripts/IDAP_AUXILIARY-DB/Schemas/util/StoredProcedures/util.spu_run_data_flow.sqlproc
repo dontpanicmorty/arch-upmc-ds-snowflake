@@ -1,0 +1,188 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_RUN_DATA_FLOW(RUN_ID VARCHAR, DATA_FLOW_NAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT = 'Call with an ADF Run_Id and a data flow name that exists in IDAP_AUXILIARY.UTIL.DATA_FLOW_LOAD_CONTROL to execute the defined multi-step data flow.  Logs to LOGDATA.DATA_FLOW_LOAD_HISTORY'
+AS $$
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = 'Y' AND DATA_FLOW_NAME = :1
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,LOG_ENTRY_TIMESTAMP
+    ,EXECUTION_START_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,CONVERT_TIMEZONE('UTC',CURRENT_TIMESTAMP())
+    ,:4
+    ,'Starting'
+    )
+`;
+
+    var procTemplate = `CALL {procName}(:1,:2);`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,LOG_ENTRY_TIMESTAMP
+    ,DATA_DOMAIN_NAME
+    ,DATA_FLOW_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+)
+VALUES (
+    :1
+    ,CONVERT_TIMEZONE('UTC',CURRENT_TIMESTAMP())
+    ,:2
+    ,:3
+    ,:4
+    ,CONVERT_TIMEZONE('UTC',CURRENT_TIMESTAMP())
+    ,'Succeeded'
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,LOG_ENTRY_TIMESTAMP
+    ,DATA_DOMAIN_NAME
+    ,DATA_FLOW_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,CONVERT_TIMEZONE('UTC',CURRENT_TIMESTAMP())
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE('UTC',CURRENT_TIMESTAMP())
+    ,'Error'
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+    try {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME]
+        }); 
+        
+        if(!lookupSet.next())
+        {   
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString('DATA_DOMAIN_NAME');                
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,startTime]
+        });
+        
+//---------------------------------------
+//-- Processing Logic
+//---------------------------------------
+
+        do
+        {
+            stepOrderNumber = lookupSet.getColumnValueAsString('STEP_ORDER_NUMBER');
+            stepProcedureName = lookupSet.getColumnValueAsString('STEP_PROCEDURE_NAME');
+
+            var procCommand = procTemplate.replace("{procName}",stepProcedureName);
+
+            snowflake.execute({
+                sqlText: procCommand, 
+                binds: [RUN_ID,DATA_FLOW_NAME]
+            });
+
+        } while (lookupSet.next());
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,dataDomainName,DATA_FLOW_NAME,startTime]
+        });
+
+        return 'Completed';
+        
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }     
+
+$$;

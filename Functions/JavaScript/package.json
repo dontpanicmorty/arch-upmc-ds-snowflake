@@ -1,0 +1,14 @@
+{
+  "name": "hpd-ea-func-hpds-dev-nsa",
+  "version": "1.0.0",
+  "description": "Functions for the HPD-EA-FUNC-HPDS-DEV-NSA Functions App",
+  "scripts": {
+    "deploy": "func azure functionapp publish hpd-ea-func-hpds-dev-nsa --javascript",
+    "start": "func start",
+    "test": "echo \"No tests yet...\""
+  },
+  "dependencies": {
+    "durable-functions": "^2.1.1",
+    "luxon": "^3.0.3"
+  }
+}

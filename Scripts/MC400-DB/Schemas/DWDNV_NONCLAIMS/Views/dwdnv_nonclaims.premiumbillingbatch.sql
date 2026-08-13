@@ -1,0 +1,9 @@
+
+
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.PremiumBillingBatch
+AS
+SELECT A.* from cdc_merge.dbo.PremiumBillingBatch A
+INNER JOIN cdc_merge.dbo.TPACustomer C ON C.ID = A.TpaRowId
+WHERE C.TPACLIENT='000001' AND C.TPADIVISION='0002' AND C.TPAIDOFCLIENT='000001' 
+
+;

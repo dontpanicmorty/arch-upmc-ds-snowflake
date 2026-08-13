@@ -1,0 +1,14 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.ALL_CATEGORIES
+AS
+SELECT
+ INI
+, ITEM
+, VALUE_C
+, NAME
+, TITLE
+, ABBR
+, INTERNAL_ID
+, IS_ACTIVE_YN
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__ALL_CATEGORIES;
+!set variable_substitution=false;

@@ -1,0 +1,23 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_CONTRACT_DEMO
+(
+HCID                    VARCHAR,
+MEMBER_NBR              VARCHAR,
+MEM_MONTH               VARCHAR,
+RELATIONSHIP_CODE       VARCHAR,
+AGE                   NUMBER(3),
+GENDER_CODE             VARCHAR,
+PLAN_TYPE               VARCHAR,
+PLAN_TIER_DESC          VARCHAR,
+CONTRACT_NBR            VARCHAR,
+MEMBERS                  NUMBER(33,5),
+NUM_FEMALE               NUMBER(33,5),
+NUM_DEPENDENTS           NUMBER(33,5),
+MEM_AGE_UNDER_2          NUMBER(33,5),
+MEM_AGE_2_10             NUMBER(33,5),
+MEM_AGE_11_20            NUMBER(33,5),
+MEM_AGE_21_50            NUMBER(33,5),
+MEM_AGE_50_60            NUMBER(33,5),
+MEM_AGE_OVER_60          NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

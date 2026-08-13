@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS IDAP_AUXILIARY 
+COMMENT = 'IDAP Auxiliary production database'
+;

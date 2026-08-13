@@ -1,0 +1,95 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK(JOB_ID VARCHAR, TABLE_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+/*
+JOB_ID must be generated first by the top level caller so we can tie together the outputs.
+TABLE_NAME is actually SCHEMA.TABLE_NAME due to how dimdata sprocs were created. 
+    - splitting apart to specify schema as a new parameter may be a good idea at some point
+This uses a un-documented Snowflake command which has been in common usage in the community for a few years: SHOW IMPORTED KEYS
+    - getDDL could possibly be used but the parsing would be complex and this SHOW command is rather straightfoward
+        and is quietly built into their JDBC driver which is how people found it
+Also assumes that primaryKeys consist of a single column and doesn't account for composite keys although it's technically possible
+*/
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var minusQuery = 'not set';
+var fkName = 'not set';
+
+//get the foreign keys we need to check first by using SHOW IMPORTED KEYS
+sqlCommand = `SHOW IMPORTED KEYS IN TABLE ${TABLE_NAME}`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+
+//grab what we need from the SHOW results and turn it into a query
+sqlCommand = `SELECT "fk_name" as FK_NAME 
+,'SELECT ' || "fk_table_name" ||'.' || "fk_column_name" || ' FROM ' || "fk_schema_name" ||'.' || "fk_table_name" || ' MINUS SELECT ' 
+    || "pk_table_name" || '.' || "pk_column_name" || ' FROM ' || "pk_schema_name" ||'.' || "pk_table_name" AS MINUS_QUERY
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+//need a loop here because some tables have multiple foreign keys
+while(resultSet.next()){
+    minusQuery = resultSet.getColumnValue('MINUS_QUERY');
+    fkName = resultSet.getColumnValue('FK_NAME')
+
+    //build the query to check for orphan keys
+    sqlCommand2 = `SELECT COUNT(*) AS RESULT_COUNT FROM (${minusQuery})`;
+
+    var sfStatement2 = snowflake.createStatement({sqlText: sqlCommand2});
+    var resultSet2 = sfStatement2.execute();
+    resultSet2.next(); 
+    var resultCount = resultSet2.getColumnValue('RESULT_COUNT')
+    
+    //insert the results to the logdata table for future reference
+    var sqlCountInsert = `INSERT INTO LOGDATA.DATA_VALIDATION_RESULT 
+        (JOB_ID, TABLE_NAME, VALIDATION_PROCEDURE_NAME, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR, VALIDATION_DESC) 
+        VALUES (${JOB_ID},'${TABLE_NAME}','${procedureName}', ${resultCount}, 0, '${fkName}')`;
+    snowflake.execute({sqlText: sqlCountInsert});
+};
+
+//see if we found any orphan keys this run
+sqlCommand = `SELECT SUM(VALIDATION_RESULT_NBR) - SUM(EXPECTED_RESULT_NBR) AS ORPHAN_KEY_CNT FROM LOGDATA.DATA_VALIDATION_RESULT 
+WHERE JOB_ID = ${JOB_ID} AND TABLE_NAME = '${TABLE_NAME}'`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+resultSet.next();
+resultCount = resultSet.getColumnValue('ORPHAN_KEY_CNT');
+
+if(resultCount === 0){
+    var result = `PASS: All validation checks successed`
+}
+else {
+    var result = `FAIL: Validation failed because of ${resultCount} orphan keys in ${TABLE_NAME} for JobId: ${JOB_ID}'`;
+    throw result;
+};
+
+var endTime = new Date().toISOString();
+
+//log results to table
+var sqlLogCommand = `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+    VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+snowflake.execute
+(
+    {sqlText: sqlLogCommand, binds: 
+        [
+        procedureName
+        ,"Procedure"
+        ,startTime
+        ,endTime
+        ,result
+        ,procedureName
+        ]
+    }
+); 
+return result;
+$$
+;

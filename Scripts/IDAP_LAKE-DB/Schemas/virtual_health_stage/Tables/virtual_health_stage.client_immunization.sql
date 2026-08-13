@@ -1,0 +1,35 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CLIENT_IMMUNIZATION
+(
+ID                                 INT,
+CLIENT_ID                          INT,
+OWNER_ID                           INT,
+IMMUNIZATION_DATE        TIMESTAMP_NTZ,
+SERVICE_LOCATION_ID                INT,
+STATUS                         VARCHAR,
+STATUS_DATE_CHANGED      TIMESTAMP_NTZ,
+CREATED_DATE             TIMESTAMP_NTZ,
+UPDATED_DATE             TIMESTAMP_NTZ,
+IMMUNIZATION_NAME              VARCHAR,
+CVX_CODE                       VARCHAR,
+IMMUNIZATION_PURPOSE           VARCHAR,
+NOTES                          VARCHAR,
+CDC_PRODUCT_NAME               VARCHAR,
+MANUFACTURER                   VARCHAR,
+MVX_CODE                       VARCHAR,
+FDA_LABELLER_CODE              VARCHAR,
+FDA_PRODUCT_CODE               VARCHAR,
+CPT_CODE                       VARCHAR,
+CPT_MODIFIERS                  VARCHAR,
+CPT_DESCRIPTION                VARCHAR,
+VACCINE_NAME                   VARCHAR,
+ENCOUNTER_ID                       INT,
+FACILITY_OR_LOCATION           VARCHAR,
+ADMINISTERED_BY                VARCHAR,
+CLIENT_SERVICE_ID                  INT,
+MERGE_ID                       VARCHAR,
+FULL_VACCINE_NAME              VARCHAR,
+VACCINE_DESCRIPTOR             VARCHAR,
+UUID                           VARCHAR
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

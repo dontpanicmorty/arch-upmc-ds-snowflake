@@ -1,0 +1,1322 @@
+!set variable_substitution=true;
+CREATE OR REPLACE PROCEDURE ACXIOMDB.CREATE_LATEST_PROSPECTS_VIEW_1865()
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var db_name = '&{IDAP_LAKE}';
+var schema_name = 'ACXIOMDB';
+var full_schema = db_name + '.' + schema_name;
+var view_name = 'FORMATTED_PROSPECTS_18_65';
+var table_pattern = '%UPMC_PROD_FILE_18_65_OUT_SVW_20%';
+
+
+// --------------------
+// Step 1: Get old table name backing the view
+// --------------------
+var old_table_name = null;
+try {
+    var get_view_stmt = snowflake.createStatement({
+        sqlText: `
+            SELECT t.TABLE_NAME
+            FROM ${db_name}.INFORMATION_SCHEMA.VIEW_TABLE_USAGE t
+            WHERE t.VIEW_SCHEMA = '${schema_name}'
+              AND t.VIEW_NAME = '${view_name}'
+        `
+    });
+    var rs_old = get_view_stmt.execute();
+    if (rs_old.next()) {
+        old_table_name = rs_old.getColumnValue(1);
+    }
+} catch (err) {
+    old_table_name = null;
+}
+
+
+
+
+// Fallback to GET_DDL if old_table_name is still null
+if (old_table_name === null) {
+    try {
+        var def_stmt = snowflake.createStatement({
+            sqlText: `SELECT GET_DDL('VIEW', '${full_schema}.${view_name}')`
+        });
+        var rs_def = def_stmt.execute();
+        if (rs_def.next()) {
+            var ddl = rs_def.getColumnValue(1);
+            var match = ddl.match(/FROM\s+["\w\.]+\."(.*?)"/i);
+            if (match) {
+                old_table_name = match[1];
+            }
+        }
+    } catch (err) {
+        old_table_name = null;
+    }
+}
+
+
+// --------------------
+// Step 2: Find newest table using INFORMATION_SCHEMA
+// --------------------
+var get_latest_stmt = snowflake.createStatement({
+    sqlText: `
+        SELECT TABLE_NAME
+        FROM ${db_name}.INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = '${schema_name}'
+          AND TABLE_NAME ILIKE '${table_pattern}'
+        ORDER BY TABLE_NAME DESC
+        LIMIT 1
+    `
+});
+var rs = get_latest_stmt.execute();
+
+var latest_table_name = null;
+var latest_date = null;
+
+if (rs.next()) {
+    latest_table_name = rs.getColumnValue(1);
+    var match = latest_table_name.match(/(\\d{8})/);
+    if (match) {
+        latest_date = match[1];
+    }
+}
+
+if (!latest_table_name) {
+    return 'No matching tables found in ' + full_schema;
+}
+
+// --------------------
+// Step 3: Row counts
+// --------------------
+function getRowCount(table_name) {
+    try {
+        var rs_cnt = snowflake.createStatement({
+            sqlText: `SELECT COUNT(*) FROM ${full_schema}."${table_name}"`
+        }).execute();
+        return rs_cnt.next() ? rs_cnt.getColumnValue(1) : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+var old_count = old_table_name ? getRowCount(old_table_name) : null;
+var new_count = getRowCount(latest_table_name);
+
+// --------------------
+// Step 4: Skip if already latest
+// --------------------
+if (old_table_name && old_table_name.toUpperCase() === latest_table_name.toUpperCase()) {
+    return 'View already points to latest table: ' + latest_table_name;
+}
+
+// --------------------
+// Step 5: Recreate the view (full DECODE body inline)
+// --------------------
+var create_view_ddl = `
+CREATE OR REPLACE VIEW ${full_schema}.${view_name}(
+    INPUT_PREFIX_TITLE_8093
+    ,CONCAT_NAME
+    ,INPUT_FIRST_NAME_3131
+    ,INPUT_MIDDLE_INITIAL_3131
+    ,INPUT_LAST_NAME_3131
+    ,CONCAT_ADDRESS
+    ,INPUT_ADDRESS_LINE2_4111
+    ,INPUT_CITY_3040
+    ,INPUT_STATE_3038
+    ,INPUT_ZIP_CODE_3043
+    ,INPUT_ZIP4_CODE_3044
+    ,INPUT_DELIVERY_POINT_BAR_CODE_3046
+    ,INPUT_USE_CODE_3048,
+	AGEOFINDIVIDUAL,
+	ENTITY_REALID_HOUSEHOLD_ID,
+	ENTITY_REALID_PERSON_ID,
+	ENTITY_REALID_PLACE_ID,
+	"Causes Supported Financially - Charitable",
+	"Causes Supported Financially - Animal Welfare",
+	"Causes Supported Financially - Arts or Cultural",
+	"Causes Supported Financially - Childrens",
+	"Causes Supported Financially - Environment or Wildlife",
+	"Causes Supported Financially - Health",
+	"Causes Supported Financially - International Aid",
+	"Causes Supported Financially - Political",
+	"Causes Supported Financially - Politically Conservative",
+	"Causes Supported Financially - Politically Liberal",
+	"Causes Supported Financially - Religious",
+	"Causes Supported Financially - Veterans",
+	"Causes Supported Financially - Other",
+	"Age in One-Year Increments - Person",
+	"Gender - Person",
+	"Marital Status - Person",
+	"Presence of Children - 100%",
+	"Presence of Children - 100% - Precision Level",
+	"Number of Children - 100%",
+	"Number of Children - 100% - Precision Level",
+	"Home Owner / Renter - 100%",
+	"Home Owner / Renter - 100% - Precision Level",
+	"Income - Estimated Household - Broad Ranges - 100%",
+	"Income - Estimated Household - Broad Ranges - 100% - Precision Level",
+	"Mail Order Buyer",
+	"Home Property Type Detail (Real Property data only)",
+	"Education - 1st Person in Household - Plus",
+	"Education - 2nd Person in Household",
+	"Number of Adults",
+	"Occupation - 1st Person in Household",
+	"Geo Block Code",
+	"Geo Block Group Code",
+	"Geo Core Based Statistical Area (CBSA) Code",
+	"Geo Core Base Statistical Area (CBSA) Name",
+	"Geo Country Code",
+	"Geo Country Name",
+	"Geo Designated Marketing Area (DMA) Code",
+	"Geo Designated Marketing Area (DMA) Name",
+	"Geo FIPS County Code",
+	"Geo FIPS County Name",
+	"Geo FIPS State Code",
+	"Geo FIPS State Name",
+	"Geo Minor Civil Division (MCD) Code",
+	"Geo Minor Civil Division (MCD) Name",
+	"Geo Nielsen County Size Code",
+	"Geo Place Code",
+	"Geo Place Name",
+	"Geo Precision Level Code",
+	"Geo Precision Level Name",
+	"Geo Tract Code",
+	"IBE7964B_21",
+	"IBE7964B_22",
+	"IBE7964B_23",
+	"IBE7964B_24",
+    "IBE7964B_25",
+    "IBE7964B_26",
+    "IBE7964B_27",
+	"Buying Activity - Total Online Dollars - Person",
+	"Race Code (Low Detail) - Person",
+	"Race Code - Person",
+	"HPSD0022",
+	"HPSD0007_01",
+	"HPSD0007_02",
+	"HPSD0007_03",
+	"HPSD0008_01",
+	"HPSD0008_02",
+	"HPSD0008_03",
+    "Likely to have food insecurity - Centile - RETIRING",
+    "Likely to have food insecurity - Quintile - RETIRING",
+    "Likely to have food insecurity - Incident Rate - RETIRING",
+    "Likely to exercise regularly - Centile - RETIRING",
+    "Likely to exercise regularly - Quintile - RETIRING",
+     "Likely to exercise regularly - Incident Rate - RETIRING",
+    
+        
+    "Likely to have a healthy diet - Centile - RETIRING",
+    "Likely to have a healthy diet - Quintile - RETIRING",
+    "Likely to have a healthy diet - Incident Rate - RETIRING",
+	"HP000273",
+	"HP000275",
+	"HP000276",
+	"HP000277",
+	"Geo Federal Congressional District Code",
+	"Geo Federal Congressional District Name",
+	"Geo State Upper House District Code",
+	"Geo State Upper House District Name",
+	"Geo State Lower House District Code",
+	"Geo State Lower House District Name",
+	"Suppression - Mail - DMA",
+	"InfoBase Match Flag",
+	"Audience Propensities Match Flag",
+    "Geo Latitude",
+	"Geo Longitude",
+    "Diet Lifestyle",
+    "Diet Lifestyle - Precision Level",
+    "Exercise Frequency (B)",
+    "Exercise Frequency (B) - Precision Level",
+    "HP000205 Geo Aggregated Data-Geo Census Data-Demographics-Age-Buying Activity",
+    "HP000212 Geo Aggregated Data-Financial-Real Property-Age-Demographics",
+    "HP000216 Geo Aggregated Data-Consumer Traits-Age-Real Property-Geo Census Data",
+    "HP001066 - Promoting Awareness of Living in a Food Desert or Being Food Insecure",
+    "Alcohol Consumption",
+    "Alcohol Consumption - Precision Level",
+    "Extreme Sports Enthusiasts",
+    "Extreme Sports Enthusiasts - Precision Level",
+    "Fast Food/Snack Food Consumption",
+    "Fast Food/Snack Food Consumption - Precision Level",
+    "Healthy Lifestyle",
+    "Healthy Lifestyle - Precision Level",
+    "Overall Wellness",
+    "Overall Wellness - Precision Level",
+    "Safety Compliance",
+    "Safety Compliance - Precision Level",
+    "Sleep Quality",
+    "Sleep Quality - Precision Level",
+    "Social Setting Behavior",
+    "Social Setting Behavior - Precision Level",
+    "Stress Levels",
+    "Stress Levels - Precision Level",
+    "Body Mass Index",
+    "Body Mass Index - Precision Level",
+    "Smoking Frequency",
+    "Smoking Frequency - Precision Level"   
+) as
+SELECT
+INPUT_PREFIX_TITLE_8093 AS INPUT_PREFIX_TITLE_8093
+,NULLIF(CONCAT_NAME,'') AS CONCAT_NAME
+,NULLIF(INPUT_FIRST_NAME_3131,'') AS INPUT_FIRST_NAME_3131
+,NULLIF(INPUT_MIDDLE_INITIAL_3131,'') AS INPUT_INPUT_MIDDLE_INITIAL_3131
+,NULLIF(INPUT_LAST_NAME_3131,'') AS INPUT_LAST_NAME_3131
+,NULLIF(CONCAT_ADDRESS,'') AS CONCAT_ADDRESS
+,NULLIF(INPUT_ADDRESS_LINE2_4111,'') AS INPUT_ADDRESS_LINE2_4111
+,NULLIF(INPUT_CITY_3040,'') AS INPUT_CITY_3040
+,NULLIF(INPUT_STATE_3038,'') AS INPUT_STATE_3038
+,NULLIF(INPUT_ZIP_CODE_3043,'') AS INPUT_ZIP_CODE_3043
+,NULLIF(INPUT_ZIP4_CODE_3044,'') AS INPUT_ZIP4_CODE_3044
+,NULLIF(INPUT_DELIVERY_POINT_BAR_CODE_3046,'') AS INPUT_DELIVERY_POINT_BAR_CODE_3046
+,NULLIF(INPUT_USE_CODE_3048,'') AS INPUT_USE_CODE_3048
+,NULLIF(AGEOFINDIVIDUAL,'') AS AGEOFINDIVIDUAL
+,ENTITY_REALID_HOUSEHOLD_ID AS ENTITY_REALID_HOUSEHOLD_ID
+,ENTITY_REALID_PERSON_ID AS ENTITY_REALID_PERSON_ID
+,ENTITY_REALID_PLACE_ID AS ENTITY_REALID_PLACE_ID
+,DECODE(IBE2076_01,'1','True','--') AS "Causes Supported Financially - Charitable"
+,DECODE(IBE2076_02,'1','True','--') AS "Causes Supported Financially - Animal Welfare"
+,DECODE(IBE2076_03,'1','True','--') AS "Causes Supported Financially - Arts or Cultural"
+,DECODE(IBE2076_04,'1','True','--') AS "Causes Supported Financially - Childrens"
+,DECODE(IBE2076_05,'1','True','--') AS "Causes Supported Financially - Environment or Wildlife"
+,DECODE(IBE2076_06,'1','True','--') AS "Causes Supported Financially - Health"
+,DECODE(IBE2076_07,'1','True','--') AS "Causes Supported Financially - International Aid"
+,DECODE(IBE2076_08,'1','True','--') AS "Causes Supported Financially - Political"
+,DECODE(IBE2076_09,'1','True','--') AS "Causes Supported Financially - Politically Conservative"
+,DECODE(IBE2076_10,'1','True','--') AS "Causes Supported Financially - Politically Liberal"
+,DECODE(IBE2076_11,'1','True','--') AS "Causes Supported Financially - Religious"
+,DECODE(IBE2076_12,'1','True','--') AS "Causes Supported Financially - Veterans"
+,DECODE(IBE2076_13,'1','True','--') AS "Causes Supported Financially - Other"
+,DECODE(IBE7200,'18','Age 18'
+,'19','Age 19'
+,'20','Age 20'
+,'21','Age 21'
+,'22','Age 22'
+,'23','Age 23'
+,'24','Age 24'
+,'25','Age 25'
+,'26','Age 26'
+,'27','Age 27'
+,'28','Age 28'
+,'29','Age 29'
+,'30','Age 30'
+,'31','Age 31'
+,'32','Age 32'
+,'33','Age 33'
+,'34','Age 34'
+,'35','Age 35'
+,'36','Age 36'
+,'37','Age 37'
+,'38','Age 38'
+,'39','Age 39'
+,'40','Age 40'
+,'41','Age 41'
+,'42','Age 42'
+,'43','Age 43'
+,'44','Age 44'
+,'45','Age 45'
+,'46','Age 46'
+,'47','Age 47'
+,'48','Age 48'
+,'49','Age 49'
+,'50','Age 50'
+,'51','Age 51'
+,'52','Age 52'
+,'53','Age 53'
+,'54','Age 54'
+,'55','Age 55'
+,'56','Age 56'
+,'57','Age 57'
+,'58','Age 58'
+,'59','Age 59'
+,'60','Age 60'
+,'61','Age 61'
+,'62','Age 62'
+,'63','Age 63'
+,'64','Age 64'
+,'65','Age 65'
+,'66','Age 66'
+,'67','Age 67'
+,'68','Age 68'
+,'69','Age 69'
+,'70','Age 70'
+,'71','Age 71'
+,'72','Age 72'
+,'73','Age 73'
+,'74','Age 74'
+,'75','Age 75'
+,'76','Age 76'
+,'77','Age 77'
+,'78','Age 78'
+,'79','Age 79'
+,'80','Age 80'
+,'81','Age 81'
+,'82','Age 82'
+,'83','Age 83'
+,'84','Age 84'
+,'85','Age 85'
+,'86','Age 86'
+,'87','Age 87'
+,'88','Age 88'
+,'89','Age 89'
+,'90','Age 90'
+,'91','Age 91'
+,'92','Age 92'
+,'93','Age 93'
+,'94','Age 94'
+,'95','Age 95'
+,'96','Age 96'
+,'97','Age 97'
+,'98','Age 98'
+,'99','Age greater than 98','--') AS "Age in One-Year Increments - Person"
+,DECODE(IBE8688,'M','Male'
+,'F','Female','--') AS "Gender - Person"
+,DECODE(IBE8631,'M','Married'
+,'S','Single'
+,'A','Inferred Married'
+,'B','Inferred Single','--') AS "Marital Status - Person"
+,DECODE(IBE7622_01,'Y','Child(ren) Present'
+,'N','No Child(ren) Present','--') AS "Presence of Children - 100%"
+,DECODE(IBE7622_02,'3','Household'
+,'4','Household Inferred'
+,'A','Zip+4'
+,'G','Zip','--') AS "Presence of Children - 100% - Precision Level"
+,DECODE(IBE7602_01,'0','No children'
+,'1','1 Child'
+,'2','2 Children'
+,'3','3 Children'
+,'4','4 Children'
+,'5','5 Children'
+,'6','6 Children'
+,'7','7 Children'
+,'8','Greater than 7 Children','--') AS "Number of Children - 100%"
+,DECODE(IBE7602_02,'3','Household'
+,'4','Household Inferred'
+,'A','Zip+4'
+,'G','Zip','--') AS "Number of Children - 100% - Precision Level"
+,DECODE(IBE7606_01,'O','Home Owner'
+,'R','Renter','--') AS "Home Owner / Renter - 100%"
+,DECODE(IBE7606_02,'3','Household'
+,'4','Household Inferred'
+,'A','Zip+4'
+,'G','Zip','--') AS "Home Owner / Renter - 100% - Precision Level"
+,DECODE(IBE7641_01,'1','Less than $15,000'
+,'2','$15,000 - $19,999'
+,'3','$20,000 - $29,999'
+,'4','$30,000 - $39,999'
+,'5','$40,000 - $49,999'
+,'6','$50,000 - $74,999'
+,'7','$75,000 - $99,999'
+,'8','$100,000 - $124,999'
+,'9','Greater than $124,999','--') AS "Income - Estimated Household - Broad Ranges - 100%"
+,DECODE(IBE7641_02,'3','Household'
+,'4','Household Inferred'
+,'A','Zip+4'
+,'G','Zip','--') AS "Income - Estimated Household - Broad Ranges - 100% - Precision Level"
+,DECODE(IBE8615,'B','Mail Order Buyer','--') AS "Mail Order Buyer"
+,DECODE(IBE8581,'A','Single Family Dwelling Unit'
+,'B','Condo'
+,'C','Cooperative'
+,'D','2-4 Unite (Duplex, Triplex, Quad)'
+,'E','Miscellaneous Residence (Combo Store/Flat)'
+,'G','Apartment (5+ Units)'
+,'M','Mobile Home'
+,'T','Timeshare','--') AS "Home Property Type Detail (Real Property data only)"
+,DECODE(IBE9650,'1','Completed High School'
+,'2','Completed College'
+,'3','Completed Graduate School'
+,'4','Attended Vocational/Technical','--') AS "Education - 1st Person in Household - Plus"
+,DECODE(IBE9510,'1','Completed High School'
+,'2','Completed College'
+,'3','Completed Graduate School'
+,'4','Attended Vocational/Technical','--') AS "Education - 2nd Person in Household"
+,DECODE(IBE8628,'1','1 Adult'
+,'2','2 Adults'
+,'3','3 Adults'
+,'4','4 Adults'
+,'5','5 Adults'
+,'6','Greater than 5 Adults','--') AS "Number of Adults"
+,DECODE(IBE8604,'1','Professional/Technical'
+,'2','Administration/Managerial'
+,'3','Sales/Service'
+,'4','Clerical/White Collar'
+,'5','Craftsman/Blue Collar'
+,'6','Student'
+,'7','Homemaker'
+,'8','Retired'
+,'9','Farmer'
+,'A','Military'
+,'B','Religious'
+,'C','Self Employed'
+,'D','Self Employed - Professional/Technical'
+,'E','Self Employed - Administration/Managerial'
+,'F','Self Employed - Sales/Service'
+,'G','Self Employed - Clerical/White Collar'
+,'H','Self Employed - Craftsman/Blue Collar'
+,'I','Self Employed - Student'
+,'J','Self Employed - Homemaker'
+,'K','Self Employed - Retired'
+,'L','Self Employed - Other'
+,'V','Educator'
+,'W','Financial Professional'
+,'X','Legal Professional'
+,'Y','Medical Professional'
+,'Z','Other','--') AS "Occupation - 1st Person in Household"
+,IBE7964B_01 AS "Geo Block Code"
+,IBE7964B_02 AS "Geo Block Group Code"
+,IBE7964B_03 AS "Geo Core Based Statistical Area (CBSA) Code"
+,IBE7964B_04 AS "Geo Core Base Statistical Area (CBSA) Name"
+,IBE7964B_05 AS "Geo Country Code"
+,IBE7964B_06 AS "Geo Country Name"
+,IBE7964B_07 AS "Geo Designated Marketing Area (DMA) Code"
+,IBE7964B_08 AS "Geo Designated Marketing Area (DMA) Name"
+,IBE7964B_09 AS "Geo FIPS County Code"
+,IBE7964B_10 AS "Geo FIPS County Name"
+,IBE7964B_11 AS "Geo FIPS State Code"
+,IBE7964B_12 AS "Geo FIPS State Name"
+,IBE7964B_13 AS "Geo Minor Civil Division (MCD) Code"
+,IBE7964B_14 AS "Geo Minor Civil Division (MCD) Name"
+,IBE7964B_15 AS "Geo Nielsen County Size Code"
+,IBE7964B_16 AS "Geo Place Code"
+,IBE7964B_17 AS "Geo Place Name"
+,DECODE(IBE7964B_18,'A','Address Point'
+,'1','Street Segment'
+,'2','ZIP+4 Centroid'
+,'3','Intersection/Street'
+,'4','ZIP+2 Centroid'
+,'5','ZIP Centroid','--') AS "Geo Precision Level Code"
+,IBE7964B_19 AS "Geo Precision Level Name"
+,IBE7964B_20 AS "Geo Tract Code"
+,IBE7964B_21 AS "IBE7964B_21"
+,IBE7964B_22 AS "IBE7964B_22"
+,IBE7964B_23 AS "IBE7964B_23"
+,IBE7964B_24 AS "IBE7964B_24"
+,IBE7964B_25 AS "IBE7964B_25"
+,IBE7964B_26 AS "IBE7964B_26"
+,IBE7964B_27 AS "IBE7964B_27"
+,DECODE(IBE3716,'1-25','$1 - $25'
+,'26-50','$26 - $50'
+,'51-75','$51 - $75'
+,'76-100','$76 - $100'
+,'101-250','$101 - $250'
+,'251-500','$251 - $500'
+,'501-1000','$501 - $1,000'
+,'1001-5000','$1,001 - $5,000'
+,'5001-10000','$5,001 - $10,000'
+,'10001-100000','$10,001 - $100,000'
+,'100001-999999','$100,001 - $999,999','--') AS "Buying Activity - Total Online Dollars - Person"
+,DECODE(IBE3805,'A','Asian'
+,'B','Black or African American'
+,'H','Hispanic'
+,'W','White/Other','--') AS "Race Code (Low Detail) - Person"
+,DECODE(IBE9533,'A','Asian'
+,'B','Black or African American'
+,'C','Chinese'
+,'H','Hispanic'
+,'I','American Indian'
+,'N','Japanese'
+,'O','Other'
+,'P','Portuguese'
+,'W','White','--') AS "Race Code - Person"
+,HPSD0022 AS HPSD0022
+,HPSD0007_01 AS HPSD0007_01
+,HPSD0007_02 AS HPSD0007_02
+,HPSD0007_03 AS HPSD0007_03
+,HPSD0008_01 AS HPSD0008_01
+,HPSD0008_02 AS HPSD0008_02
+,HPSD0008_03 AS HPSD0008_03
+,DECODE(HPSD0009_01,'001','001 (Most Likely)'
+,'002','002'
+,'003','003'
+,'004','004'
+,'005','005'
+,'006','006'
+,'007','007'
+,'008','008'
+,'009','009'
+,'010','010'
+,'011','011'
+,'012','012'
+,'013','013'
+,'014','014'
+,'015','015'
+,'016','016'
+,'017','017'
+,'018','018'
+,'019','019'
+,'020','020'
+,'021','021'
+,'022','022'
+,'023','023'
+,'024','024'
+,'025','025'
+,'026','026'
+,'027','027'
+,'028','028'
+,'029','029'
+,'030','030'
+,'031','031'
+,'032','032'
+,'033','033'
+,'034','034'
+,'035','035'
+,'036','036'
+,'037','037'
+,'038','038'
+,'039','039'
+,'040','040'
+,'041','041'
+,'042','042'
+,'043','043'
+,'044','044'
+,'045','045'
+,'046','046'
+,'047','047'
+,'048','048'
+,'049','049'
+,'050','050'
+,'051','051'
+,'052','052'
+,'053','053'
+,'054','054'
+,'055','055'
+,'056','056'
+,'057','057'
+,'058','058'
+,'059','059'
+,'060','060'
+,'061','061'
+,'062','062'
+,'063','063'
+,'064','064'
+,'065','065'
+,'066','066'
+,'067','067'
+,'068','068'
+,'069','069'
+,'070','070'
+,'071','071'
+,'072','072'
+,'073','073'
+,'074','074'
+,'075','075'
+,'076','076'
+,'077','077'
+,'078','078'
+,'079','079'
+,'080','080'
+,'081','081'
+,'082','082'
+,'083','083'
+,'084','084'
+,'085','085'
+,'086','086'
+,'087','087'
+,'088','088'
+,'089','089'
+,'090','090'
+,'091','091'
+,'092','092'
+,'093','093'
+,'094','094'
+,'095','095'
+,'096','096'
+,'097','097'
+,'098','098'
+,'099','099'
+,'100','100 (Least Likely)','--') AS "Likely to have food insecurity - Centile - RETIRING"
+,DECODE(HPSD0009_02,'1','(Most Likely)'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5 (Least Likely)','--') AS "Likely to have food insecurity - Quintile - RETIRING"
+,DECODE(HPSD0009_03,'1','(Most Likely)'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','Least Likely','--') AS "Likely to have food insecurity - Incident Rate - RETIRING"
+,DECODE(HPSD0019_01,'001','001 (Most Likely)'
+,'002','002'
+,'003','003'
+,'004','004'
+,'005','005'
+,'006','006'
+,'007','007'
+,'008','008'
+,'009','009'
+,'010','010'
+,'011','011'
+,'012','012'
+,'013','013'
+,'014','014'
+,'015','015'
+,'016','016'
+,'017','017'
+,'018','018'
+,'019','019'
+,'020','020'
+,'021','021'
+,'022','022'
+,'023','023'
+,'024','024'
+,'025','025'
+,'026','026'
+,'027','027'
+,'028','028'
+,'029','029'
+,'030','030'
+,'031','031'
+,'032','032'
+,'033','033'
+,'034','034'
+,'035','035'
+,'036','036'
+,'037','037'
+,'038','038'
+,'039','039'
+,'040','040'
+,'041','041'
+,'042','042'
+,'043','043'
+,'044','044'
+,'045','045'
+,'046','046'
+,'047','047'
+,'048','048'
+,'049','049'
+,'050','050'
+,'051','051'
+,'052','052'
+,'053','053'
+,'054','054'
+,'055','055'
+,'056','056'
+,'057','057'
+,'058','058'
+,'059','059'
+,'060','060'
+,'061','061'
+,'062','062'
+,'063','063'
+,'064','064'
+,'065','065'
+,'066','066'
+,'067','067'
+,'068','068'
+,'069','069'
+,'070','070'
+,'071','071'
+,'072','072'
+,'073','073'
+,'074','074'
+,'075','075'
+,'076','076'
+,'077','077'
+,'078','078'
+,'079','079'
+,'080','080'
+,'081','081'
+,'082','082'
+,'083','083'
+,'084','084'
+,'085','085'
+,'086','086'
+,'087','087'
+,'088','088'
+,'089','089'
+,'090','090'
+,'091','091'
+,'092','092'
+,'093','093'
+,'094','094'
+,'095','095'
+,'096','096'
+,'097','097'
+,'098','098'
+,'099','099'
+,'100','100 (Least Likely)','--') AS "Likely to have a healthy diet - Centile - RETIRING"
+,DECODE(HPSD0019_02,'1','(Most Likely)'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5 (Least Likely)','--') AS "Likely to have a healthy diet - Quintile - RETIRING"
+,DECODE(HPSD0019_03,'1','(Most Likely)'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','Least Likely','--') AS "Likely to have a healthy diet - Incident Rate - RETIRING"
+,DECODE(HPSD0018_01,'001','001 (Most Likely)'
+,'002','002'
+,'003','003'
+,'004','004'
+,'005','005'
+,'006','006'
+,'007','007'
+,'008','008'
+,'009','009'
+,'010','010'
+,'011','011'
+,'012','012'
+,'013','013'
+,'014','014'
+,'015','015'
+,'016','016'
+,'017','017'
+,'018','018'
+,'019','019'
+,'020','020'
+,'021','021'
+,'022','022'
+,'023','023'
+,'024','024'
+,'025','025'
+,'026','026'
+,'027','027'
+,'028','028'
+,'029','029'
+,'030','030'
+,'031','031'
+,'032','032'
+,'033','033'
+,'034','034'
+,'035','035'
+,'036','036'
+,'037','037'
+,'038','038'
+,'039','039'
+,'040','040'
+,'041','041'
+,'042','042'
+,'043','043'
+,'044','044'
+,'045','045'
+,'046','046'
+,'047','047'
+,'048','048'
+,'049','049'
+,'050','050'
+,'051','051'
+,'052','052'
+,'053','053'
+,'054','054'
+,'055','055'
+,'056','056'
+,'057','057'
+,'058','058'
+,'059','059'
+,'060','060'
+,'061','061'
+,'062','062'
+,'063','063'
+,'064','064'
+,'065','065'
+,'066','066'
+,'067','067'
+,'068','068'
+,'069','069'
+,'070','070'
+,'071','071'
+,'072','072'
+,'073','073'
+,'074','074'
+,'075','075'
+,'076','076'
+,'077','077'
+,'078','078'
+,'079','079'
+,'080','080'
+,'081','081'
+,'082','082'
+,'083','083'
+,'084','084'
+,'085','085'
+,'086','086'
+,'087','087'
+,'088','088'
+,'089','089'
+,'090','090'
+,'091','091'
+,'092','092'
+,'093','093'
+,'094','094'
+,'095','095'
+,'096','096'
+,'097','097'
+,'098','098'
+,'099','099'
+,'100','100 (Least Likely)','--') AS "Likely to exercise regularly - Centile - RETIRING"
+,DECODE(HPSD0018_02,'1','(Most Likely)'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5 (Least Likely)','--') AS "Likely to exercise regularly - Quintile - RETIRING"
+,DECODE(HPSD0018_03,'1','(Most Likely)'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','(Least Likely)','--') AS "Likely to exercise regularly - Incident Rate - RETIRING"
+,HP000273 AS HP000273
+,HP000275 AS HP000275
+,HP000276 AS HP000276
+,HP000277 AS HP000277
+,DECODE(IBE2403_01,'00','Congressional District - at Large (Alaska, Delaware, Montana, North Dakota, South Dakota, Vermont, Wyoming)'
+,'01','Congressional District 1'
+,'02','Congressional District 2'
+,'03','Congressional District 3'
+,'04','Congressional District 4'
+,'05','Congressional District 5'
+,'06','Congressional District 6'
+,'07','Congressional District 7'
+,'08','Congressional District 8'
+,'09','Congressional District 9'
+,'10','Congressional District 10'
+,'11','Congressional District 11'
+,'12','Congressional District 12'
+,'13','Congressional District 13'
+,'14','Congressional District 14'
+,'15','Congressional District 15'
+,'16','Congressional District 16'
+,'17','Congressional District 17'
+,'18','Congressional District 18'
+,'19','Congressional District 19'
+,'20','Congressional District 20'
+,'21','Congressional District 21'
+,'22','Congressional District 22'
+,'23','Congressional District 23'
+,'24','Congressional District 24'
+,'25','Congressional District 25'
+,'26','Congressional District 26'
+,'27','Congressional District 27'
+,'28','Congressional District 28'
+,'29','Congressional District 29'
+,'30','Congressional District 30'
+,'31','Congressional District 31'
+,'32','Congressional District 32'
+,'33','Congressional District 33'
+,'34','Congressional District 34'
+,'35','Congressional District 35'
+,'36','Congressional District 36'
+,'37','Congressional District 37'
+,'38','Congressional District 38'
+,'39','Congressional District 39'
+,'40','Congressional District 40'
+,'41','Congressional District 41'
+,'42','Congressional District 42'
+,'43','Congressional District 43'
+,'44','Congressional District 44'
+,'45','Congressional District 45'
+,'46','Congressional District 46'
+,'47','Congressional District 47'
+,'48','Congressional District 48'
+,'49','Congressional District 49'
+,'50','Congressional District 50'
+,'51','Congressional District 51'
+,'52','Congressional District 52'
+,'53','Congressional District 53'
+,'98','Delegate District - at Large (District of Columbia) or Resident Commissioner District - at Large (Puerto Rico, other Island Territories)'
+,'ZZ','Congressional Districts not defined (Connecticut, Illinois, and Michigan)','--') AS "Geo Federal Congressional District Code"
+,IBE2403_02 AS "Geo Federal Congressional District Name"
+,IBE2404_01 AS "Geo State Upper House District Code"
+,IBE2404_02 AS "Geo State Upper House District Name"
+,IBE2405_01 AS "Geo State Lower House District Code"
+,IBE2405_02 AS "Geo State Lower House District Name"
+,DECODE(IBE9557,'N','Do Not Mail','--') AS "Suppression - Mail - DMA"
+,DECODE(IBE9100,'M','Matched','--') AS "InfoBase Match Flag"
+,DECODE(AP1999,'M','Matched','--') AS "Audience Propensities Match Flag"
+,IBE7994B_01 AS "Geo Latitude"
+,IBE7994B_02 AS "Geo Longitude"
+,DECODE(AP006247_01,'1','1 Least Likely'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7', '7 Most Likely','--') AS "Diet Lifestyle"
+,DECODE (AP006247_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Diet Lifestyle - Precision Level"
+, DECODE(AP010192_01 ,'1','1 Never'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Frequent/Daily','--') AS "Exercise Frequency (B)"
+,DECODE(AP010192_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Exercise Frequency (B) - Precision Level"
+, DECODE(HP000205,'01','01 (Most Likely)'
+,'02','02'
+,'03','03'
+,'04','04'
+,'05','05'
+,'06','06'
+,'07','07'
+,'08','08'
+,'09','09'
+,'10','10'
+,'11','11'
+,'12','12'
+,'13','13'
+,'14','14'
+,'15','15'
+,'16','16'
+,'17','17'
+,'18','18'
+,'19','19'
+,'20','20 (Least Likely)','--') AS "HP000205 Geo Aggregated Data-Geo Census Data-Demographics-Age-Buying Activity"
+,DECODE(HP000212,'01','01 (Most Likely)'
+,'02','02'
+,'03','03'
+,'04','04'
+,'05','05'
+,'06','06'
+,'07','07'
+,'08','08'
+,'09','09'
+,'10','10'
+,'11','11'
+,'12','12'
+,'13','13'
+,'14','14'
+,'15','15'
+,'16','16'
+,'17','17'
+,'18','18'
+,'19','19'
+,'20','20 (Least Likely)','--') AS "HP000212 Geo Aggregated Data-Financial-Real Property-Age-Demographics"
+,DECODE(HP000216,'01','01 (Most Likely)'
+,'02','02'
+,'03','03'
+,'04','04'
+,'05','05'
+,'06','06'
+,'07','07'
+,'08','08'
+,'09','09'
+,'10','10'
+,'11','11'
+,'12','12'
+,'13','13'
+,'14','14'
+,'15','15'
+,'16','16'
+,'17','17'
+,'18','18'
+,'19','19'
+,'20','20 (Least Likely)','--') AS "HP000216 Geo Aggregated Data-Consumer Traits-Age-Real Property-Geo Census Data"
+,DECODE(HP001066,'01','01 (Most Likely)'
+,'02','02'
+,'03','03'
+,'04','04'
+,'05','05'
+,'06','06'
+,'07','07'
+,'08','08'
+,'09','09'
+,'10','10'
+,'11','11'
+,'12','12'
+,'13','13'
+,'14','14'
+,'15','15'
+,'16','16'
+,'17','17'
+,'18','18'
+,'19','19'
+,'20','20 (Least Likely)','--') AS "HP001066 - Promoting Awareness of Living in a Food Desert or Being Food Insecure"
+,DECODE(AP006253_01,'1','1 Non-Drinkers'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Heavy Drinkers','--') AS "Alcohol Consumption"
+,DECODE(AP006253_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Alcohol Consumption - Precision Level"
+,DECODE(AP006255_01,'1','1 Least Likely'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Most Likely','--') AS "Extreme Sports Enthusiasts"
+,DECODE(AP006255_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Extreme Sports Enthusiasts - Precision Level"
+,DECODE(AP006259_01,'1','1 Never'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Frequent/Daily','--') AS "Fast Food/Snack Food Consumption"
+,DECODE(AP006259_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Fast Food/Snack Food Consumption - Precision Level"
+,DECODE(AP006252_01,'1','1 Low'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 High','--') AS "Healthy Lifestyle"
+,DECODE(AP006252_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Healthy Lifestyle - Precision Level"
+,DECODE(AP006251_01,'1','1 Worst'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7'
+,'8','8'
+,'9','9'
+,'10','10'
+,'11','11'
+,'12','12'
+,'13','13'
+,'14','14'
+,'15','15'
+,'16','16'
+,'17','17'
+,'18','18'
+,'19','19'
+,'20','20'
+,'21','21'
+,'22','22'
+,'23','23'
+,'24','24'
+,'25','25'
+,'26','26'
+,'27','27'
+,'28','28'
+,'29','29'
+,'30','30'
+,'31','31'
+,'32','32'
+,'33','33'
+,'34','34'
+,'35','35'
+,'36','36'
+,'37','37'
+,'38','38'
+,'39','39'
+,'40','40'
+,'41','41'
+,'42','42'
+,'43','43'
+,'44','44'
+,'45','45'
+,'46','46'
+,'47','47'
+,'48','48'
+,'49','49'
+,'50','50'
+,'51','51'
+,'52','52'
+,'53','53'
+,'54','54'
+,'55','55'
+,'56','56'
+,'57','57'
+,'58','58'
+,'59','59'
+,'60','60'
+,'61','61'
+,'62','62'
+,'63','63'
+,'64','64'
+,'65','65'
+,'66','66'
+,'67','67'
+,'68','68'
+,'69','69'
+,'70','70'
+,'71','71'
+,'72','72'
+,'73','73'
+,'74','74'
+,'75','75'
+,'76','76'
+,'77','77'
+,'78','78'
+,'79','79'
+,'80','80'
+,'81','81'
+,'82','82'
+,'83','83'
+,'84','84'
+,'85','85'
+,'86','86'
+,'87','87'
+,'88','88'
+,'89','89'
+,'90','90'
+,'91','91'
+,'92','92'
+,'93','93'
+,'94','94'
+,'95','95'
+,'96','96'
+,'97','97'
+,'98','98'
+,'99','99 Best','--') AS "Overall Wellness"
+,DECODE(AP006251_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Overall Wellness - Precision Level"
+,DECODE(AP006256_01,'1','1 Least Likely'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Most Likely','--') AS "Safety Compliance"
+,DECODE(AP006256_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Safety Compliance - Precision Level"
+,DECODE(AP006249_01,'1','1 Poor'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Excellent','--') AS "Sleep Quality"
+,DECODE(AP006249_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Sleep Quality - Precision Level"
+,DECODE(AP006257_01,'1','1 Least Likely'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Most Likely','--') AS "Social Setting Behavior"
+,DECODE(AP006257_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Social Setting Behavior - Precision Level"
+,DECODE(AP006250_01,'1','1 Low'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Extremely High','--') AS "Stress Levels"
+,DECODE(AP006250_02,'1','Individual'
+,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Stress Levels - Precision Level"
+,DECODE(AP006246_01,'1','1 Low'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6 High','--') AS "Body Mass Index"
+,DECODE(AP006246_02,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Body Mass Index - Precision Level"
+,DECODE(AP006258_01,'1','1 Never'
+,'2','2'
+,'3','3'
+,'4','4'
+,'5','5'
+,'6','6'
+,'7','7 Daily','--') AS "Smoking Frequency"
+,DECODE(AP006258_02,'3','Household'
+,'5','Address'
+,'A','Zip+4'
+,'G','Zip','--') AS "Smoking Frequency - Precision Level"
+FROM ${full_schema}."${latest_table_name}"
+`;
+snowflake.createStatement({ sqlText: create_view_ddl }).execute();
+
+// --------------------
+// Step 6: Log updates (self-healing)
+// --------------------
+snowflake.createStatement({
+    sqlText: `
+        CREATE TABLE IF NOT EXISTS ${full_schema}.View_Update_Log (
+            run_timestamp TIMESTAMP_LTZ,
+            old_table STRING,
+            new_table STRING,
+            new_table_created_on DATE
+        )
+    `
+}).execute();
+
+// Check for missing columns
+var check_cols = snowflake.createStatement({
+    sqlText: `
+        SELECT COLUMN_NAME
+        FROM ${db_name}.INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = '${schema_name}'
+          AND TABLE_NAME = 'VIEW_UPDATE_LOG'
+          AND COLUMN_NAME IN ('OLD_COUNT','NEW_COUNT')
+    `
+}).execute();
+
+var existing_cols = [];
+while (check_cols.next()) {
+    existing_cols.push(check_cols.getColumnValue(1).toUpperCase());
+}
+
+// Add columns only if they are missing
+if (existing_cols.indexOf('OLD_COUNT') === -1) {
+    snowflake.createStatement({
+        sqlText: `ALTER TABLE ${full_schema}.View_Update_Log ADD COLUMN old_count NUMBER`
+    }).execute();
+}
+if (existing_cols.indexOf('NEW_COUNT') === -1) {
+    snowflake.createStatement({
+        sqlText: `ALTER TABLE ${full_schema}.View_Update_Log ADD COLUMN new_count NUMBER`
+    }).execute();
+}
+
+// Insert log row
+snowflake.createStatement({
+    sqlText: `
+        INSERT INTO ${full_schema}.View_Update_Log
+        (run_timestamp, old_table, new_table, new_table_created_on, old_count, new_count)
+        VALUES (CURRENT_TIMESTAMP, ?, ?, TO_DATE(?, 'YYYYMMDD'), ?, ?)
+    `,
+    binds: [old_table_name, latest_table_name, latest_date, old_count, new_count]
+}).execute();
+
+// --------------------
+// Step 7: Return summary
+// --------------------
+var pct_change_msg = '';
+if (old_count !== null && new_count !== null && old_count > 0) {
+    var pct_change = ((new_count - old_count) / old_count * 100).toFixed(2);
+    pct_change_msg = ` | % Change: ${pct_change}%`;
+} else if (old_count === null && new_count !== null) {
+    pct_change_msg = ' | % Change: N/A (no old data)';
+}
+
+return `View updated from: ${old_table_name || 'None'} [${old_count || 'N/A'} rows] → ${latest_table_name} [${new_count || 'N/A'} rows]` + pct_change_msg;
+$$;
+!set variable_substitution=false;

@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE HEDIS_COMMON.HEDIS_VSD_MV_P
+(
+MEASURE_ID                  VARCHAR,
+VALUE_SET_NAME              VARCHAR,
+DEFINITION                  VARCHAR,
+CODE                        VARCHAR,
+CODE_SYSTEM                 VARCHAR,
+VALUE_SET_VERSION     TIMESTAMP_NTZ,
+HEDIS_YEAR                  VARCHAR,
+SOURCE_TBL                  VARCHAR,
+LOAD_DATE             TIMESTAMP_NTZ,
+LAST_UPDATE_DATE      TIMESTAMP_NTZ
+)
+COMMENT='Created for HEDIS_COMMON Migration'
+;

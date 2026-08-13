@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "member",
+  "dataSourceName": "CMS",
+  "targetTableName": "RAWDATA.CMS_MMR",
+  "sourceCloneTableName": "IDAP_LAKE.CMS.MMR",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": null
+}

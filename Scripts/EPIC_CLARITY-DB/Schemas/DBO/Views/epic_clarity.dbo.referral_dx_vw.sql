@@ -1,0 +1,13 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.REFERRAL_DX
+AS
+SELECT
+ REFERRAL_ID
+, LINE
+, DX_ID
+, CM_PHY_OWNER_ID
+, CM_LOG_OWNER_ID
+, DX_TEXT
+, DX_CODE_TYPE_C
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__REFERRAL_DX;
+!set variable_substitution=false;

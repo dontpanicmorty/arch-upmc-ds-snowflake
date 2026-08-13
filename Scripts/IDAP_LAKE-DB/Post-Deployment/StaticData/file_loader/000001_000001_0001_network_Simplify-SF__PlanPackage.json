@@ -1,0 +1,9 @@
+{
+  "outputSchema": "NETWORK",
+  "outputTable": "SIMPLIFY_PLAN_PACKAGE",
+  "hasHeader": false,
+  "hasTrailer": false,
+  "fileType": "json",
+  "fileFormat": "SIMPLIFY_PLAN_PACKAGE_FILE_FORMAT",
+  "truncReload": false
+}

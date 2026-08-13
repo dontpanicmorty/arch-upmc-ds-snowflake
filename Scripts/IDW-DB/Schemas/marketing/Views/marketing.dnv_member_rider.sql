@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW MARKETING.DNV_MEMBER_RIDER
+AS
+SELECT
+DNV_MEMBER_KEY,
+DNV_RIDER_KEY,
+LOAD_DATE
+FROM &{IDW_LAKE}.MARKETING.DNV_MEMBER_RIDER;
+!set variable_substitution=false;

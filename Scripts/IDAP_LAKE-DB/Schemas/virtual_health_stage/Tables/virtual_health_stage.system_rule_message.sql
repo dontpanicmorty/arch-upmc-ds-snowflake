@@ -1,0 +1,17 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.SYSTEM_RULE_MESSAGE
+(
+ID                                 INT,
+SYSTEM_RULE_ID                     INT,
+SUBJECT                        VARCHAR,
+MESSAGE_TEXT                   VARCHAR,
+SEND_TO_MEMBER                     INT,
+LAST_UPDATED_BY                    INT,
+CREATED_DATE             TIMESTAMP_NTZ,
+UPDATED_DATE             TIMESTAMP_NTZ,
+RECIPIENT_LABELS               VARCHAR,
+RECIPIENTS                     VARCHAR,
+BCC_RECIPIENTS                 VARCHAR,
+BCC_RECIPIENT_LABELS           VARCHAR
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

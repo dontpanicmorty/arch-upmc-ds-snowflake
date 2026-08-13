@@ -1,0 +1,112 @@
+CREATE OR REPLACE PROCEDURE APPLICATION_EVENTS.SPU_LOAD_AUTHORIZATIONS()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS $$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = "APPLICATION_EVENTS.AUTHORIZATIONS";
+var result = "", sqlLogCommand = "", statement = "";
+var stagePath = "@APPLICATION_EVENTS.SNOWFLAKEDATA_CONSUMERTECH_AUTHORIZATIONS/";
+
+// Get the most recent load date — this partition will be rescanned to catch late-arriving files
+var lastLoadQuery = `SELECT COALESCE(MAX(LOAD_DATETIME), '2026-06-25 00:00:00'::TIMESTAMP_TZ(9)) AS LAST_LOAD_DATE FROM ${targetTableName};`;
+var lastLoadStmt = snowflake.createStatement({ sqlText: lastLoadQuery });
+var lastLoadResult = lastLoadStmt.execute();
+lastLoadResult.next();
+var lastLoadDate = new Date(lastLoadResult.getColumnValue(1));
+lastLoadDate.setMinutes(0, 0, 0);
+var today = new Date();
+
+// Build array of date partition paths from last load date through today
+var datePaths = [];
+for (var d = new Date(lastLoadDate); d <= today; d.setHours(d.getHours() + 1)) {
+    var yyyy = d.getFullYear();
+    var mm = ("0" + (d.getMonth() + 1)).slice(-2);
+    var dd = ("0" + d.getDate()).slice(-2);
+    var hh   = ("0" + d.getHours()).slice(-2);
+    datePaths.push(yyyy + "/" + mm + "/" + dd + "/" + hh + "/");
+}
+
+var totalAffected = 0;
+
+try
+{
+    // Loop through each date partition and load only new files
+    for (var i = 0; i < datePaths.length; i++) {
+        var sqlCommand = `
+COPY INTO ${targetTableName} (
+    FILENAME,
+    FILE_ROW_NUMBER,
+    LOAD_DATETIME,
+    ID,
+    COSMOS_LAST_UPDATED,
+    SOURCE_LAST_UPDATED,
+    MEMBER_ID,
+    JSON_DATA
+)
+FROM
+    (
+        SELECT
+            METADATA$FILENAME AS FILENAME,
+            METADATA$FILE_ROW_NUMBER AS FILE_ROW_NUMBER,
+            CURRENT_TIMESTAMP() AS LOAD_DATETIME,
+            $1:id::STRING AS ID,
+            $1:cosmosLastUpdated::TIMESTAMP_TZ AS COSMOS_LAST_UPDATED,
+            $1:sourceLastUpdated::TIMESTAMP_TZ AS SOURCE_LAST_UPDATED,
+            $1:memberId::STRING AS MEMBER_ID,
+            $1 AS JSON_DATA
+        FROM
+            ${stagePath}${datePaths[i]}
+            (FILE_FORMAT => APPLICATION_EVENTS.AUTHORIZATIONS_FILE_FORMAT, PATTERN => '.*.json')
+    )
+FORCE = FALSE;`;
+
+        statement = snowflake.createStatement({ sqlText: sqlCommand });
+        let sqlResult = statement.execute();
+        totalAffected += statement.getNumRowsInserted();
+    }
+
+    result += targetTableName + " succeeded and affected " + totalAffected + " rows across " + datePaths.length + " partition(s)" + "\\n";
+    let endTime = new Date().toISOString();
+
+    //Log results to table
+      sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+          (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+          VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [targetTableName, "TABLE", startTime, endTime, totalAffected, 0, 0, result, "COPY INTO " + targetTableName + " (" + datePaths.length + " partitions)"]
+          }
+      );
+    
+
+}
+catch (err)
+{
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/''/g, "''''")
+    let stack = (err.stackTraceTxt || err.stack || '(not available)').replace(/''/g, "''''");
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed'
+    let failedSql = (typeof statement === 'object' && statement.getSqlText) ? statement.getSqlText() : sqlCommand || '(not available)';
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, failedSql, code, state, message, stack]
+        }
+    );
+    throw message;
+}
+return result;
+$$;

@@ -1,0 +1,16 @@
+{
+    "isActive": true,
+    "isCloneFlag": false,
+    "isCopyIntoFlag": true,
+    "dataDomain": "claim",
+    "dataSourceName": "FDB",
+    "targetTableName": "RAWDATA.FDB_RMINMID1_MED_NAME",
+    "sourceCloneTableName": null,
+    "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+    "sourceFilePath": "/drug/firstdatabank/",
+    "sourceFileFormatName": "RAWDATA.IDAPLAKE_FDB_FILE_FORMAT",
+    "sourceFilePattern": "drug/firstdatabank/\\\\d{4}/\\\\d{2}/\\\\d{2}/NDDF Plus DB/NDDF Descriptive and Pricing/NDDF MEDNAMES 3.0/RMINMID1_MED_NAME",
+    "sourceFileDelimitedColumnCount": 4,
+    "sourceFileFixedWidthMapping": null,
+    "validateDataFlag": false
+  }

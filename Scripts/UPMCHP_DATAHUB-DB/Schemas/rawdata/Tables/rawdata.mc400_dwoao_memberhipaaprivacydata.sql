@@ -1,0 +1,6 @@
+!set variable_substitution=true;
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_MEMBERHIPAAPRIVACYDATA
+LIKE &{CDC_MERGE}.DBO.MEMBERHIPAAPRIVACYDATA
+;
+
+!set variable_substitution=false;

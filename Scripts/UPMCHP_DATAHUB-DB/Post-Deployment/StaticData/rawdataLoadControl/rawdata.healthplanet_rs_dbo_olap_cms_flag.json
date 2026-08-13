@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "member",
+  "dataSourceName": "HealthPlanet",
+  "targetTableName": "RAWDATA.HEALTHPLANET_RS_DBO_OLAP_CMS_FLAG",
+  "sourceCloneTableName": "IDAP_LAKE.HEALTHPLANET_RS_STAGE.DBO__OLAP_CMS_FLAG",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": null
+}

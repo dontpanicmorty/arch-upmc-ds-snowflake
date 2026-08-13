@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE EDW_RPT.PLAN_BROKER_GROUP
+(
+PLAN_BROKER_KEY                  NUMBER,
+PLAN_KEY                         NUMBER,
+BROKER_ID                       VARCHAR,
+BROKER_NAME                     VARCHAR,
+LOAD_DATE                 TIMESTAMP_NTZ,
+COMMISSION_PERCENTAGE       NUMBER(3,2),
+SPAN_EFFECTIVE_DATE       TIMESTAMP_NTZ,
+SPAN_END_DATE             TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

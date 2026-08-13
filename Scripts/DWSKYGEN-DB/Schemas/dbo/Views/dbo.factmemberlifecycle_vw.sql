@@ -1,0 +1,20 @@
+CREATE OR REPLACE VIEW DBO.FactMemberLifeCycle_VW
+AS 
+SELECT 	$1:DateCreationKey::NUMBER(38, 0) AS DateCreationKey, 
+		$1:DomainSourceKey::NUMBER(38, 0) AS DomainSourceKey, 
+		$1:EnrolleeKey::NUMBER(38, 0) AS EnrolleeKey, 
+		$1:FeatureKey::NUMBER(38, 0) AS FeatureKey, 
+		$1:LogTypeKey::NUMBER(38, 0) AS LogTypeKey, 
+		$1:ModuleKey::NUMBER(38, 0) AS ModuleKey, 
+		$1:LOG_ID::NUMBER(38, 0) AS LOG_ID, 
+		$1:FIRST_NAME::VARCHAR AS FIRST_NAME, 
+		$1:LAST_NAME::VARCHAR AS LAST_NAME, 
+		$1:IP_ADDRESS::VARCHAR AS IP_ADDRESS, 
+		$1:REMOTE_PORT::VARCHAR AS REMOTE_PORT, 
+		$1:SERVER_NAME::VARCHAR AS SERVER_NAME, 
+		$1:SERVER_PORT::VARCHAR AS SERVER_PORT, 
+		$1:SUBSCRIBER_ID::VARCHAR AS SUBSCRIBER_ID, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactMemberLifeCycle/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

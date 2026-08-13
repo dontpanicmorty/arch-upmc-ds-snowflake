@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE IDFS.CA_IDFS_DIAGNOSIS
+(
+ACCOUNT_NUMBER              VARCHAR,
+DIAGNOSIS_CODE              VARCHAR,
+DIAGNOSIS_CODE_TYPE         VARCHAR,
+DIAGNOSIS_PRIORITY        NUMBER(4),
+DIAGNOSIS_DESCRIPTION       VARCHAR,
+DIAGNOSIS_TYPE              VARCHAR,
+POA                         VARCHAR,
+IPOP                        VARCHAR,
+HP_MMI                      VARCHAR
+)
+COMMENT='Created for IDFS Migration'
+;

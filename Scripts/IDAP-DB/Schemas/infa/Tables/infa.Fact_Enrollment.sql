@@ -1,0 +1,33 @@
+CREATE OR REPLACE TABLE
+	INFA.Fact_Enrollment (
+		Fact_Enrollment_Key INTEGER NOT NULL,
+		MD5_Value_Text VARCHAR NOT NULL,
+		Insert_Datetime TIMESTAMP_TZ(9) NOT NULL,
+		Last_Updated_Datetime TIMESTAMP_TZ(9) NOT NULL,
+		Dim_TPA_Hierarchy_Key INTEGER NOT NULL,
+		Dim_Member_Key INTEGER NOT NULL,
+		Dim_Enrollment_Span_Key INTEGER NOT NULL,
+		Dim_Plan_Key INTEGER NOT NULL,
+		Dim_Sales_Channel_Key INTEGER NOT NULL,
+		Eligibility_Start_Date_Key INTEGER NOT NULL,
+		Eligibility_End_Date_Key INTEGER NOT NULL,
+		Enrollment_Date_Key INTEGER NOT NULL,
+		Renewal_Date_Key INTEGER NOT NULL,
+		Eligibility_Start_Date DATE,
+		Eligibility_End_Date DATE,
+		Enrollment_Date DATE,
+		Renewal_Date DATE,
+		Dim_Group_Key INTEGER,
+		Dim_Sub_Group_Key INTEGER,
+		Dim_GL_Distribution_Key INTEGER,
+		Subscriber_Flag BOOLEAN,
+		Dim_Rate_Cell_Key INTEGER,
+		Dim_Rider_Key INTEGER,
+		Medical_Rider_Flag INTEGER,
+		Dim_Eligibility_Type_Key INTEGER,
+		Dim_Plan_Segment_Key INTEGER,
+		Convert_Ind VARCHAR NOT NULL,
+		CONSTRAINT PK_Fact_Enrollment PRIMARY KEY (Fact_Enrollment_Key),
+		CONSTRAINT UK_Fact_Enrollment UNIQUE (Dim_Member_Key, Dim_TPA_Hierarchy_Key, Eligibility_Start_Date_Key, Dim_Rider_Key, Dim_Eligibility_Type_Key)
+	) COMMENT='Landing area for data coming from IDAP SQL Server table of the same name'
+	;

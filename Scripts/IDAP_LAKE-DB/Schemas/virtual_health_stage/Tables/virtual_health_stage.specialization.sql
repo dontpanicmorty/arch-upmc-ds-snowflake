@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.SPECIALIZATION
+(
+ID                           INT,
+TITLE                    VARCHAR,
+CODE                     VARCHAR,
+IS_DELETED                   INT,
+CREATED_DATE       TIMESTAMP_NTZ,
+UPDATED_DATE       TIMESTAMP_NTZ,
+GROUPING_RENAMED         VARCHAR,
+CLASSIFICATION           VARCHAR,
+SPECIALIZATION           VARCHAR,
+DEFINITION               VARCHAR,
+NOTES                    VARCHAR,
+SECTION                      INT,
+SYSTEM_RENAMED           VARCHAR
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

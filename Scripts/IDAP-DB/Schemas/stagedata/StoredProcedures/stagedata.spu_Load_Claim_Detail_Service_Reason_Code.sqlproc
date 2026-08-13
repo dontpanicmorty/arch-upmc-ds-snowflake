@@ -1,0 +1,100 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_CLAIM_DETAIL_SERVICE_REASON_CODE() 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+/* get procedure start time and set variables */
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `STAGEDATA.CLAIM_DETAIL_SERVICE_REASON_CODE`;
+
+/* Create INSERT OVERWRITE statement to be executed */
+var sqlInsertCommand =
+`
+INSERT OVERWRITE INTO STAGEDATA.CLAIM_DETAIL_SERVICE_REASON_CODE
+    (CLAIM_DETAIL_SERVICE_REASON_CODE_KEY
+    ,CODE_VALUE
+    ,CODE_POSITION
+    ,DATA_SOURCE_NAME
+    ,TPA_CLIENT_ID
+    ,TPA_DIV_ID
+    ,TPA_ID
+    ,TPA_KEY)
+
+SELECT
+    HUB_CLAIM_DETAIL_HKEY AS CLAIM_DETAIL_SERVICE_REASON_CODE_KEY
+    ,CODE_VALUE
+    ,CODE_POSITION
+    ,DATA_SOURCE_NAME
+    ,TPA_CLIENT_ID
+    ,TPA_DIV_ID
+    ,TPA_ID
+    ,NULL AS TPA_KEY
+FROM RAWDATA.DATAHUB_CLAIM_DETAIL_SERVICE_REASON_CODE
+;`;
+
+try 
+{
+    /*Execute INSERT OVERRIDE Command */
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCommand});
+    var resultSet = sfStatement.execute();
+    var endTime = new Date().toISOString();
+    
+    /*Get first row of result set for logging */
+    resultSet.next();
+
+    var result = "Succeeded";
+
+    /*Log results to table*/
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,sfStatement.getNumRowsInserted()
+            ,result
+            ,sfStatement.getSqlText()
+        ]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds:
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,result
+            ,sfStatement.getSqlText()
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+        ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

@@ -1,0 +1,8 @@
+CREATE OR REPLACE TABLE FDBDATA.RDLIMCR0_CLIN_REVIEW_STATUS (
+	DLIM_DRUG_ID NUMERIC(8, 0) NOT NULL,
+	DLIM_DRUG_ID_TYP_CODE VARCHAR(2) NOT NULL,
+	DLIM_STATUS_CODE VARCHAR(2) NOT NULL,
+	CONSTRAINT PK_RDLIMCR0_CLIN_REVIEW_STATUS PRIMARY KEY (DLIM_DRUG_ID, DLIM_DRUG_ID_TYP_CODE)
+)
+COMMENT = 'Indicates whether a drug has been reviewed by First Databank (FDB) clinicians for possible participation in a drug-lab interference record.'
+;

@@ -1,0 +1,225 @@
+CREATE OR REPLACE PROCEDURE NETWORK.SPU_LOAD_LOB_PLAN_TYPE(
+  "YEAR"  VARCHAR,
+  "MONTH" VARCHAR,
+  "DAY"   VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var result = "";
+const procName  = 'SPU_LOAD_LOB_PLAN_TYPE';
+const startTime = new Date();
+
+let insertCount = 0, updateCount = 0, deleteCount = 0;
+
+let currentSqlCommand = '';
+let currentStatement = null;
+
+try {
+
+    const targetTableName = 'NETWORK.LOB_PLAN_TYPE';
+
+    const basePrefix = '.*lob_plan_type_archive';
+    const extPattern = '\\.csv(\\.gz)?$';
+
+    currentSqlCommand = `SELECT COALESCE(MAX(INSERT_DATETIME), TO_TIMESTAMP('2010-01-01')) FROM ${targetTableName}`;
+    currentStatement = snowflake.createStatement({ sqlText: currentSqlCommand });
+    var lastLoadResult = currentStatement.execute();
+
+    lastLoadResult.next();
+    var lastLoadDate = new Date(lastLoadResult.getColumnValue(1));
+
+    var today = new Date();
+
+    var datePaths = [];
+
+    datePaths.push(YEAR + "/" + MONTH + "/" + DAY);
+
+    var totalFiles = 0;
+    var totalRows = 0;
+
+    for (var i = 0; i < datePaths.length; i++) {
+
+        let filePattern = `${basePrefix}/${datePaths[i]}/[^/]+${extPattern}`;
+
+        currentSqlCommand = `
+COPY INTO NETWORK.LOB_PLAN_TYPE
+(
+    FILENAME,
+    INSERT_DATETIME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    LINE_OF_BUSINESS_CODE,
+    PLAN_TYPE,
+    PLAN_TYPE_DESC,
+    PLAN_TYPE_SOURCE,
+    PROGRAM_CODE,
+    PROGRAM_DESC,
+    LOAD_DATE
+)
+FROM (
+    SELECT
+        METADATA$FILENAME,
+        CURRENT_TIMESTAMP(),
+        $1  AS TPA_CLIENT_ID,
+        $2  AS TPA_ID,
+        $3  AS TPA_DIV_ID,
+        $4  AS LINE_OF_BUSINESS_CODE,
+        $5  AS PLAN_TYPE,
+        $6  AS PLAN_TYPE_DESC,
+        $7  AS PLAN_TYPE_SOURCE,
+        $8  AS PROGRAM_CODE,
+        $9  AS PROGRAM_DESC,
+        TRY_TO_DATE($10) AS LOAD_DATE
+    FROM @NETWORK.SNOWFLAKEDATA_LOB_PLAN_TYPE
+    (
+        FILE_FORMAT => NETWORK.LOB_PLAN_TYPE_FILE_FORMAT,
+        PATTERN     => '${filePattern}'
+    )
+)
+ON_ERROR = 'ABORT_STATEMENT'
+FORCE = FALSE;
+`;
+
+        currentStatement = snowflake.createStatement({ sqlText: currentSqlCommand });
+        var resultSet = currentStatement.execute();
+
+        totalFiles += resultSet.getRowCount();
+        totalRows  += (resultSet.getNumRowsAffected() || 0);
+    }
+
+    insertCount = totalRows;
+
+    result += procName + " Succeeded";
+
+    let endTime = new Date();
+
+    let logSql = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (
+             NAME
+            ,TYPE
+            ,START_TIME
+            ,END_TIME
+            ,INSERT_COUNT
+            ,UPDATE_COUNT
+            ,DELETE_COUNT
+            ,RESULT_TEXT
+            ,SQL_STATEMENT
+            ,ERROR_CODE
+            ,ERROR_STATE
+            ,ERROR_MESSAGE
+            ,ERROR_STACK_TRACE_TEXT
+        )
+        VALUES (
+             :1
+            ,:2
+            ,:3::timestamp_ltz
+            ,:4::timestamp_ltz
+            ,:5
+            ,:6
+            ,:7
+            ,:8
+            ,:9
+            ,NULL
+            ,NULL
+            ,NULL
+            ,NULL
+        );
+    `;
+
+    snowflake.execute({
+        sqlText: logSql,
+        binds: [
+            procName,
+            'PROCEDURE',
+            startTime.toISOString(),
+            endTime.toISOString(),
+            insertCount || 0,
+            updateCount || 0,
+            deleteCount || 0,
+            result,
+            currentSqlCommand
+        ]
+    });
+
+} catch (err) {
+
+    let endTime = new Date();
+
+    result = procName + " Failed";
+
+    let errorCode = err.code || '';
+    let errorState = err.state || '';
+    let errorMessage = err.message || '';
+    let errorStack = err.stackTraceTxt || err.stack || '';
+
+    let failedSql = currentSqlCommand || '';
+
+    if (!failedSql && currentStatement && currentStatement.getSqlText) {
+        failedSql = currentStatement.getSqlText();
+    }
+
+    if (!failedSql) {
+        failedSql = 'SQL statement not available';
+    }
+
+    let failLogSql = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (
+             NAME
+            ,TYPE
+            ,START_TIME
+            ,END_TIME
+            ,INSERT_COUNT
+            ,UPDATE_COUNT
+            ,DELETE_COUNT
+            ,RESULT_TEXT
+            ,SQL_STATEMENT
+            ,ERROR_CODE
+            ,ERROR_STATE
+            ,ERROR_MESSAGE
+            ,ERROR_STACK_TRACE_TEXT
+        )
+        VALUES (
+             :1
+            ,:2
+            ,:3::timestamp_ltz
+            ,:4::timestamp_ltz
+            ,:5
+            ,:6
+            ,:7
+            ,:8
+            ,:9
+            ,:10
+            ,:11
+            ,:12
+            ,:13
+        );
+    `;
+
+    snowflake.execute({
+        sqlText: failLogSql,
+        binds: [
+            procName,
+            'PROCEDURE',
+            startTime.toISOString(),
+            endTime.toISOString(),
+            insertCount || 0,
+            updateCount || 0,
+            deleteCount || 0,
+            result,
+            failedSql,
+            errorCode.toString(),
+            errorState.toString(),
+            errorMessage.toString(),
+            errorStack.toString()
+        ]
+    });
+
+    return result;
+}
+
+return result;
+$$;

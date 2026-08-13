@@ -1,0 +1,121 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_DELETE_STAGEDATA_TABLE(SCHEMA_NAME VARCHAR, TABLE_NAME VARCHAR, ENTITY_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = SCHEMA_NAME+"."+TABLE_NAME
+
+var sqlDeleteCommand =
+`
+DELETE FROM `+targetTableName+` tgt
+USING STAGEDATA.DELETED_DOCUMENT_VW src
+WHERE tgt.URI = src.ARCHIVED_URI
+AND src.ENTITY_NAME = '`+ENTITY_NAME+`'
+AND src.IS_PROCESSED_FLAG IS NULL
+;`;
+
+var sqlUpdateCommand =
+`
+UPDATE STAGEDATA.DELETED_DOCUMENT
+SET IS_PROCESSED_FLAG = TRUE
+WHERE JSON_DATA:entityName::string = '`+ENTITY_NAME+`'
+;`;
+
+
+try 
+{
+    //Execute Delete Commands
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    var resultSet = sfStatement.execute();
+    var endTime = new Date().toISOString();
+    
+    //Get first row of result set for logging
+    resultSet.next();
+
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,resultSet.getColumnValueAsString("number of rows deleted")
+            ,result
+            ,sfStatement.getSqlText()
+        ]
+        }
+    );      
+
+      //Execute Update Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,sfStatement.getNumRowsUpdated()
+            ,result
+            ,sfStatement.getSqlText()
+        ]
+        }
+    );      
+}
+
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds:
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,result
+            ,sfStatement.getSqlText()
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+        ]
+        }
+    );           
+    throw result;
+}
+return result;
+$$
+;

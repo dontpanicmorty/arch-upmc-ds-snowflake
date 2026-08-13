@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_PROVIDERLANGUAGES
+LIKE &{CACTUS}.VISUALCACTUS.PROVIDERLANGUAGES
+;
+
+!set variable_substitution=false;
+

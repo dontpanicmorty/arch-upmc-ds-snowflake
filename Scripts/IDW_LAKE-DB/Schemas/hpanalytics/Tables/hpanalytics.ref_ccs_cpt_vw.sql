@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE HPANALYTICS.REF_CCS_CPT_VW
+(
+CPT4_CODE                VARCHAR,
+CPT4_CODE_DESC           VARCHAR,
+CODE_RANGE               VARCHAR,
+CCS                       NUMBER,
+CCS_LABEL                VARCHAR,
+CCS_VERSION              VARCHAR,
+RELEASE_DATE       TIMESTAMP_NTZ,
+LOAD_DATE          TIMESTAMP_NTZ
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

@@ -1,0 +1,31 @@
+CREATE OR REPLACE VIEW DBO.DimContact_VW
+AS 
+SELECT 	$1:ContactKey::NUMBER(38, 0) AS ContactKey, 
+		$1:CONTACT_ID::NUMBER(38, 0) AS CONTACT_ID, 
+		$1:ContactName::VARCHAR AS ContactName, 
+		$1:ContactSalutation::NUMBER(38, 0) AS ContactSalutation, 
+		$1:ContactSalutationDescription::VARCHAR AS ContactSalutationDescription, 
+		$1:ContactTitle::VARCHAR AS ContactTitle, 
+		$1:MailingAddress1::VARCHAR AS MailingAddress1, 
+		$1:MailingAddress2::VARCHAR AS MailingAddress2, 
+		$1:MailingCity::VARCHAR AS MailingCity, 
+		$1:MailingState::VARCHAR AS MailingState, 
+		$1:MailingZip::VARCHAR AS MailingZip, 
+		$1:MailingZip4::VARCHAR AS MailingZip4, 
+		$1:PhysicalAddress1::VARCHAR AS PhysicalAddress1, 
+		$1:PhysicalAddress2::VARCHAR AS PhysicalAddress2, 
+		$1:PhysicalCity::VARCHAR AS PhysicalCity, 
+		$1:PhysicalState::VARCHAR AS PhysicalState, 
+		$1:PhysicalZip::VARCHAR AS PhysicalZip, 
+		$1:PhysicalZip4::VARCHAR AS PhysicalZip4, 
+		$1:Email::VARCHAR AS Email, 
+		$1:OfficePhone::VARCHAR AS OfficePhone, 
+		$1:CellPhone::VARCHAR AS CellPhone, 
+		$1:FaxPhone::VARCHAR AS FaxPhone, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimContact/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

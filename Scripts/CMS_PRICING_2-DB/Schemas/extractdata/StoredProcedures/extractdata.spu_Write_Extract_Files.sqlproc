@@ -1,0 +1,214 @@
+/**
+Master stored procedure for running the monthly extract to the WEBSOLUTIONS
+stage. This should be run only once, and all child procedures should be called
+from here.
+- TIC_DATE is the YYYY-MM-DD date we're writing for. Defaults to the result of
+  EXTRACTDATA.FXN_GET_CURRENT_TIC_DATE()
+- STAGE_PATH is a path to a root point in a Blob stage we'll write everything
+  under. This must include the @, and defaults to @EXTRACTDATA.WEBSOLUTIONS_PUBLICWEB;
+  this can also include directories in blob.
+*/
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_WRITE_EXTRACT_FILES (
+  TIC_DATE VARCHAR,
+  STAGE_PATH VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+const failedFiles = []; // Printed at the end
+
+try {
+  // If an override date wasn't provided:
+  if (!TIC_DATE) {
+    sqlText = `SELECT EXTRACTDATA.FXN_GET_CURRENT_TIC_DATE() AS TIC_DATE;`;
+    resultSet = snowflake.execute({sqlText});
+    resultSet.next();
+    TIC_DATE = resultSet.getColumnValueAsString('TIC_DATE');
+  }
+  // Otherwise, validate that it matches a basic regex
+  else if (!TIC_DATE.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)) {
+    throw new Error('EXTRACTDATA.WRITE_EXTRACT_FILES called with a TIC_DATE parameter that did not match YYYY-MM-DD.');
+  }
+
+  if (!STAGE_PATH) {
+    STAGE_PATH = '@EXTRACTDATA.HPDSDATALAKE_OUTGOING/cmspricing/mrf/';
+  }
+
+  /**
+   * Also to-do:
+      - Delete all files from two months ago (no longer needed)
+      - Retain last month's file (public page will still be pointing to it)
+      - Optional, if Functions App is set up: run schema validator
+      - Archive all files for ten years, somewhere
+      - Archive the ToC file somehow so we can point back to it.
+   */
+  function writeFile(URL, sourceView, where) {
+    URL = URL.replace(/XXXX-XX-XX/g, TIC_DATE);
+    try {
+      sqlText = `CALL EXTRACTDATA.SPU_COPY_VIEW_TO_BLOB(
+        '${URL}', 
+        'EXTRACTDATA',
+        '${sourceView}', 
+        '${where}',
+        '${TIC_DATE}',
+        '${STAGE_PATH}'
+      );`;
+      snowflake.execute({sqlText});
+    }
+    catch (err) {
+      // I _think_ error codes are stable enough, but just in case:
+      if (err.code === 1000082 || err.message.startsWith('Max LOB size') ||
+        err.code === 100099 || err.message.indexOf('Result array of ARRAYAGG is too large') > -1) {
+        
+        // TODO: pipe to external function (version of `tic-assemble` under Utils)
+        // once Azure team finishes setting that up.
+        failedFiles.push(`URL ${URL}, from sourceView ${sourceView} (${where})`);
+        return;
+      }
+
+      throw err;
+    }
+  }
+
+  // Calls to actually write the files:
+
+  // Provider-reference files, require a join out to see what's actually ours
+/*   sqlText = `SELECT DISTINCT URL_PATH, PRICING_PROVIDER_GROUP_KEY
+FROM EXTRACTDATA.REPORTING_ENTITY
+LEFT JOIN EXTRACTDATA.PRICING_FILE ON 
+    REPORTING_ENTITY.REPORTING_ENTITY_KEY = PRICING_FILE.REPORTING_ENTITY_KEY
+LEFT JOIN EXTRACTDATA.IN_NETWORK_FILE_BASE_SELECT_VW ON 
+    IN_NETWORK_FILE_BASE_SELECT_VW.PRICING_FILE_KEY = PRICING_FILE.PRICING_FILE_KEY,
+    LATERAL FLATTEN (input => PRICING_PROVIDER_REFERENCE_JSON) PROVIDER_REFERENCES
+INNER JOIN EXTRACTDATA.PRICING_PROVIDER_GROUP_FILE_JSON_VW ON
+    PRICING_PROVIDER_GROUP_FILE_JSON_VW.PRICING_PROVIDER_GROUP_KEY = VALUE:provider_group_id
+WHERE REPORTING_ENTITY.REPORTING_ENTITY_NAME = 'UPMC Health Plan';`;
+  resultSet = snowflake.execute({sqlText});
+
+  while (resultSet.next()) {
+    const urlPath = resultSet.getColumnValueAsString('URL_PATH');
+    const key = resultSet.getColumnValueAsString('PRICING_PROVIDER_GROUP_KEY');
+    writeFile(
+      urlPath, 
+      'PRICING_PROVIDER_GROUP_FILE_JSON_VW', 
+      `WHERE PRICING_PROVIDER_GROUP_KEY = ${key}`
+    );
+  } */
+
+  /**
+  In-network files are disabled for the time being because they're too large for
+  Snowflake's compressed column limit. They're run via the tic-assemble script
+  separately at the same time.
+  */
+  /*
+  sqlText = `SELECT DISTINCT URL_PATH, IN_NETWORK_FILE_JSON_VW.PRICING_FILE_KEY
+FROM EXTRACTDATA.REPORTING_ENTITY
+INNER JOIN EXTRACTDATA.PRICING_FILE ON 
+    REPORTING_ENTITY.REPORTING_ENTITY_KEY = PRICING_FILE.REPORTING_ENTITY_KEY
+INNER JOIN EXTRACTDATA.IN_NETWORK_FILE_JSON_VW ON 
+    PRICING_FILE.PRICING_FILE_KEY = IN_NETWORK_FILE_JSON_VW.PRICING_FILE_KEY
+WHERE REPORTING_ENTITY.REPORTING_ENTITY_NAME = 'UPMC Health Plan';`;
+  resultSet = snowflake.execute({sqlText});
+
+  while (resultSet.next()) {
+    const urlPath = resultSet.getColumnValueAsString('URL_PATH');
+    const key = resultSet.getColumnValueAsString('PRICING_FILE_KEY');
+
+    writeFile(
+      urlPath, 
+      'IN_NETWORK_FILE_JSON_VW', 
+      `WHERE PRICING_FILE_KEY = ${key}`
+    );
+  } */
+
+  // Out-of-network files
+  sqlText = `SELECT DISTINCT URL_PATH, OUT_OF_NETWORK_FILE_JSON_VW.PRICING_FILE_KEY
+FROM EXTRACTDATA.REPORTING_ENTITY
+INNER JOIN EXTRACTDATA.PRICING_FILE ON 
+    REPORTING_ENTITY.REPORTING_ENTITY_KEY = PRICING_FILE.REPORTING_ENTITY_KEY
+INNER JOIN EXTRACTDATA.OUT_OF_NETWORK_FILE_JSON_VW ON 
+    PRICING_FILE.PRICING_FILE_KEY = OUT_OF_NETWORK_FILE_JSON_VW.PRICING_FILE_KEY
+WHERE REPORTING_ENTITY.REPORTING_ENTITY_NAME = 'UPMC Health Plan';`;
+  resultSet = snowflake.execute({sqlText});
+
+  while (resultSet.next()) {
+    const urlPath = resultSet.getColumnValueAsString('URL_PATH');
+    const key = resultSet.getColumnValueAsString('PRICING_FILE_KEY');
+
+    writeFile(
+      urlPath, 
+      'OUT_OF_NETWORK_FILE_JSON_VW', 
+      `WHERE PRICING_FILE_KEY = ${key}`
+    );
+  }
+
+  // table-of-contents file: only one, can do it with a moderately complicated WHERE
+  sqlText = `SELECT URL_PATH, TABLE_OF_CONTENTS_FILE_JSON_VW.REPORTING_ENTITY_KEY
+FROM EXTRACTDATA.REPORTING_ENTITY
+LEFT JOIN EXTRACTDATA.TABLE_OF_CONTENTS_FILE_JSON_VW ON
+    TABLE_OF_CONTENTS_FILE_JSON_VW.REPORTING_ENTITY_KEY = REPORTING_ENTITY.REPORTING_ENTITY_KEY
+WHERE REPORTING_ENTITY_NAME = 'UPMC Health Plan'
+`;
+  resultSet = snowflake.execute({sqlText});
+  
+  // THERE CAN ONLY BE ONE (but we're `while`ing the day away anyway)
+  while (resultSet.next()) {
+    let urlPath = resultSet.getColumnValueAsString('URL_PATH');
+    const key = resultSet.getColumnValueAsString('REPORTING_ENTITY_KEY');
+
+    writeFile(
+      urlPath,
+      'TABLE_OF_CONTENTS_FILE_JSON_VW', 
+      `WHERE REPORTING_ENTITY_KEY = ${key}`
+    );
+  }
+  
+  let failedFileDiag = '';
+  if (failedFiles.length > 0) {
+    failedFileDiag += `(the following files could not be written: ${failedFiles.join(' | ')})`;
+  }
+  return failedFileDiag;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  if (failedFiles.length > 0) {
+    message += ` (the following files could not be written: ${failedFiles.join(' | ')})`;
+  }
+
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw new Error(message + ' | ' + stack);
+}
+$$;

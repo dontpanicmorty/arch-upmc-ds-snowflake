@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE ADL_PROD.INFO_PROCEDURE_MEMBER_MO
+(
+LOB                              VARCHAR,
+MEMBERSHIP_DATE_YYYYMM           VARCHAR,
+MEMBERSHIP_DATE            TIMESTAMP_NTZ,
+MONTH_INTERVAL                    NUMBER,
+MEMBER_CNT                        NUMBER
+)
+COMMENT='Created for ADL_PROD Migration'
+;

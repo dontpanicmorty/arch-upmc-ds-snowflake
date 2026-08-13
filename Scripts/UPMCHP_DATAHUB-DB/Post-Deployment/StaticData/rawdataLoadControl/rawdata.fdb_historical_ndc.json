@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "FDB",
+  "targetTableName": "RAWDATA.FDB_HISTORICAL_NDC",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/drug/firstdatabank/",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_FDB_FILE_FORMAT",
+  "sourceFilePattern": "drug/firstdatabank/historical/fdb_historical_ndc.*",
+  "sourceFileDelimitedColumnCount": 45,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

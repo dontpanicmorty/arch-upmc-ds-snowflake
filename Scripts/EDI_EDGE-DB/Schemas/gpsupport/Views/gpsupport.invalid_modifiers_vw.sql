@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW GPSUPPORT.INVALID_MODIFIERS_VW
+AS
+SELECT
+ CODE
+FROM &{IDAP_LAKE}.EDI_EDGE_STAGE.GPSUPPORT__INVALID_MODIFIERS;
+!set variable_substitution=false;

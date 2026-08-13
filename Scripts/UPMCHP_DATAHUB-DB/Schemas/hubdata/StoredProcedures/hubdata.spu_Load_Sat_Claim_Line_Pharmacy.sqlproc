@@ -1,0 +1,743 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_SAT_CLAIM_LINE_PHARMACY(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.SAT_CLAIM_LINE_PHARMACY`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.SAT_CLAIM_LINE_PHARMACY_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+    var sqlMergeCommand = 
+`    
+MERGE INTO HUBDATA.SAT_CLAIM_LINE_PHARMACY TGT
+USING (
+    SELECT     
+        HUB_CLAIM_DETAIL_HKEY,
+        HASH_DIFF,
+        INSERT_DATETIME,
+        BATCH_RUN_DATE,
+        RECORD_IDENTIFIER,
+        PROCESSOR_NUMBER,
+        BATCH_NUMBER,
+        ASSIGNED_CLAIM_ID,
+        PRESCRIPTION_NBR,
+        FILLED_DATE,
+        REFILL_CODE,
+        DRUG_METRIC_QTY,
+        DAY_SUPPLY_CNT,
+        BASIS_OF_COST_DETERMINATION,
+        INGREDIENT_COST_AMT,
+        DISPENSING_FEE_AMT,
+        COPAY_AMT,
+        SALES_TAX_AMT,
+        NET_CHECK_DUE_AMT,
+        PATIENT_FIRST_NAME,
+        PATIENT_LAST_NAME,
+        DATE_OF_BIRTH,
+        SEX_CODE,
+        CARDHOLDER_ID_NUMBER,
+        RELATIONSHIP_CODE,
+        GROUP_NUMBER,
+        DIAGNOSIS_CODE,
+        CARDHOLDER_FIRST_NAME,
+        CARDHOLDER_LAST_NAME,
+        AUTHORIZATION_NBR,
+        P_A_M_C_S_C_NUMBER,
+        CUSTOMER_LOCATION,
+        RESUBMISSION_CYCLE_COUNT,
+        PRESCRIPTION_WRITTEN_DATE,
+        DISPENSE_CODE,
+        PERSON_CODE,
+        OTHER_COVERAGE_CODE,
+        ELIGIBILITY_CLARIFICATION_CODE,
+        COMPOUND_CODE,
+        NUMBER_OF_REFILLS_AUTHORIZED,
+        LEVEL_OF_SERVICE,
+        PRESCRIPTION_ORIGIN_CODE,
+        PRESCRIPTION_DENIAL,
+        CLINIC_ID_NUMBER,
+        CLAIMED_POSTAGE_AMT,
+        UNIT_DOSE_IND,
+        OTHER_PAYOR_AMT,
+        BASIS_OF_DAYS_SUPPLY_DET,
+        FULL_AWP,
+        EXPANSION_AREA,
+        MASTER_CARRIER,
+        ESI_SUB_GROUP,
+        PLAN_DESIGNATOR,
+        ADJUDICATION_DATE,
+        ADMINISTRATIVE_FEE_AMT,
+        CAP_AMT,
+        INGREDIENT_COST_SUB,
+        MEMBER_NON_COPAY_AMT,
+        MEMBER_PAY_CODE,
+        INCENTIVE_FEE,
+        CLAIM_ADJUSTMENT_AMT,
+        CLAIM_ADJUSTMENT_CODE,
+        PRICE_SOURCE_CODE,
+        USUAL_CUSTOMARY_AMT,
+        PAYMENT_DATE,
+        BENEFIT_PLAN_LEVEL_CODE,
+        ORIGINAL_MEMBER,
+        DATE_OF_INJURY,
+        FEE_AMT,
+        ESI_REFERENCE_NUMBER,
+        CLIENT_CUSTOMER_ID,
+        ESI_PLAN_NBR,
+        ESI_ADJUDICATION_REF_NUMBER,
+        MEMBER_PAID_AMT,
+        TROOP_APPLIED_AMT,
+        SPECIALTY_CLAIM_IND,
+        CMS_CONTRACT_ID,
+        CMS_PBP_ID,
+        ESI_CLIENT_GENERAL_PUR_AREA,
+        PARTIAL_FILL_STATUS_CODE,
+        RECEIVED_DATE,
+        FSA_VENDOR_CODE,
+        CHARGE_AMT,
+        DISALLOWED_AMT,
+        DEDUCTIBLE_AMT,
+        COINSURANCE_AMT,
+        BENEFIT_COPAY_100_PERCENT,
+        COPAY_TIER_LEVEL_NUMBER,
+        SUBMISSION_TYPE,
+        RETRO_LICS_CODE,
+        RETRO_LICS_AMT,
+        LICS_SUBSIDY_AMT,
+        MED_B_CLAIM,
+        ORIGINAL_HIA_SPENDING_AMT,
+        UPDATED_HIA_SPENDING_AMT,
+        HIA_SPENDING_AMT_UPDATE_DATE,
+        ORIGINAL_HRA_SPENDING_AMT,
+        UPDATED_HRA_SPENDING_AMT,
+        HRA_SPENDING_AMT_UPDATE_DATE,
+        TOTAL_SPENDING_AMT,
+        ESI_THERAPY_CLASS,
+        HEALTH_INSURANCE_CLAIM_NUMBER,
+        ESI_FUNDED_IND,
+        TROOP_ELIGIBILITY_CODE,
+        LOW_INCOME_SUBSIDY_CODE,
+        COPAY_BENEFIT_OPTION,
+        VALUE_CODE,
+        PAYSUB_CLAIM_SOURCE,
+        CDH_RESPONSE_ID,
+        CDH_ESI_REFERENCE_CODE,
+        HRA_SINGLE_BOOK_FLAG,
+        HRA_APPLIED_AMT,
+        HRA_REQUEST_AMT,
+        VENDOR_ID,
+        DEDUCTIBLE_SINGLE_BOOK_FLAG,
+        MAX_OOP_SINGLE_BOOK_FLAG,
+        STOP_LOSS_SINGLE_BOOK_FLAG,
+        TDS_SINGLE_BOOK_FLAG,
+        CDH_VENDOR_VALUE,
+        ACR_ADMIN_FLAG,
+        SUPL_PAYER_PAID_AMT,
+        SUPL_COPAY_PAID_AMT,
+        SUPL_PAYER_COVERAGE_CODE,
+        SUPL_PAYER_DEDUCTIBLE_AMT,
+        SUPL_PAYER_COPAY_AMT,
+        SUPL_PAYER_ANCILLARY_AMT,
+        SUPL_COPAY_ADDITIONAL_AMT,
+        PRESCRIPTION_NUMBER_12_POS,
+        PATIENT_RESIDENCE_CODE,
+        NX_EXISTS_IND,
+        MEMBER_ACR_AMT,
+        COB_RECOVERY_AMT,
+        PRE_COB_CLAIM_AMT,
+        DRUG_CALCULATED_DISCOUNT_AMT,
+        DRUG_DISCOUNT_EXCLUSION_CODE,
+        DRUG_DISCOUNT_APPLICABLE_CODE,
+        DRUG_DISCOUNT_ELIGIBLE_AMT,
+        PDE_DELETE_CODE,
+        SHORT_CYCLE_FILL_CODE,
+        TRANSACTION_TYPE_CODE,
+        TRANSACTION_ADJUSTMENT_TYPE_CODE,
+        PREFERRED_PHARMACY_IND,
+        BATCH_CODE,
+        PAYMENT_REFERENCE_NUMBER,
+        ADJUDICATION_PHARMACY_CLASS_CODE,
+        CLAIM_COB_CODE,
+        PATIENT_ASSURANCE_PROG_TYPE,
+        PATIENT_ASSURANCE_PROG_AMT,
+        SAVE_ON_RX_IND,
+        PRICING_USED_IND,
+        M3P_ORIGIN,
+        PATIENT_REDUCTION_AMT,
+        SUPPLEMENTAL_COVERAGE_AMT,
+        SUPPLEMENTAL_COVERAGE_TROOP_QUALIFICATION,
+        MANUFACTURER_DISCOUNT_TYPE,
+        ORIGINAL_CLAIM_ID,
+        FILL_METHOD_CODE,
+        AWP_INDICATION_CODE,
+        AWP_UNIT_AMT,
+        AWP_TOTAL_AMT,
+        PHARMACY_CLAIM_CNT,
+        FORMULARY_FLAG_CODE,
+        MED_B_DRUG,
+        MEDICARE_D_COVERED_DRUG,
+        CLAIM_GENERIC_PRICE_CODE,
+        DISPENSE_PHARMACY_TYPE_CODE,
+        ADJUSTMENT_TYPE_CODE,
+        PRODUCT_SELECTION_AMT,
+        BENEFIT_EXCEED_AMT,
+        UNIT_PRICE_ALLOWED_MAX_AMT,
+        REPORT_EFFECTIVE_DATE,
+        MEMBER_AGE_NBR,
+        RX_FORMULARY_CODE,
+        TRANSITION_FILL_IND
+FROM STAGEDATA.SAT_CLAIM_LINE_PHARMACY_TMP
+) SRC 
+ON (TGT.HUB_CLAIM_DETAIL_HKEY = SRC.HUB_CLAIM_DETAIL_HKEY 
+AND TGT.HASH_DIFF=SRC.HASH_DIFF
+AND TGT.IS_CURRENT_ROW_FLAG = TRUE) 
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        HUB_CLAIM_DETAIL_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        HASH_DIFF,
+        INSERT_DATETIME,
+        BATCH_RUN_DATE,
+        RECORD_IDENTIFIER,
+        PROCESSOR_NUMBER,
+        BATCH_NUMBER,
+        ASSIGNED_CLAIM_ID,
+        PRESCRIPTION_NBR,
+        FILLED_DATE,
+        REFILL_CODE,
+        DRUG_METRIC_QTY,
+        DAY_SUPPLY_CNT,
+        BASIS_OF_COST_DETERMINATION,
+        INGREDIENT_COST_AMT,
+        DISPENSING_FEE_AMT,
+        COPAY_AMT,
+        SALES_TAX_AMT,
+        NET_CHECK_DUE_AMT,
+        PATIENT_FIRST_NAME,
+        PATIENT_LAST_NAME,
+        DATE_OF_BIRTH,
+        SEX_CODE,
+        CARDHOLDER_ID_NUMBER,
+        RELATIONSHIP_CODE,
+        GROUP_NUMBER,
+        DIAGNOSIS_CODE,
+        CARDHOLDER_FIRST_NAME,
+        CARDHOLDER_LAST_NAME,
+        AUTHORIZATION_NBR,
+        P_A_M_C_S_C_NUMBER,
+        CUSTOMER_LOCATION,
+        RESUBMISSION_CYCLE_COUNT,
+        PRESCRIPTION_WRITTEN_DATE,
+        DISPENSE_CODE,
+        PERSON_CODE,
+        OTHER_COVERAGE_CODE,
+        ELIGIBILITY_CLARIFICATION_CODE,
+        COMPOUND_CODE,
+        NUMBER_OF_REFILLS_AUTHORIZED,
+        LEVEL_OF_SERVICE,
+        PRESCRIPTION_ORIGIN_CODE,
+        PRESCRIPTION_DENIAL,
+        CLINIC_ID_NUMBER,
+        CLAIMED_POSTAGE_AMT,
+        UNIT_DOSE_IND,
+        OTHER_PAYOR_AMT,
+        BASIS_OF_DAYS_SUPPLY_DET,
+        FULL_AWP,
+        EXPANSION_AREA,
+        MASTER_CARRIER,
+        ESI_SUB_GROUP,
+        PLAN_DESIGNATOR,
+        ADJUDICATION_DATE,
+        ADMINISTRATIVE_FEE_AMT,
+        CAP_AMT,
+        INGREDIENT_COST_SUB,
+        MEMBER_NON_COPAY_AMT,
+        MEMBER_PAY_CODE,
+        INCENTIVE_FEE,
+        CLAIM_ADJUSTMENT_AMT,
+        CLAIM_ADJUSTMENT_CODE,
+        PRICE_SOURCE_CODE,
+        USUAL_CUSTOMARY_AMT,
+        PAYMENT_DATE,
+        BENEFIT_PLAN_LEVEL_CODE,
+        ORIGINAL_MEMBER,
+        DATE_OF_INJURY,
+        FEE_AMT,
+        ESI_REFERENCE_NUMBER,
+        CLIENT_CUSTOMER_ID,
+        ESI_PLAN_NBR,
+        ESI_ADJUDICATION_REF_NUMBER,
+        MEMBER_PAID_AMT,
+        TROOP_APPLIED_AMT,
+        SPECIALTY_CLAIM_IND,
+        CMS_CONTRACT_ID,
+        CMS_PBP_ID,
+        ESI_CLIENT_GENERAL_PUR_AREA,
+        PARTIAL_FILL_STATUS_CODE,
+        RECEIVED_DATE,
+        FSA_VENDOR_CODE,
+        CHARGE_AMT,
+        DISALLOWED_AMT,
+        DEDUCTIBLE_AMT,
+        COINSURANCE_AMT,
+        BENEFIT_COPAY_100_PERCENT,
+        COPAY_TIER_LEVEL_NUMBER,
+        SUBMISSION_TYPE,
+        RETRO_LICS_CODE,
+        RETRO_LICS_AMT,
+        LICS_SUBSIDY_AMT,
+        MED_B_CLAIM,
+        ORIGINAL_HIA_SPENDING_AMT,
+        UPDATED_HIA_SPENDING_AMT,
+        HIA_SPENDING_AMT_UPDATE_DATE,
+        ORIGINAL_HRA_SPENDING_AMT,
+        UPDATED_HRA_SPENDING_AMT,
+        HRA_SPENDING_AMT_UPDATE_DATE,
+        TOTAL_SPENDING_AMT,
+        ESI_THERAPY_CLASS,
+        HEALTH_INSURANCE_CLAIM_NUMBER,
+        ESI_FUNDED_IND,
+        TROOP_ELIGIBILITY_CODE,
+        LOW_INCOME_SUBSIDY_CODE,
+        COPAY_BENEFIT_OPTION,
+        VALUE_CODE,
+        PAYSUB_CLAIM_SOURCE,
+        CDH_RESPONSE_ID,
+        CDH_ESI_REFERENCE_CODE,
+        HRA_SINGLE_BOOK_FLAG,
+        HRA_APPLIED_AMT,
+        HRA_REQUEST_AMT,
+        VENDOR_ID,
+        DEDUCTIBLE_SINGLE_BOOK_FLAG,
+        MAX_OOP_SINGLE_BOOK_FLAG,
+        STOP_LOSS_SINGLE_BOOK_FLAG,
+        TDS_SINGLE_BOOK_FLAG,
+        CDH_VENDOR_VALUE,
+        ACR_ADMIN_FLAG,
+        SUPL_PAYER_PAID_AMT,
+        SUPL_COPAY_PAID_AMT,
+        SUPL_PAYER_COVERAGE_CODE,
+        SUPL_PAYER_DEDUCTIBLE_AMT,
+        SUPL_PAYER_COPAY_AMT,
+        SUPL_PAYER_ANCILLARY_AMT,
+        SUPL_COPAY_ADDITIONAL_AMT,
+        PRESCRIPTION_NUMBER_12_POS,
+        PATIENT_RESIDENCE_CODE,
+        NX_EXISTS_IND,
+        MEMBER_ACR_AMT,
+        COB_RECOVERY_AMT,
+        PRE_COB_CLAIM_AMT,
+        DRUG_CALCULATED_DISCOUNT_AMT,
+        DRUG_DISCOUNT_EXCLUSION_CODE,
+        DRUG_DISCOUNT_APPLICABLE_CODE,
+        DRUG_DISCOUNT_ELIGIBLE_AMT,
+        PDE_DELETE_CODE,
+        SHORT_CYCLE_FILL_CODE,
+        TRANSACTION_TYPE_CODE,
+        TRANSACTION_ADJUSTMENT_TYPE_CODE,
+        PREFERRED_PHARMACY_IND,
+        BATCH_CODE,
+        PAYMENT_REFERENCE_NUMBER,
+        ADJUDICATION_PHARMACY_CLASS_CODE,
+        CLAIM_COB_CODE,
+        PATIENT_ASSURANCE_PROG_TYPE,
+        PATIENT_ASSURANCE_PROG_AMT,
+        SAVE_ON_RX_IND,
+        PRICING_USED_IND,
+        M3P_ORIGIN,
+        PATIENT_REDUCTION_AMT,
+        SUPPLEMENTAL_COVERAGE_AMT,
+        SUPPLEMENTAL_COVERAGE_TROOP_QUALIFICATION,
+        MANUFACTURER_DISCOUNT_TYPE,
+        ORIGINAL_CLAIM_ID,
+        FILL_METHOD_CODE,
+        AWP_INDICATION_CODE,
+        AWP_UNIT_AMT,
+        AWP_TOTAL_AMT,
+        PHARMACY_CLAIM_CNT,
+        FORMULARY_FLAG_CODE,
+        MED_B_DRUG,
+        MEDICARE_D_COVERED_DRUG,
+        CLAIM_GENERIC_PRICE_CODE,
+        DISPENSE_PHARMACY_TYPE_CODE,
+        ADJUSTMENT_TYPE_CODE,
+        PRODUCT_SELECTION_AMT,
+        BENEFIT_EXCEED_AMT,
+        UNIT_PRICE_ALLOWED_MAX_AMT,
+        REPORT_EFFECTIVE_DATE,
+        MEMBER_AGE_NBR,
+        RX_FORMULARY_CODE,
+        TRANSITION_FILL_IND
+    )
+VALUES 
+    (   SRC.HUB_CLAIM_DETAIL_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+        SRC.HASH_DIFF,
+        SRC.INSERT_DATETIME,
+        SRC.BATCH_RUN_DATE,
+        SRC.RECORD_IDENTIFIER,
+        SRC.PROCESSOR_NUMBER,
+        SRC.BATCH_NUMBER,
+        SRC.ASSIGNED_CLAIM_ID,
+        SRC.PRESCRIPTION_NBR,
+        SRC.FILLED_DATE,
+        SRC.REFILL_CODE,
+        SRC.DRUG_METRIC_QTY,
+        SRC.DAY_SUPPLY_CNT,
+        SRC.BASIS_OF_COST_DETERMINATION,
+        SRC.INGREDIENT_COST_AMT,
+        SRC.DISPENSING_FEE_AMT,
+        SRC.COPAY_AMT,
+        SRC.SALES_TAX_AMT,
+        SRC.NET_CHECK_DUE_AMT,
+        SRC.PATIENT_FIRST_NAME,
+        SRC.PATIENT_LAST_NAME,
+        SRC.DATE_OF_BIRTH,
+        SRC.SEX_CODE,
+        SRC.CARDHOLDER_ID_NUMBER,
+        SRC.RELATIONSHIP_CODE,
+        SRC.GROUP_NUMBER,
+        SRC.DIAGNOSIS_CODE,
+        SRC.CARDHOLDER_FIRST_NAME,
+        SRC.CARDHOLDER_LAST_NAME,
+        SRC.AUTHORIZATION_NBR,
+        SRC.P_A_M_C_S_C_NUMBER,
+        SRC.CUSTOMER_LOCATION,
+        SRC.RESUBMISSION_CYCLE_COUNT,
+        SRC.PRESCRIPTION_WRITTEN_DATE,
+        SRC.DISPENSE_CODE,
+        SRC.PERSON_CODE,
+        SRC.OTHER_COVERAGE_CODE,
+        SRC.ELIGIBILITY_CLARIFICATION_CODE,
+        SRC.COMPOUND_CODE,
+        SRC.NUMBER_OF_REFILLS_AUTHORIZED,
+        SRC.LEVEL_OF_SERVICE,
+        SRC.PRESCRIPTION_ORIGIN_CODE,
+        SRC.PRESCRIPTION_DENIAL,
+        SRC.CLINIC_ID_NUMBER,
+        SRC.CLAIMED_POSTAGE_AMT,
+        SRC.UNIT_DOSE_IND,
+        SRC.OTHER_PAYOR_AMT,
+        SRC.BASIS_OF_DAYS_SUPPLY_DET,
+        SRC.FULL_AWP,
+        SRC.EXPANSION_AREA,
+        SRC.MASTER_CARRIER,
+        SRC.ESI_SUB_GROUP,
+        SRC.PLAN_DESIGNATOR,
+        SRC.ADJUDICATION_DATE,
+        SRC.ADMINISTRATIVE_FEE_AMT,
+        SRC.CAP_AMT,
+        SRC.INGREDIENT_COST_SUB,
+        SRC.MEMBER_NON_COPAY_AMT,
+        SRC.MEMBER_PAY_CODE,
+        SRC.INCENTIVE_FEE,
+        SRC.CLAIM_ADJUSTMENT_AMT,
+        SRC.CLAIM_ADJUSTMENT_CODE,
+        SRC.PRICE_SOURCE_CODE,
+        SRC.USUAL_CUSTOMARY_AMT,
+        SRC.PAYMENT_DATE,
+        SRC.BENEFIT_PLAN_LEVEL_CODE,
+        SRC.ORIGINAL_MEMBER,
+        SRC.DATE_OF_INJURY,
+        SRC.FEE_AMT,
+        SRC.ESI_REFERENCE_NUMBER,
+        SRC.CLIENT_CUSTOMER_ID,
+        SRC.ESI_PLAN_NBR,
+        SRC.ESI_ADJUDICATION_REF_NUMBER,
+        SRC.MEMBER_PAID_AMT,
+        SRC.TROOP_APPLIED_AMT,
+        SRC.SPECIALTY_CLAIM_IND,
+        SRC.CMS_CONTRACT_ID,
+        SRC.CMS_PBP_ID,
+        SRC.ESI_CLIENT_GENERAL_PUR_AREA,
+        SRC.PARTIAL_FILL_STATUS_CODE,
+        SRC.RECEIVED_DATE,
+        SRC.FSA_VENDOR_CODE,
+        SRC.CHARGE_AMT,
+        SRC.DISALLOWED_AMT,
+        SRC.DEDUCTIBLE_AMT,
+        SRC.COINSURANCE_AMT,
+        SRC.BENEFIT_COPAY_100_PERCENT,
+        SRC.COPAY_TIER_LEVEL_NUMBER,
+        SRC.SUBMISSION_TYPE,
+        SRC.RETRO_LICS_CODE,
+        SRC.RETRO_LICS_AMT,
+        SRC.LICS_SUBSIDY_AMT,
+        SRC.MED_B_CLAIM,
+        SRC.ORIGINAL_HIA_SPENDING_AMT,
+        SRC.UPDATED_HIA_SPENDING_AMT,
+        SRC.HIA_SPENDING_AMT_UPDATE_DATE,
+        SRC.ORIGINAL_HRA_SPENDING_AMT,
+        SRC.UPDATED_HRA_SPENDING_AMT,
+        SRC.HRA_SPENDING_AMT_UPDATE_DATE,
+        SRC.TOTAL_SPENDING_AMT,
+        SRC.ESI_THERAPY_CLASS,
+        SRC.HEALTH_INSURANCE_CLAIM_NUMBER,
+        SRC.ESI_FUNDED_IND,
+        SRC.TROOP_ELIGIBILITY_CODE,
+        SRC.LOW_INCOME_SUBSIDY_CODE,
+        SRC.COPAY_BENEFIT_OPTION,
+        SRC.VALUE_CODE,
+        SRC.PAYSUB_CLAIM_SOURCE,
+        SRC.CDH_RESPONSE_ID,
+        SRC.CDH_ESI_REFERENCE_CODE,
+        SRC.HRA_SINGLE_BOOK_FLAG,
+        SRC.HRA_APPLIED_AMT,
+        SRC.HRA_REQUEST_AMT,
+        SRC.VENDOR_ID,
+        SRC.DEDUCTIBLE_SINGLE_BOOK_FLAG,
+        SRC.MAX_OOP_SINGLE_BOOK_FLAG,
+        SRC.STOP_LOSS_SINGLE_BOOK_FLAG,
+        SRC.TDS_SINGLE_BOOK_FLAG,
+        SRC.CDH_VENDOR_VALUE,
+        SRC.ACR_ADMIN_FLAG,
+        SRC.SUPL_PAYER_PAID_AMT,
+        SRC.SUPL_COPAY_PAID_AMT,
+        SRC.SUPL_PAYER_COVERAGE_CODE,
+        SRC.SUPL_PAYER_DEDUCTIBLE_AMT,
+        SRC.SUPL_PAYER_COPAY_AMT,
+        SRC.SUPL_PAYER_ANCILLARY_AMT,
+        SRC.SUPL_COPAY_ADDITIONAL_AMT,
+        SRC.PRESCRIPTION_NUMBER_12_POS,
+        SRC.PATIENT_RESIDENCE_CODE,
+        SRC.NX_EXISTS_IND,
+        SRC.MEMBER_ACR_AMT,
+        SRC.COB_RECOVERY_AMT,
+        SRC.PRE_COB_CLAIM_AMT,
+        SRC.DRUG_CALCULATED_DISCOUNT_AMT,
+        SRC.DRUG_DISCOUNT_EXCLUSION_CODE,
+        SRC.DRUG_DISCOUNT_APPLICABLE_CODE,
+        SRC.DRUG_DISCOUNT_ELIGIBLE_AMT,
+        SRC.PDE_DELETE_CODE,
+        SRC.SHORT_CYCLE_FILL_CODE,
+        SRC.TRANSACTION_TYPE_CODE,
+        SRC.TRANSACTION_ADJUSTMENT_TYPE_CODE,
+        SRC.PREFERRED_PHARMACY_IND,
+        SRC.BATCH_CODE,
+        SRC.PAYMENT_REFERENCE_NUMBER,
+        SRC.ADJUDICATION_PHARMACY_CLASS_CODE,
+        SRC.CLAIM_COB_CODE,
+        SRC.PATIENT_ASSURANCE_PROG_TYPE,
+        SRC.PATIENT_ASSURANCE_PROG_AMT,
+        SRC.SAVE_ON_RX_IND,
+        SRC.PRICING_USED_IND,
+        SRC.M3P_ORIGIN,
+        SRC.PATIENT_REDUCTION_AMT,
+        SRC.SUPPLEMENTAL_COVERAGE_AMT,
+        SRC.SUPPLEMENTAL_COVERAGE_TROOP_QUALIFICATION,
+        SRC.MANUFACTURER_DISCOUNT_TYPE,
+        SRC.ORIGINAL_CLAIM_ID,
+        SRC.FILL_METHOD_CODE,
+        SRC.AWP_INDICATION_CODE,
+        SRC.AWP_UNIT_AMT,
+        SRC.AWP_TOTAL_AMT,
+        SRC.PHARMACY_CLAIM_CNT,
+        SRC.FORMULARY_FLAG_CODE,
+        SRC.MED_B_DRUG,
+        SRC.MEDICARE_D_COVERED_DRUG,
+        SRC.CLAIM_GENERIC_PRICE_CODE,
+        SRC.DISPENSE_PHARMACY_TYPE_CODE,
+        SRC.ADJUSTMENT_TYPE_CODE,
+        SRC.PRODUCT_SELECTION_AMT,
+        SRC.BENEFIT_EXCEED_AMT,
+        SRC.UNIT_PRICE_ALLOWED_MAX_AMT,
+        SRC.REPORT_EFFECTIVE_DATE, 
+        SRC.MEMBER_AGE_NBR,
+        SRC.RX_FORMULARY_CODE,
+        SRC.TRANSITION_FILL_IND
+    )
+;`;
+
+// Create update statement to be executed.
+var sqlUpdateCommand=
+`UPDATE HUBDATA.SAT_CLAIM_LINE_PHARMACY TGT
+SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_CLAIM_DETAIL_HKEY, ROW_EFFECTIVE_DATETIME) IN 
+(
+    SELECT HUB_CLAIM_DETAIL_HKEY, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            SAT_CLAIM_LINE_PHARMACY.HUB_CLAIM_DETAIL_HKEY,
+            SAT_CLAIM_LINE_PHARMACY.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY SAT_CLAIM_LINE_PHARMACY.HUB_CLAIM_DETAIL_HKEY ORDER BY SAT_CLAIM_LINE_PHARMACY.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.SAT_CLAIM_LINE_PHARMACY
+            JOIN STAGEDATA.SAT_CLAIM_LINE_PHARMACY_TMP
+                ON (SAT_CLAIM_LINE_PHARMACY_TMP.HUB_CLAIM_DETAIL_HKEY = SAT_CLAIM_LINE_PHARMACY.HUB_CLAIM_DETAIL_HKEY)
+        WHERE SAT_CLAIM_LINE_PHARMACY.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+);`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`UPDATE HUBDATA.SAT_CLAIM_LINE_PHARMACY TGT
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_CLAIM_DETAIL_HKEY, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    SAT_CLAIM_LINE_PHARMACY.HUB_CLAIM_DETAIL_HKEY,
+    SAT_CLAIM_LINE_PHARMACY.ROW_EFFECTIVE_DATETIME
+    FROM HUBDATA.SAT_CLAIM_LINE_PHARMACY
+        JOIN HUBDATA.HUB_CLAIM_DETAIL
+            ON (HUB_CLAIM_DETAIL.HUB_CLAIM_DETAIL_HKEY = SAT_CLAIM_LINE_PHARMACY.HUB_CLAIM_DETAIL_HKEY)
+        LEFT OUTER JOIN STAGEDATA.SAT_CLAIM_LINE_PHARMACY_TMP
+            ON (SAT_CLAIM_LINE_PHARMACY_TMP.HUB_CLAIM_DETAIL_HKEY = SAT_CLAIM_LINE_PHARMACY.HUB_CLAIM_DETAIL_HKEY)
+    WHERE HUB_CLAIM_DETAIL.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM STAGEDATA.SAT_CLAIM_LINE_PHARMACY_TMP)
+    AND SAT_CLAIM_LINE_PHARMACY.IS_CURRENT_ROW_FLAG = TRUE
+    AND SAT_CLAIM_LINE_PHARMACY_TMP.HUB_CLAIM_DETAIL_HKEY IS NULL
+);`;
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    targetTableName = `STAGEDATA.SAT_CLAIM_LINE_PHARMACY_TMP`;
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Merge Command
+    targetTableName = `HUBDATA.SAT_CLAIM_LINE_PHARMACY`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Update Command
+    targetTableName = `HUBDATA.SAT_CLAIM_LINE_PHARMACY`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Delete Command
+    targetTableName = `HUBDATA.SAT_CLAIM_LINE_PHARMACY`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

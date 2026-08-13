@@ -1,0 +1,3 @@
+CREATE SCHEMA IF NOT EXISTS STAGE_REPORTDATA
+COMMENT = 'IDAP staging and work area for building REPORTDATA objects'
+;

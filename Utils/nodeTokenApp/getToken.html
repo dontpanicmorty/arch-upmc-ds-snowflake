@@ -1,0 +1,161 @@
+<html>
+  <head><script type="text/javascript" src="https://alcdn.msauth.net/browser/2.22.0/js/msal-browser.min.js"></script></head>
+  <body>
+    <div><b>Generates a token for a DataServices API. Requires you to log in with the desired account.</b></div>
+    <div style="margin-top: 1rem;"><label style="font-weight:bold;">Client ID:</label></div>
+    <div>
+      <input type="radio" name="clientID" value="656cf0c0-137d-4298-bfde-fdf7f9222a43" id="656cf0c0-137d-4298-bfde-fdf7f9222a43" data-which="snowflake" checked/>
+      <label for="#656cf0c0-137d-4298-bfde-fdf7f9222a43">Snowflake API Access</label>
+    </div>
+    <div>
+      <input type="radio" name="clientID" value="df41a9e4-3382-4c85-8204-1d17f309d799" id="df41a9e4-3382-4c85-8204-1d17f309d799" data-which="datahub"/>
+      <label for="#df41a9e4-3382-4c85-8204-1d17f309d799">DataHub API Access</label>
+    </div>
+    <div>
+      <input type="radio" name="clientID" value="clientID-custom" id="clientID-custom" data-which="datahub"/>
+      <label for="clientID-custom">Custom:</label>
+      <input type="text" id="clientID-custom-input" style="width: 50rem;"/>
+    </div>
+    
+    <div id="snowflake-scopes">
+      <div style="margin-top: 1rem;"><label style="font-weight:bold;">Scope:</label></div>
+      <div>
+        <input type="radio" name="snowflake-scope" value="DS_ANALYST_ROLE" id="DS_ANALYST_ROLE" checked/>
+        <label for="#DS_ANALYST_ROLE">DS_ANALYST_ROLE</label>
+      </div>
+      <div>
+        <input type="radio" name="snowflake-scope" value="DS_ARCHITECT_ROLE" id="DS_ARCHITECT_ROLE"/>
+        <label for="#DS_ARCHITECT_ROLE">DS_ARCHITECT_ROLE</label>
+      </div>
+      <div>
+        <input type="radio" name="snowflake-scope" value="CT_DEVELOPER_ROLE" id="CT_DEVELOPER_ROLE"/>
+        <label for="#CT_DEVELOPER_ROLE">CT_DEVELOPER_ROLE</label>
+      </div>
+      <div>
+        <input type="radio" name="snowflake-scope" value="HPSS_DEVELOPER_ROLE" id="HPSS_DEVELOPER_ROLE"/>
+        <label for="#HPSS_DEVELOPER_ROLE">HPSS_DEVELOPER_ROLE</label>
+      </div>
+      <div>
+        <input type="radio" name="snowflake-scope" value="default" id="scope-default"/>
+        <label for="#scope-default">Client ID default</label>
+      </div>
+      <div>
+        <input type="checkbox" name="snowflake-scope-prefix" id="snowflake-scope-prefix" checked/>
+        <label for="#snowflake-scope-prefix">Add the <code>https://upmchs.onmicrosoft.com/upmchp.snowflake/session:scope:</code> prefix? (You probably want this checked.)</label>
+      </div>
+    </div>
+
+    <div id="datahub-scopes" style="display: none;">
+      <div style="margin-top: 1rem;"><label style="font-weight:bold;">Scope:</label></div>
+      <div>
+        <input type="radio" name="datahub-scope" value="default" id="scope-default" checked/>
+        <label for="#scope-default">Client ID default</label>
+      </div>
+    </div>
+    
+    <div>
+      <input type="radio" name="datahub-scope" value="scope-custom" id="scope-custom"/>
+      <label for="scope-custom">Custom:</label>
+      <input type="text" class="scope-custom-input" style="width: 50rem;"/>
+    </div>
+  
+    <div style="margin-top: 1rem;">
+      <button id="generateToken">Generate token</button>
+    </div>
+    
+    <div id="diag" style="margin: 1em; word-break: break-all;"></div>
+  </body>
+  <script>
+  // Common util
+  function getSelectedClientName()
+  {
+    return document.querySelector('input[name="clientID"]:checked').getAttribute('data-which');
+  }
+
+
+  // Async wrapper to make it easier to handle promises
+  async function loadToken() {
+    // Load selected clientID
+    let clientIDNode = document.querySelector('input[name="clientID"]:checked')
+    if (clientIDNode.value === 'clientID-custom')
+      clientIDNode = document.getElementById('clientID-custom-input');
+    const clientId = clientIDNode.value;
+    
+    // Load selected scope; name has to be different so we can keep one from each selected
+    let clientName = getSelectedClientName();
+    let scopeNode = document.querySelector(`#${clientName}-scopes input[name="${clientName}-scope"]:checked`);
+    if (scopeNode.value === 'scope-custom')
+      scopeNode = document.getElementById('#scope-custom-input');
+    let scope = scopeNode.value;
+    if (scope === 'default')
+      scope = clientId + '/.default';
+
+    // If we're sending a Snowflake scope and need the prefix, add it
+    if (clientName === 'snowflake' && document.getElementById('snowflake-scope-prefix').checked) {
+      scope = 'https://upmchs.onmicrosoft.com/upmchp.snowflake/session:scope:' + scope;
+    }
+
+    // Object passed to auth lib
+    const msalConfig = {
+      auth: {
+        clientId,
+        
+        // UUID is for the UPMCHP tenant
+        authority: 'https://login.microsoftonline.com/8b3dd73e-4e72-4679-b191-56da1588712b/',
+
+        // Each URL we expecte people to access this page at needs to be whitelisted in the app registration
+        redirectUri: window.location.href
+      },
+  
+      // How to save the data
+      cache: {
+        cacheLocation: 'localStorage',
+        storeAuthStateInCookie: true
+      }
+    };
+
+    // Multi currently isn't well-supported
+    const scopes = [scope];
+  
+    // Initialize MSAL
+    const msalInstance = await new msal.PublicClientApplication(msalConfig);
+
+    // Redirects the user to the UPMC signin page if they're not already logged in
+    try {
+      let tokenResponse = await msalInstance.loginPopup({scopes});
+
+      // Basic parsing of the middle part of the JWT so we can print some diag
+      const parsed = JSON.parse(atob(tokenResponse.accessToken.split('.')[1]));
+      document.getElementById('diag').innerHTML = `
+        <div style="margin-top: 1rem;">User ID: ${parsed.upn}</div>
+        <div style="margin-top: 1rem;">Token: ${tokenResponse.accessToken}</div>
+        <div style="margin-top: 1rem;">Decoded: <pre>${JSON.stringify(parsed, null, 4)}</pre></div>
+      `;
+    }
+
+    catch(err) {
+      document.getElementById('diag').innerHTML = `
+        <div style="margin-top: 1rem;">Error encountered:</div>
+        <div style="margin-top: 1rem;"><pre>${err.stack}</pre></div>
+      `;
+    }
+  };
+
+  function updateUI() {
+    if (getSelectedClientName() === 'snowflake') {
+      document.getElementById('snowflake-scopes').style.display = 'block';
+      document.getElementById('datahub-scopes').style.display = 'none';
+    }
+    else { // datahub or custom, latter can use datahub options
+      document.getElementById('snowflake-scopes').style.display = 'none';
+      document.getElementById('datahub-scopes').style.display = 'block';
+    }
+  };
+
+  document.getElementById('generateToken').addEventListener('click', loadToken);
+
+  for (const node of document.querySelectorAll('input[name="clientID"]')) {
+    node.addEventListener('change', updateUI)
+  }
+</script>
+</html>

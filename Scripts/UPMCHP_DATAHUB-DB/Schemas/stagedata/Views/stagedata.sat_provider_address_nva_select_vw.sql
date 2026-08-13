@@ -1,0 +1,16 @@
+CREATE OR REPLACE VIEW STAGEDATA.SAT_PROVIDER_ADDRESS_NVA_SELECT_VW
+COMMENT = 'This is a SAT View containing Provider Address data'
+AS
+SELECT 
+    UTIL.FXN_ARRAY_HASH([ '000001', '000001', '0001', 'NVA', "BillProvID"]) AS HUB_PROVIDER_HKEY,
+    'N/A' AS ADDRESS_TYPE_CODE, --Needs Fix
+    '9999-12-31' AS ROW_EXPIRATION_DATETIME,    -- TODO cast to date type
+    CURRENT_TIMESTAMP BETWEEN CURRENT_TIMESTAMP() AND  '9999-12-31' AS IS_CURRENT_ROW_FLAG, -- TODO cast to date type
+    UTIL.FXN_ARRAY_HASH(["BillProvAddr1", "BillProvAddr2", "BillProvCity", "BillProvZip", "BillProvLoc"]) AS HASH_DIFF,
+    "BillProvAddr1" AS ADDRESS_LINE_1,
+    "BillProvAddr2" AS ADDRESS_LINE_2,
+    "BillProvCity" AS CITY,
+    "BillProvZip" AS ZIP_CODE,
+    "BillProvLoc" AS LOCATION_ID
+FROM  RAWDATA.NVA_PAID_CLAIM_EXTRACTS
+;

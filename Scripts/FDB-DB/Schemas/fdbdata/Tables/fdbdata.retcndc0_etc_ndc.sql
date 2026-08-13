@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE FDBDATA.RETCNDC0_ETC_NDC (
+	NDC VARCHAR(11) NOT NULL,
+	ETC_ID NUMERIC(8, 0) NOT NULL,
+	ETC_COMMON_USE_IND VARCHAR(1) NULL,
+	ETC_DEFAULT_USE_IND VARCHAR(1) NULL,
+	CONSTRAINT PK_RETCNDC0_ETC_NDC PRIMARY KEY (NDC, ETC_ID)
+)
+COMMENT = 'Links the packaged product to a therapeutic classification and provides the attributes of that association.'
+;

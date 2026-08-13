@@ -1,0 +1,107 @@
+CREATE OR REPLACE PROCEDURE PROVIDER_DIRECTORY.SPU_LOAD_PROVIDER_DIRECTORY_OFFICE_LIST()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `PROVIDER_DIRECTORY.PROVIDER_DIRECTORY_OFFICE_LIST`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO PROVIDER_DIRECTORY.PROVIDER_DIRECTORY_OFFICE_LIST TGT 
+USING (SELECT 
+        a.ID,
+        a.OFFICEIDLIST,
+        a.LOADDATE,
+        CASE 
+            WHEN b.ID IS NULL THEN 0 
+            WHEN a.OFFICEIDLIST=b.OFFICE_ID_LIST THEN 0 
+            WHEN a.OFFICEIDLIST!=b.OFFICE_ID_LIST THEN 1 
+        end as OFFICE_ID_CHANGE_IND 
+        FROM
+        (
+            --get everything from the incoming build
+            SELECT 
+                ID,
+                LOADDATE,
+                ARRAY_AGG(DISTINCT OFFICEID)
+                    WITHIN GROUP (ORDER BY OFFICEID) as OFFICEIDLIST
+            FROM PROVIDER_DIRECTORY.PROVIDER_DIRECTORY_VW 
+            GROUP BY
+                ID,
+                LOADDATE
+        ) a
+    LEFT JOIN 
+        (SELECT
+            ID,
+            OFFICE_ID_LIST,
+            INSERT_DATETIME
+        FROM PROVIDER_DIRECTORY.PROVIDER_DIRECTORY_OFFICE_LIST
+        ) b
+        ON a.ID=b.ID
+        WHERE a.LOADDATE > (IFNULL(b.INSERT_DATETIME, '1/1/1900')) --NEEDED FOR WHEN TARGET IS EMPTY
+    ) AS SRC
+ON SRC.ID=TGT.ID
+WHEN MATCHED
+THEN UPDATE
+    SET TGT.OFFICE_ID_LIST = SRC.OFFICEIDLIST,
+        TGT.OFFICE_ID_CHANGE_IND = SRC.OFFICE_ID_CHANGE_IND,
+        TGT.INSERT_DATETIME = SRC.LOADDATE
+WHEN NOT MATCHED THEN INSERT
+    (TGT.ID,
+     TGT.OFFICE_ID_CHANGE_IND,
+     TGT.INSERT_DATETIME,
+     TGT.OFFICE_ID_LIST)
+    VALUES
+    (SRC.ID,
+     SRC.OFFICE_ID_CHANGE_IND,
+     SRC.LOADDATE,
+     SRC.OFFICEIDLIST);
+`;
+
+try
+{
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+    throw result;
+}
+return result;
+$$
+;

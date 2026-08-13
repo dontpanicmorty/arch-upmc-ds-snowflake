@@ -1,0 +1,150 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_UNKNOWN_FOREIGN_KEY_CHECK("JOB_ID" VARCHAR(16777216), "TABLE_NAME" VARCHAR(16777216))
+RETURNS VARCHAR not null
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var factColQuery = 'not set';
+
+//get the foreign keys we need to check first by using SHOW IMPORTED KEYS
+sqlCommand = `SHOW IMPORTED KEYS IN TABLE ${TABLE_NAME}`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+
+//grab what we need from the SHOW results and turn it into a query
+sqlCommand = `SELECT "fk_column_name" as FACT_COLUMN_NAME  FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+
+//need a loop here because some tables have multiple foreign keys
+while(resultSet.next()){
+                        factColQuery = resultSet.getColumnValue('FACT_COLUMN_NAME');
+                    
+                        //build the query to check for orphan keys
+                        sqlCommand2 = `SELECT ((SELECT COUNT(*) AS RESULT_COUNT FROM ${TABLE_NAME} WHERE (${factColQuery}=1))/
+                        					(SELECT COUNT(*) AS RESULT_COUNT FROM ${TABLE_NAME})*100) AS RESULT_COUNT`;
+                        // sqlCommand2 = `SELECT COUNT(*) AS RESULT_COUNT FROM ${TABLE_NAME} WHERE (${factColQuery}=1)`;
+                        
+                        var sfStatement2 = snowflake.createStatement({sqlText: sqlCommand2});
+                        var resultSet2 = sfStatement2.execute();
+                        resultSet2.next(); 
+                        var resultCount = resultSet2.getColumnValue('RESULT_COUNT')
+                        
+                        //insert the results to the logdata table for future reference
+                        var sqlCountInsert = `INSERT INTO LOGDATA.BUILD_THRESHOLD_RESULT( JOB_ID
+                        																, TABLE_NAME
+                                                                                        , COLUMN_NAME
+                                                                                        , VALIDATION_PROCEDURE_NAME
+                                                                                        , LAST_UNKNOWN_PERCENT
+                                                                                        , CURRENT_UNKNOWN_PERCENT
+                                                                                        , ALLOWED_VARIANCE_PERCENT
+                                                                                        , STATUS) 
+                                                VALUES ('${JOB_ID}'
+                                                        ,'${TABLE_NAME}'
+                                                        ,'${factColQuery}'
+                                                        ,'${procedureName}'
+                                                        ,'0'
+                                                        , ${resultCount}
+                                                        , 0
+                                                        ,'0' )`;
+                                                        
+                        snowflake.execute({sqlText: sqlCountInsert});
+						};
+
+                        //==========
+                        // query to get Threshold % from UTIL.THRESHOLD_VALIDATION
+
+                         sqlCommand_tp = `UPDATE  LOGDATA.BUILD_THRESHOLD_RESULT AS TGT
+                                        SET  TGT.ALLOWED_VARIANCE_PERCENT = THRESHOLD_PERCENT
+                                         
+                                        FROM ( 
+                                                SELECT TV.THRESHOLD_PERCENT as THRESHOLD_PERCENT,BTR.table_name,BTR.COLUMN_NAME
+                                                FROM UTIL.THRESHOLD_VALIDATION as TV
+                                                INNER JOIN LOGDATA.BUILD_THRESHOLD_RESULT AS BTR 
+                                                ON concat(TV.SCHEMA_NAME ,'.', TV.TABLE_NAME)='${TABLE_NAME}'
+                                                and TV.COLUMN_NAME=BTR.COLUMN_NAME
+                                            ) AS SRC
+                                        WHERE JOB_ID = '${JOB_ID}' 
+                                         AND SRC.COLUMN_NAME=TGT.COLUMN_NAME AND TGT.TABLE_NAME=SRC.TABLE_NAME`;
+
+                       
+                        
+                        snowflake.execute({sqlText: sqlCommand_tp});
+                        //==========
+
+                        //update the LastUnknownPercentage in the logdata table
+                        var sqlUpdateLastUnknownPercentage = `Update  LOGDATA.BUILD_THRESHOLD_RESULT as a 
+                                                                Set  LAST_UNKNOWN_PERCENT = b.CURRENT_UNKNOWN_PERCENT
+                                                                from LOGDATA.BUILD_THRESHOLD_RESULT as b
+                                                                where a.TABLE_NAME=b.TABLE_NAME 
+                                                                and a.COLUMN_NAME=b.COLUMN_NAME 
+                                                                and b.JOB_ID = (Select JOB_ID from (Select JOB_ID, max(INSERT_DATETIME) 
+                                                                				from LOGDATA.BUILD_THRESHOLD_RESULT 
+                                                                                where TABLE_NAME='${TABLE_NAME}'
+                                                                                and VALIDATION_PROCEDURE_NAME='${procedureName}' 
+                                                                                group by JOB_ID 
+                                                                                order by max(INSERT_DATETIME) desc
+                                                                                LIMIT 1 
+                                                                                OFFSET 1  ))
+                                                                and a.JOB_ID = '${JOB_ID}'`;
+                        snowflake.execute({sqlText: sqlUpdateLastUnknownPercentage});
+						
+                        //update the STATUS in the logdata table
+                        var sqlUpdateStatus = `Update  LOGDATA.BUILD_THRESHOLD_RESULT as a 
+Set  STATUS = (CASE WHEN CURRENT_UNKNOWN_PERCENT BETWEEN  LAST_UNKNOWN_PERCENT-(LAST_UNKNOWN_PERCENT*(ALLOWED_VARIANCE_PERCENT/100)) and LAST_UNKNOWN_PERCENT+(LAST_UNKNOWN_PERCENT*(ALLOWED_VARIANCE_PERCENT/100)) THEN 'Success' 
+          else  'Failure' END)
+                                                            where a.JOB_ID = '${JOB_ID}'`;
+                        snowflake.execute({sqlText: sqlUpdateStatus});
+
+sqlCommand = `SELECT COUNT(*) AS ERROR_COUNT 
+			FROM LOGDATA.BUILD_THRESHOLD_RESULT 
+            WHERE STATUS='Failure' 
+            AND JOB_ID = '${JOB_ID}'
+            AND TABLE_NAME='${TABLE_NAME}'`;
+
+var sfStatement2 = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet2 = sfStatement2.execute();
+resultSet2.next(); 
+var errorCount = resultSet2.getColumnValue('ERROR_COUNT')
+
+if(errorCount === 0){
+    var result = `PASS: All validation checks success`
+}
+else {
+    var result = `FAIL: Validation failed because of ${errorCount} failure in during UNKNOWN_FOREIGN_KEY_CHECK in ${TABLE_NAME} for JobId: ${JOB_ID}'`;
+   // throw result;
+    // If we have to make the Process hard stop in case of any Failure please uncomment the above throw result
+};
+ 
+var endTime = new Date().toISOString();
+
+//log results to table
+var sqlLogCommand = `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+    VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+snowflake.execute
+(
+    {sqlText: sqlLogCommand, binds: 
+        [
+        procedureName
+        ,"Procedure"
+        ,startTime
+        ,endTime
+        ,result
+        ,procedureName
+        ]
+    }
+); 
+return result;
+$$
+;
+
+ 
+
+

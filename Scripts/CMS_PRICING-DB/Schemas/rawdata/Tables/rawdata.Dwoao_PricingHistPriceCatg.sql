@@ -1,0 +1,25 @@
+CREATE OR REPLACE TABLE RAWDATA.Dwoao_PRICINGHISTPRICECATG
+(     
+           Entity varchar,
+           GroupCarrierPriceGroup varchar,
+           IPAPriceGroup varchar,
+           PlaceofService varchar,
+           PlanType varchar,
+           ProviderNo varchar,
+           EffectiveDate int,
+           POSUserDefinedField varchar,
+           PriceCategory varchar,
+           PriceCatSequence decimal(11,2),
+           ReimbursementFlag varchar,
+           TermDate int,
+           LastUpdated datetime,
+           LastApplied datetime,
+           DeletedFlag datetime,
+           PricingHistPriceCatgSeqNbr int,
+           CHGLAST DATETIME(7),
+           CHGORIG DATETIME(7),
+           CHGUSER varchar,
+           TPACLIENT varchar,
+           TPADIVISION varchar,
+           TPAIDOFCLIENT varchar
+)COMMENT='Replicated from dwOAO database';

@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "ESI",
+  "targetTableName": "RAWDATA.ESI_CLAIM_WEEKLY_HISTORICAL",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/esi/historical/pmd_weekly/",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_ESI_HISTORICAL_FILE_FORMAT",
+  "sourceFilePattern": "claim/esi/historical/pmd_weekly/\\\\d{4}/\\\\d{2}/\\\\d{2}/data_.*",
+  "sourceFileDelimitedColumnCount": 210,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

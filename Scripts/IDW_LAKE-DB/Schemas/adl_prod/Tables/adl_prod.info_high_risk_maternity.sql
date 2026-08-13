@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE ADL_PROD.INFO_HIGH_RISK_MATERNITY
+(
+MEMBER_NBR                VARCHAR,
+MMI                       VARCHAR,
+DUE_DATE            TIMESTAMP_NTZ,
+DUE_DATE_SOURCE           VARCHAR,
+RACE_UNIFORM              VARCHAR,
+USE_DISORDER               NUMBER,
+RECENT_MAT                 NUMBER,
+OVERDOSE                   NUMBER,
+CLAIM_NBR                 VARCHAR,
+LOAD_DATE           TIMESTAMP_NTZ
+)
+COMMENT='Created for ADL_PROD Migration'
+;

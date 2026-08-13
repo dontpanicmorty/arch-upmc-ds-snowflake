@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_PAID_SUM_PROVIDER
+(
+CORPORATION_ID                VARCHAR,
+GROUP_ID                      VARCHAR,
+DIVISION_ID                   VARCHAR,
+PLAN_NBR                      VARCHAR,
+PAYMENT_DATE            TIMESTAMP_NTZ,
+PROVIDER_NAME                 VARCHAR,
+IP_PAID_GROSS_AMT              NUMBER(33,5),
+OP_PAID_GROSS_AMT              NUMBER(33,5),
+PROF_PAID_GROSS_AMT            NUMBER(33,5)
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

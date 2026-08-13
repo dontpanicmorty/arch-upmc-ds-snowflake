@@ -1,0 +1,27 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_HRA_POPULATION
+(
+INSERT_DATETIME              TIMESTAMP_NTZ,
+LAST_UPDATED_DATETIME        TIMESTAMP_NTZ,
+CORPORATION_ID                     VARCHAR,
+GROUP_ID                           VARCHAR,
+DIVISION_ID                        VARCHAR,
+PLAN_NBR                           VARCHAR,
+MEMBER_NBR                         VARCHAR,
+RELATIONSHIP_CODE                  VARCHAR,
+GENDER_CODE                        VARCHAR,
+AGE                                 NUMBER(33,5),
+MEMBERSHIP_MTH                     VARCHAR,
+MEMBERSHIP_MTH_BGN_DATE      TIMESTAMP_NTZ,
+MEMBERSHIP_MTH_END_DATE      TIMESTAMP_NTZ,
+LINE_OF_BUSINESS                   VARCHAR,
+LIMEADE_USER_ID                    VARCHAR,
+LIMEADE_CREATED_DATE         TIMESTAMP_NTZ,
+LIMEADE_WELCOME_DATE         TIMESTAMP_NTZ,
+LIMEADE_TERMINATION_DATE     TIMESTAMP_NTZ,
+ACTIVE_IND                          NUMBER(33,5),
+TERMED_IND                          NUMBER(33,5),
+UPMC_HEALTH_PLAN_IND                NUMBER(33,5),
+LIMEADE_IND                         NUMBER(33,5)
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

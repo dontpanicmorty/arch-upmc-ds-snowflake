@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_DRUG_M
+(
+HCID                   VARCHAR,
+MEM_MONTH              VARCHAR,
+DRUG_CNT                NUMBER(33,5),
+RX_PAID                 NUMBER(33,5),
+DATE_UPDATED     TIMESTAMP_NTZ
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

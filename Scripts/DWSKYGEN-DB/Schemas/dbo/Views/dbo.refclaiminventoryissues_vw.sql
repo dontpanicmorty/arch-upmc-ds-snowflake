@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW DBO.RefClaimInventoryIssues_VW
+AS 
+SELECT 	$1:ClaimInventoryIssueTypeKey::NUMBER(38, 0) AS ClaimInventoryIssueTypeKey, 
+		$1:CLAIM_INVENTORY_ID::NUMBER(38, 0) AS CLAIM_INVENTORY_ID, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/RefClaimInventoryIssues/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

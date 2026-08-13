@@ -1,0 +1,19 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_AWC
+(
+HCID                       VARCHAR,
+MEM_MONTH                  VARCHAR,
+IDP_MEMBER_NBR             VARCHAR,
+AWC_VISIT_IDP               NUMBER(33,5),
+AWC_VISIT_CONTRACT          NUMBER(33,5),
+CONTRACT_MEMBER_NBR        VARCHAR,
+CONVVSCONT                 VARCHAR,
+VISIT_DURATION_MIN_SEC     VARCHAR,
+CPT4_CODE                  VARCHAR,
+ICD9_CODE                  VARCHAR,
+ICD10_CODE                 VARCHAR,
+NDC_CODE                   VARCHAR,
+PROVIDER_ID                VARCHAR,
+PROVIDER_NPI               VARCHAR
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

@@ -1,0 +1,33 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_BIOMETRIC_SUMM
+(
+BIOMETRIC_MTH_BGN      TIMESTAMP_NTZ,
+BIOMETRIC_MTH_END      TIMESTAMP_NTZ,
+MEMBER_NBR                   VARCHAR,
+RELATIONSHIP_CODE            VARCHAR,
+RELATIONSHIP_DESC            VARCHAR,
+AGE                           NUMBER(33,5),
+GENDER_CODE                  VARCHAR,
+CORPORATION_ID               VARCHAR,
+GROUP_ID                     VARCHAR,
+UPMC_MEMBER                   NUMBER(33,5),
+PARTICIPENT_ID               VARCHAR,
+SCREENINGDATE          TIMESTAMP_NTZ,
+VALUE_BMI                     NUMBER(33,5),
+VALUE_BP_SYSTOLIC             NUMBER(33,5),
+VALUE_BP_DIASTOLIC            NUMBER(33,5),
+VALUE_CHOL_TOT                NUMBER(33,5),
+VALUE_CHOL_LDL                NUMBER(33,5),
+VALUE_CHOL_HDL                NUMBER(33,5),
+VALUE_TRIG                    NUMBER(33,5),
+VALUE_GLU                     NUMBER(33,5),
+BMI_RISK_LEVEL               VARCHAR,
+BP_RISK_LEVEL                VARCHAR,
+CHOL_RISK_LEVEL              VARCHAR,
+LDL_RISK_LEVEL               VARCHAR,
+HDL_RISK_LEVEL               VARCHAR,
+TRIG_RISK_LEVEL              VARCHAR,
+GLU_RISK_LEVEL               VARCHAR,
+DATE_UPDATED           TIMESTAMP_NTZ
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

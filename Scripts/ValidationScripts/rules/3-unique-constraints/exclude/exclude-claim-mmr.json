@@ -1,0 +1,7 @@
+{
+  "CATALOG_PATTERN": "%",
+  "SCHEMA_PATTERN": "CLAIM",
+  "OBJECT_PATTERN": "MMR",
+  "TEST_INDEX": 3,
+  "INCLUDE": 0
+}

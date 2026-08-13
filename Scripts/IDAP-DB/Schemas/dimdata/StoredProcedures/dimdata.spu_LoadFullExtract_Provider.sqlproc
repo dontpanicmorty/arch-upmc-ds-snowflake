@@ -1,0 +1,1106 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.spu_LoadFullExtract_Provider()
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+try
+{
+    var trunc_table = "TRUNCATE TABLE DIMDATA.BRIDGE_FACILITY_ACCREDITATION;";
+    var trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    var res_trunc_table = trunc_table_snowflake.execute();
+
+
+	let load_BRIDGE_FACILITY_ACCREDITATION = `COPY INTO DIMDATA.BRIDGE_FACILITY_ACCREDITATION
+    (
+    BRIDGE_FACILITY_ACCREDITATION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DIM_PROVIDER_KEY,
+    DIM_FACILITY_ACCREDITATION_KEY
+    )
+    FROM (
+        SELECT
+        $1:BridgeFacilityAccreditationKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:DimProviderKey,
+        $1:DimFacilityAccreditationKey
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.BridgeFacilityAccreditation.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_BRIDGE_FACILITY_ACCREDITATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_BRIDGE_FACILITY_ACCREDITATION
+    }
+    );
+    var res_load_BRIDGE_FACILITY_ACCREDITATION = load_BRIDGE_FACILITY_ACCREDITATION_snowflake.execute();
+
+  
+    trunc_table = "TRUNCATE TABLE DIMDATA.BRIDGE_PRACTITIONER_EDUCATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+
+	let load_BRIDGE_PRACTITIONER_EDUCATION = `COPY INTO DIMDATA.BRIDGE_PRACTITIONER_EDUCATION
+    (
+    BRIDGE_PRACTITIONER_EDUCATION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DIM_PROVIDER_KEY,
+    DIM_PRACTITIONER_EDUCATION_KEY,
+    EDUCATION_START_DATE,
+    EDUCATION_COMPLETION_DATE,
+    EDUCATION_GRADUATED_IND
+    )
+    FROM (
+        SELECT
+        $1:BridgePractitionerEducationKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:DimProviderKey,
+        $1:DimPractitionerEducationKey,
+        $1:EducationStartDate,
+        $1:EducationCompletionDate,
+        $1:EducationGraduatedInd
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.BridgePractitionerEducation.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_BRIDGE_PRACTITIONER_EDUCATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_BRIDGE_PRACTITIONER_EDUCATION
+    }
+    );
+    var res_load_BRIDGE_PRACTITIONER_EDUCATION = load_BRIDGE_PRACTITIONER_EDUCATION_snowflake.execute();
+  
+    trunc_table = "TRUNCATE TABLE DIMDATA.BRIDGE_PROVIDER_AFFILIATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_BRIDGE_PROVIDER_AFFILIATION = `COPY INTO DIMDATA.BRIDGE_PROVIDER_AFFILIATION
+    (
+    BRIDGE_PROVIDER_AFFILIATION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DIM_PROVIDER_KEY,
+    DIM_PROVIDER_AFFILIATION_KEY,
+    AFFILIATION_START_DATE,
+    AFFILIATION_END_DATE,
+    AFFILIATION_ACTIVE_IND,
+    AFFILIATION_ADMIT_PRIVILEGES_IND
+    )
+    FROM (
+        SELECT
+        $1:BridgeProviderAffiliationKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:DimProviderKey,
+        $1:DimProviderAffiliationKey,
+        $1:AffiliationStartDate,
+        $1:AffiliationEndDate,
+        $1:AffiliationActiveInd,
+        $1:AffiliationAdmitPrivilegesInd
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.BridgeProviderAffiliation.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_BRIDGE_PROVIDER_AFFILIATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_BRIDGE_PROVIDER_AFFILIATION
+    }
+    );
+    var res_load_BRIDGE_PROVIDER_AFFILIATION = load_BRIDGE_PROVIDER_AFFILIATION_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.BRIDGE_PROVIDER_LANGUAGE;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_BRIDGE_PROVIDER_LANGUAGE = `COPY INTO DIMDATA.BRIDGE_PROVIDER_LANGUAGE
+    (
+    BRIDGE_PROVIDER_LANGUAGE_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DIM_PROVIDER_KEY,
+    DIM_LANGUAGE_KEY
+    )
+    FROM (
+        SELECT
+        $1:BridgeProviderLanguageKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:DimProviderKey,
+        $1:DimLanguageKey
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.BridgeProviderLanguage.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_BRIDGE_PROVIDER_LANGUAGE_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_BRIDGE_PROVIDER_LANGUAGE
+    }
+    );
+    var res_load_BRIDGE_PROVIDER_LANGUAGE = load_BRIDGE_PROVIDER_LANGUAGE_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.BRIDGE_PROVIDER_SPECIALTY;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_BRIDGE_PROVIDER_SPECIALTY = `COPY INTO DIMDATA.BRIDGE_PROVIDER_SPECIALTY
+    (
+    BRIDGE_PROVIDER_SPECIALTY_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    PROVIDER_SPECIALTY_GROUPING_KEY,
+    DIM_PROVIDER_SPECIALTY_KEY
+    )
+    FROM (
+        SELECT
+        $1:BridgeProviderSpecialtyKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:ProviderSpecialtyGroupingKey,
+        $1:DimProviderSpecialtyKey
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.BridgeProviderSpecialty.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_BRIDGE_PROVIDER_SPECIALTY_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_BRIDGE_PROVIDER_SPECIALTY
+    }
+    );
+    var res_load_BRIDGE_PROVIDER_SPECIALTY = load_BRIDGE_PROVIDER_SPECIALTY_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_FACILITY_ACCREDITATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_FACILITY_ACCREDITATION = `COPY INTO DIMDATA.DIM_FACILITY_ACCREDITATION
+    (
+    DIM_FACILITY_ACCREDITATION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    ACCREDITATION_AGENCY_NAME
+    )
+    FROM (
+        SELECT
+        $1:DimFacilityAccreditationKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:AccreditationAgencyName
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimFacilityAccreditation.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_FACILITY_ACCREDITATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_FACILITY_ACCREDITATION
+    }
+    );
+    var res_load_DIM_FACILITY_ACCREDITATION = load_DIM_FACILITY_ACCREDITATION_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_LANGUAGE;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_LANGUAGE = `COPY INTO DIMDATA.DIM_LANGUAGE
+    (
+    DIM_LANGUAGE_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    LANGUAGE_NAME
+    )
+    FROM (
+        SELECT
+        $1:DimLanguageKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:LanguageName
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimLanguage.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_LANGUAGE_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_LANGUAGE
+    }
+    );
+    var res_load_DIM_LANGUAGE = load_DIM_LANGUAGE_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_OFFICE_HOURS;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_OFFICE_HOURS = `COPY INTO DIMDATA.DIM_OFFICE_HOURS
+    (
+    DIM_OFFICE_HOURS_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    MONDAY_OFFICE_HOURS,
+    TUESDAY_OFFICE_HOURS,
+    WEDNESDAY_OFFICE_HOURS,
+    THURSDAY_OFFICE_HOURS,
+    FRIDAY_OFFICE_HOURS,
+    SATURDAY_OFFICE_HOURS,
+    SUNDAY_OFFICE_HOURS,
+    OPEN_MONDAY_IND,
+    OPEN_TUESDAY_IND,
+    OPEN_WEDNESDAY_IND,
+    OPEN_THURSDAY_IND,
+    OPEN_FRIDAY_IND,
+    OPEN_SATURDAY_IND,
+    OPEN_SUNDAY_IND
+    )
+    FROM (
+        SELECT
+        $1:DimOfficeHoursKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:MondayOfficeHours,
+        $1:TuesdayOfficeHours,
+        $1:WednesdayOfficeHours,
+        $1:ThursdayOfficeHours,
+        $1:FridayOfficeHours,
+        $1:SaturdayOfficeHours,
+        $1:SundayOfficeHours,
+        $1:OpenMondayInd,
+        $1:OpenTuesdayInd,
+        $1:OpenWednesdayInd,
+        $1:OpenThursdayInd,
+        $1:OpenFridayInd,
+        $1:OpenSaturdayInd,
+        $1:OpenSundayInd
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimOfficeHours.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_OFFICE_HOURS_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_OFFICE_HOURS
+    }
+    );
+    var res_load_DIM_OFFICE_HOURS = load_DIM_OFFICE_HOURS_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PRACTITIONER_EDUCATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PRACTITIONER_EDUCATION = `COPY INTO DIMDATA.DIM_PRACTITIONER_EDUCATION
+    (
+    DIM_PRACTITIONER_EDUCATION_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    EDUCATION_TYPE_CODE,
+    EDUCATION_TYPE_DESC,
+    EDUCATION_INSTITUTION_SOURCE_NBR,
+    EDUCATION_INSTITUTION_NAME,
+    EDUCATION_DEPARTMENT_CODE,
+    EDUCATION_DEPARTMENT_NAME,
+    EDUCATION_DEGREE_NAME
+    )
+    FROM (
+        SELECT
+        $1:DimPractitionerEducationKey,
+        $1:MD5ValueText,
+        $1:InsertDatetime,
+        $1:LastUpdatedDatetime,
+        $1:IsLogicalDeleteFlag,
+        $1:EducationTypeCode,
+        $1:EducationTypeDesc,
+        $1:EducationInstitutionSourceNbr,
+        $1:EducationInstitutionName,
+        $1:EducationDepartmentCode,
+        $1:EducationDepartmentName,
+        $1:EducationDegreeName
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimPractitionerEducation.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PRACTITIONER_EDUCATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PRACTITIONER_EDUCATION
+    }
+    );
+    var res_load_DIM_PRACTITIONER_EDUCATION = load_DIM_PRACTITIONER_EDUCATION_snowflake.execute();
+
+    trunc_table = "DELETE FROM DIMDATA.DIM_PROVIDER WHERE SOURCE_SYSTEM = 'SQLSERVER';";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER = `COPY INTO DIMDATA.DIM_PROVIDER
+    (
+       DIM_PROVIDER_KEY
+      ,MD5_VALUE_TEXT
+      ,INSERT_DATETIME
+      ,LAST_UPDATED_DATETIME
+      ,IS_LOGICAL_DELETE_FLAG
+      ,ROW_EFFECTIVE_DATETIME
+      , ROW_EXPIRATION_DATETIME
+      , IS_CURRENTROW_FLAG
+      , DATA_SOURCE_NAME
+      , PROVIDER_ID
+      , TPA_CLIENT_ID
+      , TPA_ID
+      , TPA_DIVISION_ID
+      , PROVIDER_TYPE_CODE
+      , PROVIDER_TYPE_DESC
+      , PROVIDER_ROLE_TYPE_CODE
+      , PROVIDER_ROLE_TYPE_DESC
+      , PROVIDER_FULL_NAME
+      , PRACTITIONER_LAST_NAME
+      , PRACTITIONER_FIRST_NAME
+      , PRACTITIONER_MIDDLE_NAME
+      , PRACTITIONER_MIDDLE_INITIAL
+      , PRACTITIONER_NAME_SUFFIX
+      , PRACTITIONER_GENDER_CODE
+      , PRACTITIONER_GENDER_NAME
+      , PRACTITIONER_BIRTH_DATE
+      , MEDICAL_GROUP_TIN_NBR
+      , PRACTITIONER_UPIN_NBR
+      , PRACTITIONER_SSN_NBR
+      , PRACTITIONER_DEGREE
+      , PROVIDER_EMAIL_ADDRESS
+      , PROVIDER_WEBSITE_URL
+      , PRIMARY_SPECIALTY_NAME
+      , PRIMARY_PHO_CODE
+      , PRIMARY_PHO_NAME
+      , PRIMARY_PHO_TERMINATION_DATE
+      , SECONDARY_PHO_CODE
+      , SECONDARY_PHO_NAME
+      , SECONDARY_PHO_TERMINATION_DATE
+      , TERTIARY_PHO_CODE
+      , TERTIARY_PHO_NAME
+      , TERTIARY_PHO_TERMINATION_DATE
+      , PROVIDER_START_DATE
+      , FACILITY_INCEPTION_DATE
+      , PROVIDER_ACTIVE_IND
+      , PRACTITIONER_LOCUM_TENENS_IND
+      , INVISIBLE_PROVIDER_IND
+      , TEMPORARY_PROVIDER_IND
+      , PA_MEDICAID_IND
+      , PP_ACA_ENHANCED_PAY_IND
+      , HAS_MALPRACTICE_INSURANCE_IND
+      , OWNERSHIP_STATUS_CODE
+      , OWNERSHIP_STATUS_DESC
+      , SOURCE_SYSTEM
+      , SOURCE_PROVIDER_NBR
+    )
+FROM (
+    SELECT
+	   $1:DimProviderKey
+      ,$1:MD5ValueText
+      ,$1:InsertDatetime
+      ,$1:LastUpdatedDatetime
+      ,$1:IsLogicalDeleteFlag
+      ,$1:RowEffectiveDatetime
+      ,CASE WHEN $1:RowExpirationDatetime::varchar LIKE '1816-%' THEN '9999-12-31 00:00:00.000' ELSE TRY_TO_TIMESTAMP($1:RowExpirationDatetime::varchar) END
+      ,$1:IsCurrentRowFlag
+      ,CASE WHEN $1:DataSourceName IS NULL THEN '' ELSE $1:DataSourceName END
+      ,$1:ProviderId
+      ,$1:TPAClientId
+      ,$1:TPAId
+      ,$1:TPADivisionId
+      ,$1:ProviderTypeCode
+      ,$1:ProviderTypeDesc
+      ,$1:ProviderRoleTypeCode
+      ,$1:ProviderRoleTypeDesc
+      ,$1:ProviderFullName
+      ,$1:PractitionerLastName
+      ,$1:PractitionerFirstName
+      ,$1:PractitionerMiddleName
+      ,$1:PractitionerMiddleInitial
+      ,$1:PractitionerNameSuffix
+      ,$1:PractitionerGenderCode
+      ,$1:PractitionerGenderName
+      ,CASE WHEN $1:PractitionerBirthDate = '' THEN NULL ELSE $1:PractitionerBirthDate END
+      ,$1:MedicalGroupTINNbr
+      ,$1:PractitionerUPINNbr
+      ,$1:PractitionerSSNNbr
+      ,$1:PractitionerDegree
+      ,$1:ProviderEmailAddress
+      ,$1:ProviderWebsiteURL
+      ,$1:PrimarySpecialtyName
+      ,$1:PrimaryPHOCode
+      ,$1:PrimaryPHOName
+      ,CASE WHEN $1:PrimaryPHOTerminationDate = '' THEN NULL ELSE $1:PrimaryPHOTerminationDate END
+      ,$1:SecondaryPHOCode
+      ,$1:SecondaryPHOName
+      ,CASE WHEN $1:SecondaryPHOTerminationDate = '' THEN NULL ELSE $1:SecondaryPHOTerminationDate END
+      ,$1:TertiaryPHOCode
+      ,$1:TertiaryPHOName
+      ,CASE WHEN $1:TertiaryPHOTerminationDate = '' THEN NULL ELSE $1:TertiaryPHOTerminationDate END
+      ,CASE WHEN $1:ProviderStartDate = '' THEN NULL ELSE $1:ProviderStartDate END
+      ,CASE WHEN $1:FacilityInceptionDate = '' THEN NULL ELSE $1:FacilityInceptionDate END
+      ,$1:ProviderActiveInd
+      ,$1:PractitionerLocumTenensInd
+      ,$1:InvisibleProviderInd
+      ,$1:TemporaryProviderInd
+      ,$1:PAMedicaidInd
+      ,$1:PPACAEnhancedPayInd
+      ,$1:HasMalpracticeInsuranceInd
+      ,$1:OwnershipStatusCode
+      ,$1:OwnershipStatusDesc
+      ,'SQLSERVER'
+      ,$1:SourceProviderNbr
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProvider.parquet'
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER
+    }
+    );
+    var res_load_DIM_PROVIDER = load_DIM_PROVIDER_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_ADDRESS;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_ADDRESS = `COPY INTO DIMDATA.DIM_PROVIDER_ADDRESS
+    (
+      DIM_PROVIDER_ADDRESS_KEY
+      ,MD5_VALUE_TEXT
+      ,INSERT_DATETIME
+      ,LAST_UPDATED_DATETIME
+      ,IS_LOGICAL_DELETE_FLAG
+      ,TPA_CLIENT_ID
+      ,TPA_ID
+      ,TPA_DIVISION_ID
+      ,PROVIDER_ADDRESS_TYPE_CODE
+      ,PROVIDER_ADDRESS_TYPE_DESC
+      ,PROVIDER_OFFICE_ID
+      ,PROVIDER_OFFICE_NAME
+      ,PROVIDER_FULL_ADDRESS_FORMATTED
+      ,PROVIDER_ADDRESS_LINE1_TEXT
+      ,PROVIDER_ADDRESS_LINE2_TEXT
+      ,PROVIDER_CITY_NAME
+      ,PROVIDER_STATE_ABBREV_NAME
+      ,PROVIDER_STATE_FULL_NAME
+      ,PROVIDER_COUNTY_NAME
+      ,PROVIDER_COUNTRY_NAME
+      ,PROVIDER_COUNTRY_ISO2
+      ,PROVIDER_COUNTRY_ISO3
+      ,PROVIDER_ZIP_CODE_NBR
+      ,PROVIDER_LATITUDE_NBR
+      ,PROVIDER_LONGITUDE_NBR
+      ,PROVIDER_OFFICE_MANAGER_NAME
+      ,HANDICAP_ACCESS_IND
+      ,TELE_HEALTH_IND
+      ,RECEIVES_MAIL_IND
+	  ,E_PRESCRIBE_IND
+	  ,MA_SUPER_PCP_IND
+	  ,EMR_SYSTEM_NAME
+
+
+    )
+FROM (SELECT
+      $1:DimProviderAddressKey
+      ,$1:MD5ValueText
+      ,$1:InsertDatetime
+      ,$1:LastUpdatedDatetime
+      ,$1:IsLogicalDeleteFlag
+      ,$1:TPAClientId
+      ,$1:TPAId
+      ,$1:TPADivisionId
+      ,$1:ProviderAddressTypeCode
+      ,$1:ProviderAddressTypeDesc
+      ,$1:ProviderOfficeId
+      ,$1:ProviderOfficeName
+      ,$1:ProviderFullAddressFormatted
+      ,$1:ProviderAddressLine1Text
+      ,$1:ProviderAddressLine2Text
+      ,$1:ProviderCityName
+      ,$1:ProviderStateAbbrevName
+      ,$1:ProviderStateFullName
+      ,$1:ProviderCountyName
+      ,$1:ProviderCountryName
+      ,$1:ProviderCountryISO2
+      ,$1:ProviderCountryISO3
+      ,$1:ProviderZipCodeNbr
+      ,CASE WHEN $1:ProviderLatitudeNbr = '' THEN NULL ELSE $1:ProviderLatitudeNbr END
+      ,CASE WHEN $1:ProviderLongitudeNbr = '' THEN NULL ELSE $1:ProviderLongitudeNbr END
+      ,$1:ProviderOfficeManagerName
+      ,$1:HandicapAccessInd
+      ,CASE WHEN $1:TeleHealthInd IS NULL THEN '' ELSE $1:TeleHealthInd END
+      ,CASE WHEN $1:ReceivesMailInd IS NULL THEN '' ELSE $1:ReceivesMailInd END
+  	  ,CASE WHEN $1:EPrescribeInd IS NULL THEN '' ELSE $1:EPrescribeInd END
+      ,CASE WHEN $1:MASuperPCPInd IS NULL THEN '' ELSE $1:MASuperPCPInd END
+	  ,CASE WHEN $1:EMRSystemName IS NULL THEN '' ELSE $1:EMRSystemName END
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderAddress.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_ADDRESS_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_ADDRESS
+    }
+    );
+    var res_load_DIM_PROVIDER_ADDRESS = load_DIM_PROVIDER_ADDRESS_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_AFFILIATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_AFFILIATION = `COPY INTO DIMDATA.DIM_PROVIDER_AFFILIATION
+    (
+    Dim_Provider_Affiliation_Key,
+	MD5_Value_Text,
+	Insert_Datetime,
+	Last_Updated_Datetime,
+	Is_Logical_Delete_Flag,
+	Affiliation_Type_Code,
+	Affiliation_Type_Desc,
+	Affiliation_Institution_Name,
+	Affiliation_Gateway_Text,
+	Affiliation_Gateway_Type_Code,
+	Affiliation_Gateway_Type_Desc,
+	Affiliated_Dim_Provider_Key
+    )
+FROM (SELECT
+    $1:DimProviderAffiliationKey
+	,$1:MD5ValueText
+	,$1:InsertDatetime
+	,$1:LastUpdatedDatetime
+	,$1:IsLogicalDeleteFlag
+	,$1:AffiliationTypeCode
+	,$1:AffiliationTypeDesc
+	,$1:AffiliationInstitutionName
+	,$1:AffiliationGatewayText
+	,$1:AffiliationGatewayTypeCode
+	,$1:AffiliationGatewayTypeDesc
+	,CASE WHEN $1:AffiliatedDimProviderKey = '' THEN NULL ELSE $1:AffiliatedDimProviderKey END
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderAffiliation.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_AFFILIATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_AFFILIATION
+    }
+    );
+    var res_load_DIM_PROVIDER_AFFILIATION = load_DIM_PROVIDER_AFFILIATION_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CERTIFICATION;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_CERTIFICATION = `COPY INTO DIMDATA.DIM_PROVIDER_CERTIFICATION
+	(
+	DIM_PROVIDER_CERTIFICATION_KEY 
+	,MD5_VALUE_TEXT 
+	,INSERT_DATETIME 
+	,LAST_UPDATED_DATETIME 
+	,IS_LOGICAL_DELETE_FLAG 
+	,DIM_PROVIDER_KEY 
+	,CERTIFICATION_TYPE_DESC 
+	,CERTIFICATION_NAME 
+	,CERTIFICATION_NBR 
+	,CERTIFICATION_STATE_ABBREV_NAME 
+	,CERTIFICATION_STATE_FULL_NAME 
+	,CERTIFICATION_START_DATE 
+	,CERTIFICATION_END_DATE 
+	,RECERTIFICATION_DATE 
+	,CERTIFICATION_VERIFICATION_DATE 
+	,CERTIFICATION_STATUS_CODE 
+	,CERTIFICATION_STATUS_DESC 
+	,CERTIFICATION_ACTIVE_IND 
+	,LIFETIME_CERTIFICATION_IND 
+	)
+FROM (SELECT
+	$1:DimProviderCertificationKey
+	,$1:MD5ValueText 
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:DimProviderKey
+	,$1:CertificationTypeDesc
+	,$1:CertificationName
+	,$1:CertificationNbr
+	,$1:CertificationStateAbbrevName 
+	,$1:CertificationStateFullName
+	,$1:CertificationStartDate
+	,$1:CertificationEndDate
+	,CASE WHEN $1:RecertificationDate = '' THEN NULL ELSE $1:RecertificationDate END
+	,CASE WHEN $1:CertificationVerificationDate = '' THEN NULL ELSE $1:CertificationVerificationDate END
+	,$1:CertificationStatusCode
+	,$1:CertificationStatusDesc
+	,$1:CertificationActiveInd
+	,$1:LifetimeCertificationInd 
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderCertification.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_CERTIFICATION_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_CERTIFICATION
+    }
+    );
+    var res_load_DIM_PROVIDER_CERTIFICATION = load_DIM_PROVIDER_CERTIFICATION_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CONTACT_INFO;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_CONTACT_INFO = `COPY INTO DIMDATA.DIM_PROVIDER_CONTACT_INFO
+	(
+    DIM_PROVIDER_CONTACT_INFO_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    PROVIDER_PRIMARY_PHONE_NBR,
+    PROVIDER_PRIMARY_PHONE_EXTENSION_NBR,
+    PROVIDER_PRIMARY_PHONE_NBR_FORMATTED,
+    PROVIDER_ALTERNATE_PHONE_NBR,
+    PROVIDER_ALTERNATE_PHONE_EXTENSION_NBR,
+    PROVIDER_ALTERNATE_PHONE_NBR_FORMATTED,
+    PROVIDER_FAX_NBR,
+    PROVIDER_FAX_NBR_FORMATTED,
+    PROVIDER_INTERNATIONAL_PHONE_CODE,
+    PROVIDER_EMAIL_ADDRESS_TEXT 
+	)
+FROM (SELECT
+	$1:DimProviderContactInfoKey
+	,$1:MD5ValueText 
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:ProviderPrimaryPhoneNbr
+	,$1:ProviderPrimaryPhoneExtensionNbr 
+	,$1:ProviderPrimaryPhoneNbrFormatted
+	,$1:ProviderAlternatePhoneNbr
+	,$1:ProviderAlternatePhoneExtensionNbr 
+	,$1:ProviderAlternatePhoneNbrFormatted
+	,$1:ProviderFaxNbr
+	,$1:ProviderFaxNbrFormatted
+	,$1:ProviderInternationalPhoneCode
+	,$1:ProviderEmailAddressText
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderContactInfo.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_CONTACT_INFO_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_CONTACT_INFO
+    }
+    );
+    var res_load_DIM_PROVIDER_CONTACT_INFO = load_DIM_PROVIDER_CONTACT_INFO_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CONTRACT;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_CONTRACT = `COPY INTO DIMDATA.DIM_PROVIDER_CONTRACT
+	(
+    DIM_PROVIDER_CONTRACT_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DATA_SOURCE_CODE,
+    DATA_SOURCE_NAME,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    PRODUCT_CODE,
+    PRODUCT_NAME,
+    PRODUCT_TYPE_CODE,
+    PRODUCT_TYPE_NAME,
+    CONTRACT_MODEL_TEXT,
+    RESTRICTION_MIN_AGE,
+    RESTRICTION_MAX_AGE,
+    RESTRICTION_GENDER_CODE,
+    RESTRICTION_GENDER_NAME,
+    SPECIAL_RESTRICTION_DESC,
+    EXISTING_PATIENTS_ONLY_IND
+	)
+FROM (SELECT
+	$1:DimProviderContractKey
+	,$1:MD5ValueText 
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:DataSourceCode
+	,$1:DataSourceName 
+	,$1:TPAClientId
+	,$1:TPAId
+	,$1:TPADivId 
+	,$1:ProductCode
+	,$1:ProductName
+	,$1:ProductTypeCode
+	,$1:ProductTypeName
+	,$1:ContractModelText
+    ,$1:RestrictionMinAge
+    ,$1:RestrictionMaxAge
+    ,$1:RestrictionGenderCode
+    ,$1:RestrictionGenderName
+    ,$1:SpecialRestrictionDesc
+    ,$1:ExistingPatientsOnlyInd
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderContract.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_CONTRACT_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_CONTRACT
+    }
+    );
+    var res_load_DIM_PROVIDER_CONTRACT = load_DIM_PROVIDER_CONTRACT_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_CONTRACT_ATTRIBUTE;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_CONTRACT_ATTRIBUTE = `COPY INTO DIMDATA.DIM_PROVIDER_CONTRACT_ATTRIBUTE
+	(
+    DIM_PROVIDER_CONTRACT_ATTRIBUTE_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    CONTRACT_TERMINATION_REASON_CODE,
+    CONTRACT_TERMINATION_REASON_DESC
+	)
+FROM (SELECT
+	$1:DimProviderContractAttributeKey
+	,$1:MD5ValueText 
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:ContractTerminationReasonCode
+	,$1:ContractTerminationReasonDesc 
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderContractAttribute.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_CONTRACT_ATTRIBUTE_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_CONTRACT_ATTRIBUTE
+    }
+    );
+    var res_load_DIM_PROVIDER_CONTRACT_ATTRIBUTE = load_DIM_PROVIDER_CONTRACT_ATTRIBUTE_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_IDENTIFIER;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_IDENTIFIER = `COPY INTO DIMDATA.DIM_PROVIDER_IDENTIFIER
+	(
+    DIM_PROVIDER_IDENTIFIER_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DIM_PROVIDER_KEY,
+    IDENTIFIER_NAME,
+    IDENTIFIER_NBR
+	)
+FROM (SELECT
+	$1:DimProviderIdentifierKey
+    ,$1:MD5ValueText 
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:DimProviderKey
+	,$1:IdentifierName 
+    ,$1:IdentifierNbr
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderIdentifier.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_IDENTIFIER_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_IDENTIFIER
+    }
+    );
+    var res_load_DIM_PROVIDER_IDENTIFIER = load_DIM_PROVIDER_IDENTIFIER_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.DIM_PROVIDER_SPECIALTY;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_DIM_PROVIDER_SPECIALTY = `COPY INTO DIMDATA.DIM_PROVIDER_SPECIALTY
+	(
+    DIM_PROVIDER_SPECIALTY_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    SPECIALTY_NAME
+	)
+FROM (SELECT
+	$1:DimProviderSpecialtyKey
+	,$1:MD5ValueText
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:SpecialtyName
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.DimProviderSpecialty.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_DIM_PROVIDER_SPECIALTY_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_DIM_PROVIDER_SPECIALTY
+    }
+    );
+    var res_load_DIM_PROVIDER_SPECIALTY = load_DIM_PROVIDER_SPECIALTY_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.FACT_PROVIDER_CONTRACT;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_FACT_PROVIDER_CONTRACT = `COPY INTO DIMDATA.FACT_PROVIDER_CONTRACT
+	(
+    FACT_PROVIDER_CONTRACT_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    DIM_TPA_HIERARCHY_KEY,
+    DIM_PROVIDER_KEY,
+    DIM_PROVIDER_CONTRACT_KEY,
+    DIM_PROVIDER_ADDRESS_KEY,
+    PROVIDER_SPECIALTY_GROUPING_KEY,
+    DIM_PROVIDER_CONTRACT_ATTRIBUTE_KEY,
+    DIM_PROVIDER_CONTACT_INFO_KEY,
+    DIM_OFFICE_HOURS_KEY,
+    OWNING_MEDICAL_GROUP_KEY,
+    CONTRACT_START_DATE_KEY,
+    CONTRACT_TERMINATION_DATE_KEY,
+    ADDRESS_START_DATE_KEY,
+    ADDRESS_TERM_DATE_KEY,
+    CONTRACT_LEVEL_NAME,
+    CONTRACT_ACTIVE_IND,
+    ADDRESS_ACTIVE_IND,
+    SUPPRESSED_IN_DIRECTORY_IND,
+    CARE_TYPE_DESC
+	)
+    FROM (SELECT
+	$1:FactProviderContractKey
+	,$1:MD5ValueText 
+	,$1:InsertDatetime 
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:DimTPAHierarchyKey
+    ,$1:DimProviderKey
+    ,$1:DimProviderContractKey
+    ,$1:DimProviderAddressKey
+    ,$1:ProviderSpecialtyGroupingKey
+    ,$1:DimProviderContractAttributeKey
+    ,$1:DimProviderContactInfoKey
+    ,$1:DimOfficeHoursKey
+    ,$1:OwningMedicalGroupKey
+    ,$1:ContractStartDateKey
+    ,$1:ContractTerminationDateKey
+    ,$1:AddressStartDateKey
+    ,$1:AddressTermDateKey
+    ,$1:ContractLevelName
+    ,$1:ContractActiveInd
+    ,$1:AddressActiveInd
+    ,$1:SuppressedInDirectoryInd
+    ,CASE WHEN $1:CareTypeDesc is null THEN '' ELSE $1:CareTypeDesc END
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.FactProviderContract.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_FACT_PROVIDER_CONTRACT_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_FACT_PROVIDER_CONTRACT
+    }
+    );
+    var res_load_FACT_PROVIDER_CONTRACT = load_FACT_PROVIDER_CONTRACT_snowflake.execute();
+
+    trunc_table = "TRUNCATE TABLE DIMDATA.PROVIDER_SPECIALTY_GROUPING;";
+    trunc_table_snowflake = snowflake.createStatement(
+    {
+        sqlText: trunc_table
+    }
+    );
+    res_trunc_table = trunc_table_snowflake.execute();
+
+	let load_PROVIDER_SPECIALTY_GROUPING = `COPY INTO DIMDATA.PROVIDER_SPECIALTY_GROUPING
+	(
+    PROVIDER_SPECIALTY_GROUPING_KEY,
+    MD5_VALUE_TEXT,
+    INSERT_DATETIME,
+    LAST_UPDATED_DATETIME,
+    IS_LOGICAL_DELETE_FLAG,
+    SPECIALTY_GROUPING_LIST,
+    SPECIALTY_CARE_TYPE_CODE,
+    CARE_TYPE_DESC
+	)
+    FROM (SELECT
+	$1:ProviderSpecialtyGroupingKey
+	,$1:MD5ValueText 
+	,$1:InsertDatetime
+	,$1:LastUpdatedDatetime 
+	,$1:IsLogicalDeleteFlag 
+	,$1:SpecialtyGroupingList
+    ,$1:SpecialtyCareTypeCode
+    ,$1:CareTypeDesc
+        FROM '@DIMDATA.HPDSDATALAKE_IDAPSQL_IDAPFULL/dbo.ProviderSpecialtyGrouping.parquet'    
+        (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));`
+
+    var load_PROVIDER_SPECIALTY_GROUPING_snowflake = snowflake.createStatement(
+    {
+        sqlText: load_PROVIDER_SPECIALTY_GROUPING
+    }
+    );
+    var res_load_PROVIDER_SPECIALTY_GROUPING = load_PROVIDER_SPECIALTY_GROUPING_snowflake.execute();
+
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+    (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+    VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    return result;
+}
+return result;
+    
+$$;

@@ -1,0 +1,3 @@
+CREATE SCHEMA IF NOT EXISTS RAWDATA
+COMMENT = 'Datahub Raw Data landing zone'
+;

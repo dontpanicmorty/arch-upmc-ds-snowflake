@@ -1,0 +1,22 @@
+{
+  "comment": "2000 length for single column is because this is a text file used to deliver us a single URL that contains a hash. 2k should be more than enough, and we effectively only need to map it to a single column. truncReload set to false because we may as well archive these, and we'll always select the most recent timestamp when creating our ToC file and ensure that it's the right month",
+  "outputSchema": "PRICING",
+  "outputTable": "CIGNA_URL",
+  "hasHeader": false,
+  "hasTrailer": false,
+  "fileType": "fixed",
+  "fileFormat": "BUSINESS_FIXED_FILE_FORMAT",
+  "truncReload": false,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "outputField": "URL",
+          "startPos": "1",
+          "length": "2000",
+          "columnOrder": 1
+        }
+      ]
+    }
+  }
+}

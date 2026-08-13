@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_PROVIDERINSURANCE
+LIKE &{CACTUS}.VISUALCACTUS.PROVIDERINSURANCE
+;
+
+!set variable_substitution=false;

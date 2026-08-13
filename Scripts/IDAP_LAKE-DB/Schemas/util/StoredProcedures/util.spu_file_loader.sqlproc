@@ -1,0 +1,321 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_FILE_LOADER(FILENAME VARCHAR, TPA_CLIENT_ID VARCHAR, TPA_ID VARCHAR, TPA_DIV_ID VARCHAR, DATA_DOMAIN VARCHAR, UNIQUE_FILENAME_PATTERN VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT = 'Stored procedure for loading simple fixed / delimited files into Snowflake from blob storage'
+EXECUTE AS OWNER 
+AS
+$$
+//define here so we can access this variable in the catch statement
+let fileLoaderControlKey = -1;
+
+try {
+    const controlTable = 'FILE_LOADER_CONTROL';
+    const FILE_TYPE_DELIMITED = 'delimited';
+    const FILE_TYPE_FIXED = 'fixed';
+    const FILE_TYPE_JSON = 'json';
+
+    let format;
+    // If UNIQUE_FILENAME_PATTERN was provided, we're looking for an exact match
+    if (UNIQUE_FILENAME_PATTERN) {
+        var sqlCommand = `SELECT FILE_LOADER_CONTROL_KEY, PARSE_JSON(FILE_MAPPING) FROM UTIL.${controlTable}
+        WHERE TPA_CLIENT_ID = '${TPA_CLIENT_ID}'
+        AND TPA_ID = '${TPA_ID}'
+        AND TPA_DIV_ID = '${TPA_DIV_ID}'
+        AND DATA_DOMAIN = '${DATA_DOMAIN}'
+        AND UNIQUE_FILENAME_PATTERN = '${UNIQUE_FILENAME_PATTERN}'
+        `;
+
+        var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        var resultSet = sfStatement.execute();
+        resultSet.next();
+
+        if (resultSet.getRowCount() === 0) 
+            throw new Error("ERROR: no file mapping found in " + controlTable + " for the specified parameters.");
+
+        fileLoaderControlKey = resultSet.getColumnValue(1) ? resultSet.getColumnValue(1) : -1;
+        format = resultSet.getColumnValue(2);
+    }
+    // If UNIQUE_FILENAME_PATTERN wasn't provided, we want to do a LIKE '%___%' match
+    else {
+        var sqlCommand = `SELECT FILE_LOADER_CONTROL_KEY, PARSE_JSON(FILE_MAPPING) FROM UTIL.${controlTable}
+        WHERE '${FILENAME}' LIKE CONCAT(TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, '-', DATA_DOMAIN, '%', UNIQUE_FILENAME_PATTERN, '%')
+        `;
+
+        var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        var resultSet = sfStatement.execute();
+        resultSet.next();
+
+        if (resultSet.getRowCount() === 0) 
+            throw new Error("ERROR: no file mapping found in " + controlTable + " for the specified parameters.");
+
+        fileLoaderControlKey = resultSet.getColumnValue(1) ? resultSet.getColumnValue(1) : -1;
+        format = resultSet.getColumnValue(2);
+    }
+
+    if (!format) {
+        throw new Error("ERROR: no file mapping found in " + controlTable + " for the specified parameters.");
+    }
+
+    const fileType = format.fileType;
+    const outputSchema = format.outputSchema;
+    const outputTable = format.outputTable;
+    const hasHeader = format.hasHeader || false;
+    const headerFormat = format.headerFormat;
+    const hasTrailer = format.hasTrailer || false;
+    const fileFormat = format.fileFormat;
+    const truncReload = format.truncReload; 
+    const jsonBasePath = format.jsonBasePath;
+
+    //check if the requested file exists in the stage
+    var sqlCommand = `SELECT COUNT(*) FROM @UTIL.HPDSDATALAKE_FILELOADDATA (FILE_FORMAT => ${outputSchema}.${fileFormat}, PATTERN => '${FILENAME}.*')`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    var resultSet = sfStatement.execute();
+    resultSet.next();
+
+    if (resultSet.getColumnValue(1) === 0) 
+        throw new Error("ERROR: " + FILENAME + " empty or not found in @UTIL.HPDSDATALAKE_FILELOADDATA.");
+
+
+    //fail if the file has characteristics this procedure does not (yet?) support
+    if ([FILE_TYPE_DELIMITED, FILE_TYPE_FIXED, FILE_TYPE_JSON].indexOf(fileType) < 0) 
+        throw new Error("ERROR: fileType " + fileType + " not supported.");
+    if (hasTrailer && [FILE_TYPE_DELIMITED, FILE_TYPE_FIXED].indexOf(fileType) < 0) 
+        throw new Error(`ERROR: trailer not supported for ${fileType} filetype.`);
+
+    //check for existence of meta fields (will also fail if the output table does not exist)
+    let reqFields = `FILENAME, INSERT_DATETIME`;
+    if (fileType === FILE_TYPE_JSON) reqFields += ", JSON_DATA"
+    try {
+        var sqlCommand = `    
+            select ${reqFields}
+            FROM ${outputSchema}.${outputTable}
+            limit 1`;
+
+        var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+    }
+    catch(err) {
+        if (err.toString().match(/.*invalid identifier.*/g))
+            throw new Error(`ERROR: ${reqFields} fields must exist on output table "${outputSchema}"."${outputTable}.`);
+        else throw err;
+    }
+
+    // Set up the `FROM` statement to use for the main table:
+    let from = `FROM @UTIL.HPDSDATALAKE_FILELOADDATA/${FILENAME}
+            (file_format => ${outputSchema}.${fileFormat}) S`;
+    
+    // If we're working with JSON, parse the root JSON object out for some queries
+    // where we need to reach deeper. Use `parse_json(JSONCONTENT.value:_____)` 
+    // to access anything below this.
+    let jsonFlattenFrom = '';
+    if (fileType === FILE_TYPE_JSON && jsonBasePath) {
+        jsonFlattenFrom = `, lateral flatten(input => S.$1, '${jsonBasePath}') JSON_DATA`;
+    }
+
+    let outputFields = [];
+    let selectCols = ['FILENAME','INSERT_DATETIME'];
+    let formatNumCols, mapping;
+
+    // For table-like input formats, get the select cols in one way:
+    if (fileType === FILE_TYPE_DELIMITED || fileType === FILE_TYPE_FIXED) {
+        //TODO add logic for variable fixed substring to determine which format to use (other than "all")
+        mapping = format.mappingTypes.all.mappingContents;
+
+        //get the number of expected columns from the format
+        //Obj.keys = [0,...,18];
+        formatNumCols = Object.keys(mapping).length;
+
+        if (fileType === FILE_TYPE_DELIMITED) {
+            //dynamically build a list of columns to select like $1, $2, ... $n
+            selectCols = [...Array(formatNumCols).keys()].map(x => "$"+(x+1));
+        }
+        
+        //TRIM(SUBSTRING(RECORD,595,1)) WHLCHR_ACCESS, ... 
+        else if (fileType === FILE_TYPE_FIXED) {
+            for (const field of mapping) {
+                //substring to get the specified field positions, trim extra spaces, and set to NULL if we get an empty string back (empty string causes issues converting to FLOAT, etc)
+                selectCols.push(`DECODE(TRIM(SUBSTRING(RECORD,${field.startPos}, ${field.length})), '', NULL, TRIM(SUBSTRING(RECORD,${field.startPos}, ${field.length}))) ${field.outputField}`);
+            }
+        }
+            
+        //sort the fields because Snowflake "helpfully" decides to sort JSON keys alphabetically when inserted into a VARIANT column
+        let sortedMapping = mapping.sort((a, b) => {
+                    if (a.columnOrder > b.columnOrder) return 1;
+                    else if (a.columnOrder < b.columnOrder) return -1;
+                    return 0;
+                    });
+                    
+        //build a list of output columns
+        for (var field of sortedMapping) {
+            outputFields.push(field['outputField']);
+        }
+    }
+    // For JSON-like, we just want to map JSON_DATA through
+    else if (fileType === FILE_TYPE_JSON) {
+        outputFields.push('JSON_DATA');
+        selectCols.push(jsonBasePath ? 'JSON_DATA.value' : 'JSON_DATA'); // without `.value`, it returns `.this`, the full array
+    }
+
+    // Join the lists from above
+    selectCols = selectCols.join(",");
+    outputFieldStr = outputFields.join(",");
+
+    // validate the header against the format if we have a delimited file
+    if (fileType === FILE_TYPE_DELIMITED && hasHeader) {
+        //get the header (first row)
+        var sqlCommand = `    
+        select ${selectCols} 
+        FROM @UTIL.HPDSDATALAKE_FILELOADDATA/${FILENAME}
+            (file_format => ${outputSchema}.${headerFormat})
+        limit 1`;
+
+        var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        var resultSet = sfStatement.execute();
+        resultSet.next();
+
+        for (var i=1; i<=formatNumCols; i++) {
+            const fileColumnName = resultSet.getColumnValueAsString(i);
+            formatMatch = mapping.filter((a) => a.inputField === fileColumnName);
+
+            if (formatMatch.length === 0) throw new Error('ERROR: field name ' + fileColumnName + ' on file does not exist in format'); 
+        }
+    }
+
+    /*
+    if number of columns is mismatched, should fail with this error:
+
+    Number of columns in file (20) does not match that of the corresponding table (19), use file format option error_on_column_count_mismatch=false 
+    to ignore this error File 'idapProviderDailyGlobal.txt', line 2, character 1 Row 1 starts at line 1, column "IDAPPROVIDERDAILYGLOBAL"[20] 
+    If you would like to continue loading when an error is encountered, use other values such as 'SKIP_FILE' or 'CONTINUE' for the ON_ERROR option. 
+    For more information on loading options, please run 'info loading_data' in a SQL client.*/
+
+    if(truncReload) {
+        sqlCommand = `TRUNCATE TABLE ${outputSchema}.${outputTable}`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+    }
+
+    //if we have a trailer, filter out the last row from the temp table -> target table insert
+    let trailerWhereClause = hasTrailer ? ' WHERE FILE_ROW_NBR < LASTROW' : '';
+
+
+    //If we've made it this far, generate a COPY INTO statement.  Copy the structure of the output table (already made sure it exists above) 
+    if (format.fileType === FILE_TYPE_DELIMITED) {
+        sqlCommand = `CREATE OR REPLACE TEMPORARY TABLE UTIL.TEMP_DELIMITED AS (SELECT CAST(1 AS NUMBER) AS FILE_ROW_NBR, ${outputTable}.* FROM ${outputSchema}.${outputTable} WHERE FALSE)`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+        
+        sqlCommand = `    
+        COPY INTO UTIL.TEMP_DELIMITED
+        (FILENAME, INSERT_DATETIME, FILE_ROW_NBR, ${outputFieldStr})
+        FROM (SELECT metadata$filename, CURRENT_TIMESTAMP(), metadata$file_row_number, ${selectCols}
+        ${from})`;
+
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+
+        sqlCommand = `INSERT INTO ${outputSchema}.${outputTable}
+        (FILENAME, INSERT_DATETIME, ${outputFieldStr})
+        (SELECT FILENAME, INSERT_DATETIME, ${outputFieldStr} FROM (
+            SELECT FILENAME, INSERT_DATETIME, ${outputFieldStr}, FILE_ROW_NBR, MAX(FILE_ROW_NBR) OVER (ORDER BY 1) AS LASTROW 
+            FROM UTIL.TEMP_DELIMITED)
+        ${trailerWhereClause})`;
+    }
+    
+
+    //if fixed width, copy the whole record to a temp table first (COPY INTO doesn't support TRIM, etc)
+    else if (format.fileType === FILE_TYPE_FIXED) {
+        sqlCommand = `CREATE OR REPLACE TEMPORARY TABLE UTIL.TEMP_FIXED_WIDTH(FILENAME VARCHAR, INSERT_DATETIME TIMESTAMP_TZ(9), FILE_ROW_NBR NUMBER, RECORD VARCHAR)`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+        
+        sqlCommand = `    
+        COPY INTO UTIL.TEMP_FIXED_WIDTH 
+        (FILENAME, INSERT_DATETIME, FILE_ROW_NBR, RECORD)
+        FROM (SELECT metadata$filename, CURRENT_TIMESTAMP(), metadata$file_row_number, $1 
+        ${from})`;
+ 
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+
+        sqlCommand = `INSERT INTO ${outputSchema}.${outputTable}
+        (FILENAME, INSERT_DATETIME, ${outputFieldStr})
+        (SELECT FILENAME, INSERT_DATETIME, ${outputFieldStr} FROM (
+            SELECT ${selectCols}, FILE_ROW_NBR, MAX(FILE_ROW_NBR) OVER (ORDER BY 1) AS LASTROW
+            FROM UTIL.TEMP_FIXED_WIDTH) 
+            ${trailerWhereClause})`;
+    }     
+    
+    // and if we're JSON, do some even weirder stuff:
+    else if (format.fileType === FILE_TYPE_JSON) {
+        // Make a temp table because SF doesn't support complex `copy`, and keep
+        // `JSON_DATA OBJECT` as the column first so we can use the same `S.$1` 
+        // query from the stage
+        sqlCommand = `CREATE OR REPLACE TEMPORARY TABLE UTIL.TEMP_JSON(JSON_DATA VARIANT, FILENAME VARCHAR, INSERT_DATETIME TIMESTAMP_TZ(9))`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+        
+        // Paste from the stage
+        sqlCommand = `    
+        COPY INTO UTIL.TEMP_JSON 
+        (JSON_DATA, FILENAME, INSERT_DATETIME)
+        FROM (SELECT $1, metadata$filename, CURRENT_TIMESTAMP()
+        ${from})`;
+
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+
+        // Now: alias the temp table to S (like the stage) and INSERT INTO
+        sqlCommand = `INSERT INTO ${outputSchema}.${outputTable}
+        (FILENAME, INSERT_DATETIME, ${outputFieldStr})
+        (SELECT ${selectCols} FROM UTIL.TEMP_JSON S ${jsonFlattenFrom})`;
+    }
+
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    resultSet = sfStatement.execute();
+    resultSet.next();
+
+    var insertCnt = resultSet.getNumRowsAffected();
+
+    sqlCommand = `INSERT INTO LOGDATA.FILE_LOADER_HISTORY (
+        FILE_LOADER_CONTROL_KEY,
+        FILENAME,
+        LOAD_STATUS,
+        ERROR_MESSAGE,
+        ROW_CNT)
+    VALUES (
+        ${fileLoaderControlKey}, 
+        '${FILENAME}', 
+        'SUCCESS',
+        '',
+        ${insertCnt})`;
+
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    sfStatement.execute();
+}
+catch(err) {
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+
+    sqlCommand = `INSERT INTO LOGDATA.FILE_LOADER_HISTORY (
+        FILE_LOADER_CONTROL_KEY,
+        FILENAME,
+        LOAD_STATUS,
+        ERROR_MESSAGE,
+        ROW_CNT)
+    VALUES (
+        ${fileLoaderControlKey}, 
+        '${FILENAME}', 
+        'FAILURE',
+        '${message} | ${stack}',
+        0)`;
+
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    sfStatement.execute();
+
+    return 'FAILURE: ' + message;
+}
+
+return 'SUCCESS';
+$$
+;

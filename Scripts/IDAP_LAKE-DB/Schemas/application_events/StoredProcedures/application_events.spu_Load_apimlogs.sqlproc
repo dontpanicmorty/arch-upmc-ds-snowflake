@@ -1,0 +1,61 @@
+CREATE OR REPLACE PROCEDURE APPLICATION_EVENTS.SPU_LOAD_APIMLOGS_FROM_BLOB(YEAR_IN VARCHAR, MONTH_IN VARCHAR, DAY_IN VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+
+var result = "";
+
+try
+{
+    //Build the file pattern based off the filed out variables..
+    let filePattern = ".*";
+    if (YEAR_IN) //If year_in is not empty then add it to the pattern
+    {
+        filePattern += "/"+YEAR_IN;  //for a month value
+        if (MONTH_IN)
+        {
+            filePattern += "/"+MONTH_IN;
+            if (DAY_IN)
+            {
+                filePattern += "/"+DAY_IN;
+            }
+        }
+    }
+    filePattern += "/.*\.json";
+
+    let sqlCommand = `COPY INTO APPLICATION_EVENTS.APIM_LOGS
+        (FILENAME, FILE_ROW_NUMBER, LOAD_DATETIME, EVENT_DATETIME_UTC, PRODUCT, API_NAME, REQUEST_URL, JSON_DATA)
+    FROM (SELECT metadata$filename, metadata$file_row_number, current_timestamp(), $1:EventTime::datetime, $1:Product::string, $1:"API Name"::string, $1:"Request URL"::string, $1
+        FROM @APPLICATION_EVENTS.SNOWFLAKEDATA_CONSUMERTECH_APIMLOGS
+            (
+                FILE_FORMAT => APPLICATION_EVENTS.APIMLOGS_FILE_FORMAT
+                ,PATTERN => '`+filePattern+`'
+            )
+        );`;
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    var resultSet = sfStatement.execute();
+    
+    if (resultSet.getRowCount() === 1 && resultSet.getNumRowsAffected() === 0)
+    {
+        result = "Copy executed with 0 files processed.";
+    }
+    else
+    {
+        result = "Copy executed with " + resultSet.getRowCount() + " files processed, and " + resultSet.getNumRowsAffected() + " rows loaded.";
+    }
+}
+catch (err)  
+{
+    result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+    throw result;
+}
+
+return result;
+$$
+;

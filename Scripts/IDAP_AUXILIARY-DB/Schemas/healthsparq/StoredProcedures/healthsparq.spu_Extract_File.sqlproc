@@ -1,0 +1,106 @@
+/**
+Writes a view to the snowflakedata.outbounddata blob storage container in a 
+standardized way.
+
+- `FILEPATH` should be the path under the `outbounddata` storage container
+- `SCHEMA_NAME` should be the name of the schema of table/view we're working with
+- `VIEW_NAME` should be the name of the table/view we're working with
+
+This will intentionally throw an error if something is invalid.
+*/
+CREATE OR REPLACE PROCEDURE HEALTHSPARQ.SPU_EXTRACT_FILE (
+  FILEPATH VARCHAR, 
+  SCHEMA_NAME VARCHAR,
+  VIEW_NAME VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let startTime = new Date();
+let sqlText, resultSet;
+
+// Prepend any standard pathing we want to have
+let fullFilepath = '@HEALTHSPARQ.SNOWFLAKEDATA_OUTBOUNDDATA/healthsparq/' + FILEPATH;
+
+try {
+  // Sanity check
+  if (FILEPATH.startsWith('/')) {
+    throw new Error('Filepath can not start with a slash.');
+  }
+  
+  // Ensure no one tried to cram two params in one
+  if (VIEW_NAME.indexOf('.') > -1 || SCHEMA_NAME.indexOf('.') > -1) {
+    throw new Error('Keep VIEW_NAME and SCHEMA_NAME separate. This can also only be run on data inside its own database.');
+  }
+
+  // Stringify the data, then set up the copy with the fileformat/options we want
+  sqlText = `COPY INTO ${fullFilepath} FROM (
+    SELECT *
+    FROM ${VIEW_NAME}
+  )
+  FILE_FORMAT = (FORMAT_NAME = HEALTHSPARQ.HEALTHSPARQ_EXTRACT_FILE_FORMAT)
+  overwrite = true, 
+  single = true
+  max_file_size = 5000000000;`; // 5GB, max
+
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  const diag = `${resultSet.getColumnValue('output_bytes') / 1000} KB written to '${fullFilepath}'.`;
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.HEALTHSPARQ_EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${fullFilepath}',
+    'FILE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${diag.replace(/'/g, "''")}',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+
+  return diag;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.HEALTHSPARQ_EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${fullFilepath}',
+    'FILE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw err;
+}
+$$;

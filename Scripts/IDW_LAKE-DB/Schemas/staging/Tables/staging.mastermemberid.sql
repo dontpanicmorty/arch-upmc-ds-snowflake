@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE STAGING.MASTERMEMBERID
+(
+MASTERMEMBER                   NUMBER(11),
+DUALMEMBERONMC400                 VARCHAR,
+IDTYPE                            VARCHAR,
+LASTCHANGETIMESTAMP               VARCHAR,
+LASTCHANGEUSER                    VARCHAR,
+RECORDCREATIONTIMESTAMP           VARCHAR,
+RECORDCREATIONUSER                VARCHAR,
+SOURCEID                          VARCHAR,
+SOURCESYSTEM                      VARCHAR,
+STATUS                            VARCHAR,
+LASTUPDATED                 TIMESTAMP_NTZ,
+LASTAPPLIED                 TIMESTAMP_NTZ,
+DELETEDFLAG                 TIMESTAMP_NTZ
+)
+COMMENT='Created for STAGING Migration'
+;

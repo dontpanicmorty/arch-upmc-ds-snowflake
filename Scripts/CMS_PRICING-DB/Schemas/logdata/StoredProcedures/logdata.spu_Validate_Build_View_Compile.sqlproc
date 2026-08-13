@@ -1,0 +1,99 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_BUILD_VIEW_COMPILE(BUILD_NBR VARCHAR, BATCH_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+//hard-coded query to generate the list of views we need to check and the validation SQL to go along with them. 
+sqlCommand = `SELECT TABLE_SCHEMA, TABLE_NAME, 'EXPLAIN USING TEXT SELECT * FROM ' || TABLE_CATALOG || '.' || TABLE_SCHEMA || '.' || TABLE_NAME AS COUNT_QUERY 
+    FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'VIEW' AND TABLE_SCHEMA <> 'INFORMATION_SCHEMA'`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+
+try 
+{
+    //*****************************************************************************
+    //loop through all of the views we need to check
+    //*****************************************************************************
+    while(resultSet.next()){
+        var schemaName = resultSet.getColumnValue(1);
+        var tableName = resultSet.getColumnValue(2);
+        var sqlQuery = resultSet.getColumnValue(3);              
+        try {
+            //here we just want to see if the EXPLAIN executes which indicates a valid view
+            var sfStatementExplainView = snowflake.createStatement({sqlText: sqlQuery});
+            sfStatementExplainView.execute();
+            }
+        catch(err) {
+            //Insert a record to indicate the view is no good
+            var sqlCountInsert = `INSERT INTO LOGDATA.BUILD_VALIDATION_RESULT 
+                (SCHEMA_NAME, TABLE_NAME, BUILD_NBR, BATCH_ID, VALIDATION_PROCEDURE_NAME, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR) 
+                VALUES ('${schemaName}','${tableName}','${BUILD_NBR}','${BATCH_ID}','${procedureName}', '0', 1)`;
+            snowflake.execute({sqlText: sqlCountInsert});
+            }
+        }
+    //*****************************************************************************
+    // End the validation step
+    //*****************************************************************************
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

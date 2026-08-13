@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE MEDHOK.AUDIT_AUDIT
+(
+MHK_AUDIT_INT_ID                       VARCHAR,
+COMMENT_SEQ_NBR                      NUMBER(2),
+AUDIT_DATETIME                   TIMESTAMP_NTZ,
+CONTENT                                VARCHAR,
+FIELD_NAME                             VARCHAR,
+OLD_VALUE                              VARCHAR,
+NEW_VALUE                              VARCHAR,
+CREATED_BY                             VARCHAR,
+MHK_IRE_INT_ID                         VARCHAR,
+MHK_REFERRAL_INT_ID                    VARCHAR,
+MHK_DER_INT_ID                         VARCHAR,
+MHK_OTM_INT_ID                         VARCHAR,
+MHK_OTM_DETAIL_INT_ID                  VARCHAR,
+MHK_GRIEVANCE_INT_ID                   VARCHAR,
+MHK_CTM_INT_ID                         VARCHAR,
+MHK_APPEALS_INT_ID                     VARCHAR,
+MHK_AUTH_INT_ID                        VARCHAR,
+MHK_PROV_APPEALS_INT_ID                VARCHAR,
+MHK_COMPLIANCE_INT_ID                  VARCHAR,
+MHK_RCA_INT_ID                         VARCHAR,
+MHK_CAREPLAN_INT_ID                    VARCHAR,
+MHK_MTM_INT_ID                         VARCHAR,
+MHK_FOLLOWUP_INT_ID                    VARCHAR,
+MHK_OB_CONTACT_INT_ID                  VARCHAR,
+MHK_MBR_INT_ID                         VARCHAR,
+MHK_ALERTS_INT_ID                      VARCHAR,
+MHK_INTERDISCIPLINARY_INT_ID           VARCHAR,
+CLIENT_ID                              VARCHAR,
+TPA_ID                                 VARCHAR,
+TPA_DIV                                VARCHAR,
+FILE_NAME                              VARCHAR
+)
+COMMENT='Created for MEDHOK Migration'
+;

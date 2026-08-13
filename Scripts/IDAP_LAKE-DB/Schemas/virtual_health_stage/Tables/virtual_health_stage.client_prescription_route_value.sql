@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CLIENT_PRESCRIPTION_ROUTE_VALUE
+(
+ID                      INT,
+UUID                VARCHAR,
+TITLE               VARCHAR,
+LAST_UPDATED_BY         INT,
+IS_DELETED              INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

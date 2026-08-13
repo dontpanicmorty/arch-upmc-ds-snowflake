@@ -1,0 +1,14 @@
+CREATE OR REPLACE FUNCTION EXTRACTDATA.FXN_PREPEND_STAGING_CONTAINER_URL(URL_PATH VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+AS
+$$
+/*
+Could do the following, but for right now the dev ones aren't web-accessible 
+
+SELECT REPLACE(STAGE_URL, 'azure', 'https')
+FROM INFORMATION_SCHEMA.STAGES WHERE STAGE_SCHEMA = 'EXTRACTDATA' AND STAGE_NAME = 'WEBSOLUTIONS_PUBLICWEB'
+*/
+return `https://content.upmchp.com/publicweb${URL_PATH}`;
+$$
+;

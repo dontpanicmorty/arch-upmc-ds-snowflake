@@ -1,0 +1,195 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_SKYGEN_CLAIM_AUTHORIZATION(JOB_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION`
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_TMP
+AS
+SELECT * FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION AS tgt
+USING (
+        SELECT TO_VARCHAR(AUTHORIZATION_NBR) AS AUTHORIZATION_NBR
+                ,TO_VARCHAR(MEMBER_NBR) AS MEMBER_NBR
+                ,TO_VARCHAR(SUBMITTING_PROVIDER_ID) AS SUBMITTING_PROVIDER_ID
+                ,TO_VARCHAR(RENDERING_PROVIDER_ID) AS RENDERING_PROVIDER_ID
+                ,TO_VARCHAR(STATUS) AS STATUS
+                ,TO_VARCHAR(STATUS_DESC) AS STATUS_DESC
+                ,TO_VARCHAR(DETERMINATION_STATUS) AS DETERMINATION_STATUS
+                ,TO_VARCHAR(DETERMINATION_STATUS_DESC) AS DETERMINATION_STATUS_DESC
+                ,TO_VARCHAR(OFFICE_ID) AS OFFICE_ID
+                ,DETERMINATION_DATE
+                ,TO_VARCHAR(PLAN_CODE) AS PLAN_CODE
+                ,TO_VARCHAR(PLAN_TYPE_CODE) AS PLAN_TYPE_CODE
+            FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_TMP
+        MINUS
+       SELECT TO_VARCHAR(AUTHORIZATION_NBR) AS AUTHORIZATION_NBR
+                ,TO_VARCHAR(MEMBER_NBR) AS MEMBER_NBR
+                ,TO_VARCHAR(SUBMITTING_PROVIDER_ID) AS SUBMITTING_PROVIDER_ID
+                ,TO_VARCHAR(RENDERING_PROVIDER_ID) AS RENDERING_PROVIDER_ID
+                ,TO_VARCHAR(STATUS) AS STATUS
+                ,TO_VARCHAR(STATUS_DESC) AS STATUS_DESC
+                ,TO_VARCHAR(DETERMINATION_STATUS) AS DETERMINATION_STATUS
+                ,TO_VARCHAR(DETERMINATION_STATUS_DESC) AS DETERMINATION_STATUS_DESC
+                ,TO_VARCHAR(OFFICE_ID) AS OFFICE_ID
+                ,DETERMINATION_DATE
+                ,TO_VARCHAR(PLAN_CODE) AS PLAN_CODE
+                ,TO_VARCHAR(PLAN_TYPE_CODE) AS PLAN_TYPE_CODE
+            FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION
+    ) AS src /*returns everything in the source that is not a match in the target*/
+ON (tgt.AUTHORIZATION_NBR = src.AUTHORIZATION_NBR) /*key columns to determine if this is a new record or an update*/
+
+WHEN NOT MATCHED
+THEN INSERT
+    (
+		DWSKYGEN_CLAIM_AUTHORIZATION_KEY
+		,INSERT_DATETIME
+		,LAST_UPDATED_DATETIME
+        ,AUTHORIZATION_NBR
+        ,MEMBER_NBR
+        ,SUBMITTING_PROVIDER_ID
+        ,RENDERING_PROVIDER_ID
+        ,STATUS
+        ,STATUS_DESC
+        ,DETERMINATION_STATUS
+        ,DETERMINATION_STATUS_DESC
+        ,OFFICE_ID
+        ,DETERMINATION_DATE
+        ,PLAN_CODE
+        ,PLAN_TYPE_CODE
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DWSKYGEN_CLAIM_AUTHORIZATION_KEY), 1000) FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,src.AUTHORIZATION_NBR
+        ,src.MEMBER_NBR
+        ,src.SUBMITTING_PROVIDER_ID
+        ,src.RENDERING_PROVIDER_ID
+        ,src.STATUS
+        ,src.STATUS_DESC
+        ,src.DETERMINATION_STATUS
+        ,src.DETERMINATION_STATUS_DESC
+        ,src.OFFICE_ID
+        ,src.DETERMINATION_DATE
+        ,src.PLAN_CODE
+        ,src.PLAN_TYPE_CODE
+    )
+
+WHEN MATCHED
+THEN UPDATE SET
+		tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+        ,tgt.MEMBER_NBR = src.MEMBER_NBR
+        ,tgt.SUBMITTING_PROVIDER_ID = src.SUBMITTING_PROVIDER_ID
+        ,tgt.RENDERING_PROVIDER_ID = src.RENDERING_PROVIDER_ID
+        ,tgt.STATUS = src.STATUS
+        ,tgt.STATUS_DESC = src.STATUS_DESC
+        ,tgt.DETERMINATION_STATUS = src.DETERMINATION_STATUS
+        ,tgt.DETERMINATION_STATUS_DESC = src.DETERMINATION_STATUS_DESC
+        ,tgt.OFFICE_ID = src.OFFICE_ID
+        ,tgt.DETERMINATION_DATE = src.DETERMINATION_DATE
+        ,tgt.PLAN_CODE = src.PLAN_CODE
+        ,tgt.PLAN_TYPE_CODE = src.PLAN_TYPE_CODE
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+DELETE FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION 
+WHERE DWSKYGEN_CLAIM_AUTHORIZATION_KEY IN 
+(
+    SELECT DWSKYGEN_CLAIM_AUTHORIZATION.DWSKYGEN_CLAIM_AUTHORIZATION_KEY
+    FROM RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION
+        LEFT OUTER JOIN  RAWDATA.DWSKYGEN_CLAIM_AUTHORIZATION_TMP
+            ON DWSKYGEN_CLAIM_AUTHORIZATION.AUTHORIZATION_NBR = DWSKYGEN_CLAIM_AUTHORIZATION_TMP.AUTHORIZATION_NBR
+    WHERE DWSKYGEN_CLAIM_AUTHORIZATION_TMP.AUTHORIZATION_NBR IS NULL
+);`;
+
+try 
+{
+	//Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    //Execute DELETE Command
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

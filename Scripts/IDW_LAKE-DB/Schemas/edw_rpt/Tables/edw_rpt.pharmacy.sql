@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE EDW_RPT.PHARMACY
+(
+PHARMACY_KEY              NUMBER(38),
+NAPB_NBR                     VARCHAR,
+PHARMACY_NAME                VARCHAR,
+ADDRESS_LINE                 VARCHAR,
+ADDRESS_CITY                 VARCHAR,
+ADDRESS_STATE                VARCHAR,
+ADDRESS_ZIP_CODE             VARCHAR,
+LOAD_DATE              TIMESTAMP_NTZ,
+UPDATE_DATE            TIMESTAMP_NTZ,
+PHARMACY_NPI                 VARCHAR,
+PHARMACY_PHONE_NBR        NUMBER(10)
+)
+COMMENT='Created for EDWRPT Migration'
+;

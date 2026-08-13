@@ -1,0 +1,78 @@
+/**
+Creates the PRICE_CATEGORY table from all component tables. Needs to be run
+before anything else; grabs all the possible priceCategiries and inserts them 
+into the table with an integer key.
+*/
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_INSERT_OVERWRITE_PROVIDER_GROUPING ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+  sqlText = `INSERT OVERWRITE INTO STAGEDATA.PROVIDER_GROUPING (VENDOR_NBR, TAX_ID_NBR, TAX_ID_TYPE_CODE, GROUP_CARRIER_PRICE_GROUP_KEY, PROVIDER_TYPE_NAME, RENDERING_PROVIDER_NBR, IPA_KEY, PLAN_TYPE_KEY, RENDERING_PROVIDER_NPI_NBRS)
+SELECT VENDOR_NBR, TAX_ID_NBR, TAX_ID_TYPE_CODE, GROUP_CARRIER_PRICE_GROUP_KEY, PROVIDER_TYPE_NAME, RENDERING_PROVIDER_NBR, IPA_KEY, PLAN_TYPE_KEY, RENDERING_PROVIDER_NPI_NBRS
+FROM STAGEDATA.PROVIDER_GROUPING_SELECT_VW`;
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;

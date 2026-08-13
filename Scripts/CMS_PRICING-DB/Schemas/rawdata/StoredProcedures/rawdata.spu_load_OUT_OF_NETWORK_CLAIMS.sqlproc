@@ -1,0 +1,216 @@
+/**
+Truncates and loads the RAWDATA.DWOAO_OUT_OF_NETWORK_CLAIMS table from MC400 Database. 
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_CMS_RAWDATA_DWOAO_OUT_OF_NETWORK_CLAIMS()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+
+
+try {
+  sqlText = `INSERT OVERWRITE INTO RAWDATA.DWOAO_OUT_OF_NETWORK_CLAIMS(BILLING_PROVIDER_ID,TAX_ID,PROVIDER_TYPE,NPI,CLAIM_NBR,CLAIM_IPA_CODE,ALLOW_AMT,CHARGE_AMT,PLACE_OF_SERVICE_CODE,BILLING_CODE,BILLING_CODE_MODIFIER,PLAN_CODE,EMPLOYERTIN,CLAIM_TYPE)
+
+/**
+Find all Out of Network Claims that meet the Criteria
+PlanTypeCTE is a temp solution to the edwDTS planTypeLkp table to get LOB
+**/
+
+WITH PlanTypeCTE as
+(select 'CHC' as LOB, '4' as PLANTYPE UNION
+select 'CHIP' as LOB, 'K' as PLANTYPE UNION
+select 'CM' as LOB,    '0' as PLANTYPE UNION
+select 'CM' as LOB,    '2' as PLANTYPE UNION
+select 'CM' as LOB,    '3' as PLANTYPE UNION
+select 'CM' as LOB,    '5' as PLANTYPE UNION
+select 'CM' as LOB,    '9' as PLANTYPE UNION
+select 'CM' as LOB,    'A' as PLANTYPE UNION
+select 'CM' as LOB,    'E' as PLANTYPE UNION
+select 'CM' as LOB,    'E01' as PLANTYPE UNION
+select 'CM' as LOB,    'E03' as PLANTYPE UNION
+select 'CM' as LOB,    'H' as PLANTYPE UNION
+select 'CM' as LOB,    'H03' as PLANTYPE UNION
+select 'CM' as LOB,    'I' as PLANTYPE UNION
+select 'CM' as LOB,    'I01' as PLANTYPE UNION
+select 'CM' as LOB,    'I02' as PLANTYPE UNION
+select 'CM' as LOB,    'J' as PLANTYPE UNION
+select 'CM' as LOB,    'N' as PLANTYPE UNION
+select 'CM' as LOB,    'O' as PLANTYPE UNION
+select 'CM' as LOB,    'P' as PLANTYPE UNION
+select 'CM' as LOB,    'P03' as PLANTYPE UNION
+select 'CM' as LOB,    'X' as PLANTYPE UNION
+select 'CM' as LOB,    'Y' as PLANTYPE UNION
+select 'CM' as LOB,    'Z' as PLANTYPE UNION
+select 'MA' as LOB,    '1' as PLANTYPE UNION
+select 'MA' as LOB,    'B' as PLANTYPE UNION
+select 'MA' as LOB,    'D' as PLANTYPE UNION
+select 'MC' as LOB,    'C' as PLANTYPE UNION
+select 'MC' as LOB,    'C01' as PLANTYPE UNION
+select 'MC' as LOB,    'C02' as PLANTYPE UNION
+select 'MC' as LOB,    'C03' as PLANTYPE UNION
+select 'MC' as LOB,    'F' as PLANTYPE UNION
+select 'MC' as LOB,    'G' as PLANTYPE UNION
+select 'MC' as LOB,    'M' as PLANTYPE UNION
+select 'MC' as LOB,    'Q' as PLANTYPE UNION
+select 'MC' as LOB,    'R' as PLANTYPE UNION
+select 'MC' as LOB,    'R02' as PLANTYPE UNION
+select 'MC' as LOB,    'S' as PLANTYPE UNION
+select 'MC' as LOB,    'T' as PLANTYPE UNION
+select 'MC' as LOB,    'U' as PLANTYPE UNION
+select 'MC' as LOB,    'V' as PLANTYPE UNION
+select 'UNK' as LOB, 'L' as PLANTYPE UNION
+select 'WL' as LOB,    'W' as PLANTYPE)
+
+/***
+Get OON Claims from dwoao
+*******/
+Select Distinct
+c.ProviderNbr AS BILLING_PROVIDER_ID,
+Case When v.FEIN = '000000000' Then p.AlternateProviderNo
+              ELSE v.FEIN END As TAX_ID,
+p.PRIMARYSPECIALTY AS PROVIDER_TYPE,
+NULLIF(p.NationalProviderNbr, '') AS NPI,
+C.ClaimNBr AS CLAIM_NBR,
+IPACode AS CLAIM_IPA_CODE ,
+Sum(AllowedAmt) As ALLOW_AMT,
+Sum(BilledAmt) As CHARGE_AMT,
+c.PlaceofService AS PLACE_OF_SERVICE_CODE,
+DRGCode AS BILLING_CODE,
+NULL AS BILLING_CODE_MODIFIER,
+c.PlanCode AS PLAN_CODE,
+CoverGroupFederalTaxID As EmployerTIN,
+Case When c.ClaimType = 'E' Then 'professional' When c.ClaimType = 'I' Then 'institutional' End As CLAIM_TYPE
+From &{MC400}.DWOAO.Claims c 
+Inner Join &{MC400}.DWOAO.ClaimsDetail cd /*on c.FormNbr = cd.FormNbr AND c.AdmitDate = cd.AdmitDate and c.ClaimType = cd.ClaimType*/
+       on c.ClaimNbr = cd.ClaimNbr 
+                     And c.TPACLIENT = cd.TPACLIENT AND c.TPADIVISION = cd.TPADIVISION and c.TPAIDOFCLIENT = cd.TPAIDOFCLIENT
+inner join &{MC400}.DWOAO.vendors v  on c.VendorNbr = v.VendorNbr AND c.TPACLIENT = v.TPACLIENT AND c.TPADIVISION = v.TPADIVISION and c.TPAIDOFCLIENT = v.TPAIDOFCLIENT
+/*Inner Join dwcustom.dwoao_dts.tbl_plantype_lkp pt on pt.plantype = c.PlanType*/
+Inner join PlanTypeCTE pt on pt.PLANTYPE = c.PlanType
+INNER Join &{MC400}.DWOAO.Groups g on g.GroupNbr = c.GroupNbr and c.TPACLIENT = g.TPACLIENT AND c.TPADIVISION = g.TPADIVISION and c.TPAIDOFCLIENT = g.TPAIDOFCLIENT
+Left Outer join &{MC400}.DWOAO.providers P  on c.ProviderNbr = P.ProviderNbr
+       AND c.TPACLIENT = p.TPACLIENT AND c.TPADIVISION = p.TPADIVISION and c.TPAIDOFCLIENT = p.TPAIDOFCLIENT
+Where IPACode in ('09','CN','12')
+AND  c.ProviderNbr NOT IN ('V00PTC','V33395','V00FOR')
+And TO_DATE(TO_CHAR(cd.SpecificDateofService),'YYYYMMDD') Between DATEADD(day,-180,current_date)
+AND DATEADD(day,-90,current_date)
+And DRGCode <> '' AND pt.LOB = 'CM'
+AND  NotCoveredAmt = 0 AND NetAmt <> 0    
+AND OICAllowedAmount = 0 AND OICAllowedAmt = 0  AND OICPaidAmount = 0
+And c.TPACLIENT = '000001' And c.TPACLIENT = '000001' AND c.TPADIVISION = '0001'
+AND NOT EXISTS (SELECT ClaimNbr
+            FROM &{MC400}.DWOAO.ClaimsDetail CD2
+            WHERE CD.ClaimNbr = CD2.ClaimNbr
+            AND TO_DATE(TO_CHAR(cd2.SpecificDateofService),'YYYYMMDD') NOT BETWEEN DATEADD(day,-180,current_date)
+AND DATEADD(day,-90,current_date))
+Group by  c.ProviderNbr,c.PlanCode,c.PlaceofService,DRGCODE,v.FEIN, IPACode,NULLIF(p.NationalProviderNbr, ''),p.PRIMARYSPECIALTY,p.AlternateProviderNo,C.ClaimNBr,c.GroupNbr, c.ClaimType,CoverGroupFederalTaxID
+
+
+UNION
+Select Distinct
+c.ProviderNbr AS BILLING_PROVIDER_ID,
+Case When v.FEIN = '000000000' Then p.AlternateProviderNo
+              ELSE v.FEIN END As TAX_ID,
+p.PRIMARYSPECIALTY AS PROVIDER_TYPE,
+NULLIF(p.NationalProviderNbr, '')  AS NPI,
+C.ClaimNBr AS CLAIM_NBR,
+IPACode AS CLAIM_IPA_CODE ,
+Sum(AllowedAmt) As ALLOW_AMT,
+Sum(BilledAmt) As CHARGE_AMT,
+c.PlaceofService AS PLACE_OF_SERVICE_CODE,
+ProcedureCode AS BILLING_CODE,
+NULLIF(ProcedureModifier,'') AS BILLING_CODE_MODIFIER,
+c.PlanCode AS PLAN_CODE,
+CoverGroupFederalTaxID As EmployerTIN,
+Case When c.ClaimType = 'E' Then 'professional' When c.ClaimType = 'I' Then 'institutional' End As CLAIM_TYPE
+From &{MC400}.DWOAO.Claims c 
+Inner Join &{MC400}.DWOAO.ClaimsDetail cd /*on c.FormNbr = cd.FormNbr AND c.AdmitDate = cd.AdmitDate and c.ClaimType = cd.ClaimType*/
+       on c.ClaimNbr = cd.ClaimNbr
+                     And c.TPACLIENT = cd.TPACLIENT AND c.TPADIVISION = cd.TPADIVISION and c.TPAIDOFCLIENT = cd.TPAIDOFCLIENT
+inner join &{MC400}.DWOAO.vendors v  on c.VendorNbr = v.VendorNbr
+/*Inner Join dwcustom.dwoao_dts.tbl_plantype_lkp pt on pt.plantype = c.PlanType*/
+Inner join PlanTypeCTE pt on pt.PLANTYPE = c.PlanType
+INNER Join &{MC400}.DWOAO.Groups g on g.GroupNbr = c.GroupNbr and c.TPACLIENT = g.TPACLIENT AND c.TPADIVISION = g.TPADIVISION and c.TPAIDOFCLIENT = g.TPAIDOFCLIENT
+Left Outer join &{MC400}.DWOAO.providers P  on c.ProviderNbr = P.ProviderNbr
+Where IPACode in ('09','CN','12')
+AND  c.ProviderNbr NOT IN ('V00PTC','V33395','V00FOR')
+And TO_DATE(TO_CHAR(cd.SpecificDateofService),'YYYYMMDD') Between DATEADD(day,-180,current_date)
+AND DATEADD(day,-90,current_date)
+And DRGCode = '' AND pt.LOB = 'CM'
+AND ProcedureCode <> 'NSAIN' AND c.PlaceofService Not in ('21','51')
+AND  (NetAmt <> 0 OR copayAmt <> 0 or deductAmt <> 0 OR (AllowedAmt <> 0 and AllowedAmt <> NotCoveredAmt) OR (OICPaidAmount <> 0 and NotCoveredAmt = 0)) 
+AND OICAllowedAmount = 0 AND OICAllowedAmt = 0  AND OICPaidAmount = 0
+AND NOT EXISTS (SELECT ClaimNbr
+            FROM &{MC400}.DWOAO.ClaimsDetail CD2
+            WHERE CD.ClaimNbr = CD2.ClaimNbr
+            AND TO_DATE(TO_CHAR(cd2.SpecificDateofService),'YYYYMMDD') NOT BETWEEN DATEADD(day,-180,current_date)
+AND DATEADD(day,-90,current_date))
+Group by  c.ProviderNbr,c.PlanCode,c.PlaceofService,ProcedureCode,v.FEIN, IPACode,NULLIF(p.NationalProviderNbr, ''),p.PRIMARYSPECIALTY,p.AlternateProviderNo,C.ClaimNBr,NULLIF(ProcedureModifier,''),c.GroupNbr, c.ClaimType,CoverGroupFederalTaxID`;
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;
+
+!set variable_substitution=false;

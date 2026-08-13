@@ -1,0 +1,7 @@
+CREATE OR REPLACE TABLE FDBDATA.RMEDSTD0_SEARCH_TERM_TYPE_DESC (
+	SEARCH_TERM_TYPE_CD NUMERIC(4, 0) NOT NULL,
+	SEARCH_TERM_TYPE_CD_DESC VARCHAR(50) NOT NULL,
+	CONSTRAINT PK_RMEDSTD0_SEARCH_TERM_TYPE_DESC PRIMARY KEY (SEARCH_TERM_TYPE_CD)
+)
+COMMENT = 'Provides descriptions of the search term type codes. The data in this table is contained in both OrderKnowledge and MedKnowledge.'
+;

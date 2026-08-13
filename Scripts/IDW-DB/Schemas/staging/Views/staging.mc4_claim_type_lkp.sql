@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.MC4_CLAIM_TYPE_LKP
+AS
+SELECT
+BATCHNBR,
+LOAD_DATE,
+CLAIMTYPEDESC
+FROM &{IDW_LAKE}.STAGING.MC4_CLAIM_TYPE_LKP;
+!set variable_substitution=false;

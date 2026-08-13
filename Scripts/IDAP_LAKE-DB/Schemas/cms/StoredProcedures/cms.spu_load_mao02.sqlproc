@@ -1,0 +1,62 @@
+CREATE OR REPLACE PROCEDURE CMS.SPU_LOAD_MAO02(PATH VARCHAR, DATABASE_NAME VARCHAR)
+  RETURNS VARCHAR
+  LANGUAGE JAVASCRIPT
+  EXECUTE AS OWNER
+AS
+$$
+
+const path = PATH;
+const database_name = DATABASE_NAME;
+const procedureName = 'LOAD_MAO02';
+let startTime = new Date().toISOString();
+let result = '';
+let statement, sqlResult;
+
+let copy_into_query = `COPY INTO ${database_name}.CMS.RESPONSE_MAO_002_STAGE (FILENAME, FILE_LAST_MODIFIED_DATETIME, LAST_UPDATED_DATETIME, ROW_NUMBER, RECORD_TYPE, FILE_PREFIX, FILE_TYPE, RECORD) FROM (SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, LEFT($1, 1) AS RECORD_TYPE, REGEXP_SUBSTR(FILENAME, '__(\\w*[.]\\w*)[.]', 1, 1, 'ei', 1) AS FILE_PREFIX, REGEXP_SUBSTR(FILENAME, '[.]([^\\.]*EDPS_002_DataProcessing[^.]*)[.]', 1, 1, 'e', 1) AS FILE_TYPE, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE${path} (FILE_FORMAT => 'CMS.RESPONSE_FIXED_FILE_FORMAT'));`
+
+try
+{
+    statement = snowflake.createStatement({ sqlText: copy_into_query});
+    sqlResult = statement.execute();
+
+    let affectedNum = sqlResult.getNumRowsAffected();
+    result += database_name + ' succeeded and affected ' + affectedNum + ' rows ' + '\n';
+    let endTime = new Date().toISOString();
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds: [procedureName, "TABLE", startTime, endTime, statement.getNumRowsInserted(), statement.getNumRowsUpdated(), statement.getNumRowsDeleted(), result, statement.getSqlText()]
+        }
+    );
+}
+catch(err)
+{
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''");
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed';
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message, stack]
+        }
+    );
+
+    throw message;
+}
+return result;
+$$;

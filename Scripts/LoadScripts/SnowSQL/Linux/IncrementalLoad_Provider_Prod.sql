@@ -1,0 +1,2 @@
+!load /app01/app/DATAWHSE/PROD/GITREPOS/Snowflake/Scripts/LoadScripts/LoadIncremental_Infa_Provider.sql
+!load /app01/app/DATAWHSE/PROD/GITREPOS/Snowflake/Scripts/LoadScripts/MergeIncremental_Dimdata_Provider.sql

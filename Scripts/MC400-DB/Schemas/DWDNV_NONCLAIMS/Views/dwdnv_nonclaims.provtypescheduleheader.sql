@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.ProvTypeScheduleHeader
+AS
+SELECT * FROM CDC_MERGE.DBO.ProvTypeScheduleHeader 
+;

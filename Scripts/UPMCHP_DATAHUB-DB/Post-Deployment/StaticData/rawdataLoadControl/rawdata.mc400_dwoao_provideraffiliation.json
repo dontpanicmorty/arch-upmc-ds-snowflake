@@ -1,0 +1,16 @@
+{
+    "isActive": true,
+    "isCloneFlag": true,
+    "isCopyIntoFlag": false,
+    "dataDomain": "provider",
+    "dataSourceName": "MC400Upm",
+    "targetTableName": "RAWDATA.MC400_DWOAO_PROVIDERAFFILIATION",
+    "sourceCloneTableName": "CDC_MERGE.DBO.PROVIDERAFFILIATION",
+    "sourceFileStageName": null,
+    "sourceFilePath": null,
+    "sourceFileFormatName": null,
+    "sourceFilePattern": null,
+    "sourceFileDelimitedColumnCount": null,
+    "sourceFileFixedWidthMapping": null,
+    "validateDataFlag": null
+  }

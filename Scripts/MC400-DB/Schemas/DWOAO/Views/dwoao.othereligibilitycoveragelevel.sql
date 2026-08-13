@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWOAO.OtherEligibilityCoverageLevel
+AS
+SELECT * FROM CDC_Merge.dbo.OtherEligibilityCoverageLevel WHERE TPACLIENT = '000001' AND TPADIVISION = '0001' AND TPAIDOFCLIENT = '000001' 
+;

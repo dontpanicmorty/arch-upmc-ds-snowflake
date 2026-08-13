@@ -1,0 +1,17 @@
+CREATE OR REPLACE TABLE EDW_RPT.MA_LAB_FACT
+(
+MA_LAB_FACT_KEY                 NUMBER,
+MA_MEMBER_KEY                   NUMBER,
+SERVICE_DATE             TIMESTAMP_NTZ,
+COLLECTION_DATE          TIMESTAMP_NTZ,
+PROVIDER_KEY                    NUMBER,
+CPT4_PROCEDURE_KEY              NUMBER,
+LOINC_TEST_KEY                  NUMBER,
+LAB_RESULT_RANGE_KEY            NUMBER,
+RESULT_VALUE                   VARCHAR,
+LAB_SOURCE_KEY                  NUMBER,
+LOAD_DATE                TIMESTAMP_NTZ,
+UPDATE_DATE              TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

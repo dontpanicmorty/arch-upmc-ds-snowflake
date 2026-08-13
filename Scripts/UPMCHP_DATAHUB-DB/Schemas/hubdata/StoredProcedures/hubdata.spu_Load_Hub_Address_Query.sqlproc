@@ -1,0 +1,144 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_HUB_ADDRESS_QUERY(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.HUB_ADDRESS_QUERY`;
+var hkeyName = `HUB_ADDRESS_QUERY_HKEY`;
+var effSatTableName = `HUBDATA.EFF_SAT_ADDRESS_QUERY`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand = 
+`    
+MERGE INTO HUBDATA.HUB_ADDRESS_QUERY TGT
+USING (
+    SELECT
+        HUB_ADDRESS_QUERY_HKEY,
+        SOURCE_KEY,
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        DATA_SOURCE_NAME,
+        CONCATENATED_ADDRESS        
+    FROM ${SOURCE_VIEW_NAME}
+) SRC
+ON (TGT.HUB_ADDRESS_QUERY_HKEY = SRC.HUB_ADDRESS_QUERY_HKEY)  
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        HUB_ADDRESS_QUERY_HKEY,
+        INSERT_DATETIME,
+        SOURCE_KEY,
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        DATA_SOURCE_NAME,
+        CONCATENATED_ADDRESS 
+    )
+ VALUES 
+    (
+        SRC.HUB_ADDRESS_QUERY_HKEY,
+        :1,
+        SRC.SOURCE_KEY,
+        SRC.TPA_CLIENT_ID,
+        SRC.TPA_ID,
+        SRC.TPA_DIV_ID,
+        SRC.DATA_SOURCE_NAME,
+        SRC.CONCATENATED_ADDRESS 
+    )
+;`;
+
+var sqlLogCommand =
+`
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+    VALUES
+        (:1, :2, :3, :4::timestamp_ltz, :5::timestamp_ltz, :6, :7, :8, :9, :10, :11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();    
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand =
+    `
+    INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1, :2, :3, :4::timestamp_ltz, :5::timestamp_ltz, :6, :7, :8, :9, :10, :11, :12)
+    ;`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Load Effective Satellite Table
+sqlText = `CALL HUBDATA.SPU_LOAD_EFF_SAT_TABLE('${JOB_ID}', '${targetTableName}', '${hkeyName}', '${effSatTableName}', '${SOURCE_VIEW_NAME}');`;
+snowflake.execute({sqlText});
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

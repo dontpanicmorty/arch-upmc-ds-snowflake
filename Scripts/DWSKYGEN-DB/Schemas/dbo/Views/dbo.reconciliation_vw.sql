@@ -1,0 +1,8 @@
+CREATE OR REPLACE VIEW DBO.Reconciliation_VW
+AS 
+SELECT 	$1:RunDate::DATE AS RunDate, 
+		$1:Category::VARCHAR AS Category, 
+		$1:Name::VARCHAR AS Name, 
+		$1:Value::VARCHAR AS Value
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/Reconciliation/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

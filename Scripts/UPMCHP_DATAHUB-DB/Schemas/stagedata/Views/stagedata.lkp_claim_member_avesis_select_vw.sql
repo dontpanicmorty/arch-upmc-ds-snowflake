@@ -1,0 +1,310 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE VIEW STAGEDATA.LKP_CLAIM_MEMBER_AVESIS_SELECT_VW(
+	CLAIM_NBR,
+	TPA_CLIENT_ID,
+	TPA_ID,
+	TPA_DIV_ID,
+	DATA_SOURCE_NAME,
+	CLAIM_MEMBER_NBR,
+	MEMBER_NBR,
+	MASTER_MEMBER_ID,
+	GROUP_CODE,
+	SUB_GROUP_CODE,
+	PLAN_TYPE_CODE,
+	PLAN_CODE,
+    RIDER_ARRAY
+) COMMENT='Translates AVESIS member to UPMC MemberNbrs for use in other mappings'
+ AS
+WITH ELIGIBILITY_HISTORY_CTE AS (
+SELECT MEMBERNBR,
+        TPACLIENT,
+        TPADIVISION,
+        TPAIDOFCLIENT,
+        ELIGIBILITYSTARTDATE,
+        ELIGIBILITYENDDATE,
+        COVERAGEGROUPCODE,
+        SUBGROUPCODE,
+        PLANTYPE,
+        PLANCODE,
+        RIDERS,
+        DENSE_RANK() OVER(PARTITION BY MEMBERNBR, TPACLIENT, TPADIVISION,TPAIDOFCLIENT ORDER BY ELIGIBILITYSTARTDATE) AS ELIGIBILITY_RANK
+
+FROM (SELECT MEMBERNBR,
+            TPACLIENT, 
+            TPADIVISION, 
+            TPAIDOFCLIENT, 
+            IFNULL(TRY_TO_DATE(TO_CHAR(ELIGIBILITYSTARTDATE), 'YYYYMMDD'), '9999-12-31') AS ELIGIBILITYSTARTDATE,
+            IFNULL(TRY_TO_DATE(TO_CHAR(ELIGIBILITYENDDATE), 'YYYYMMDD'), '9999-12-31') AS ELIGIBILITYENDDATE,
+            COVERAGEGROUPCODE, 
+            SUBGROUPCODE, 
+            PLANTYPE,
+            PLANCODE, 
+            RIDERS
+        FROM &{MC400}.DWOAO.ELIGIBILITYHISTORY
+ 
+        UNION ALL
+
+        SELECT MEMBERNBR,
+                TPACLIENT, 
+                TPADIVISION, 
+                TPAIDOFCLIENT, 
+                IFNULL(TRY_TO_DATE(TO_CHAR(ELIGIBILITYSTARTDATE), 'YYYYMMDD'), '9999-12-31') AS ELIGIBILITYSTARTDATE,
+                IFNULL(TRY_TO_DATE(TO_CHAR(ELIGIBILITYENDDATE), 'YYYYMMDD'), '9999-12-31') AS ELIGIBILITYENDDATE,
+                COVERAGEGROUPCODE, 
+                SUBGROUPCODE, 
+                PLANTYPE,
+                PLANCODE, 
+                RIDERS
+        FROM &{MC400}.DWDNV_NONCLAIMS.ELIGIBILITYHISTORY
+        )
+)
+
+,LKP_CTE AS (
+
+SELECT DISTINCT
+AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO,
+IFNULL(MEMBERS_MemberNbr.TpaClient, MEMBERS_EMPNO.TpaClient) AS TPA_CLIENT_ID,
+IFNULL(MEMBERS_MemberNbr.TpaIdOfClient, MEMBERS_EMPNO.TpaIdOfClient) AS TPA_ID,
+IFNULL(MEMBERS_MemberNbr.TpaDivision, MEMBERS_EMPNO.TpaDivision) AS TPA_DIV_ID,
+'Avesis' AS SOURCE_SYSTEM,
+AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID AS CLAIM_MEMBER_NBR,
+IFNULL(MEMBERS_MemberNbr.MemberNbr, MEMBERS_EMPNO.MemberNbr) AS MEMBER_NBR,
+MASTERMEMBERID.MASTERMEMBER AS MASTER_MEMBER_ID,
+COALESCE(TRIM(EligibilityHistory.CoverageGroupCode), TRIM(MEMBERS_EMPNO.CoverageGroupCode), TRIM(EligibilityHistory_Split.CoverageGroupCode)) AS COVERAGE_GROUP_CODE,
+COALESCE(TRIM(EligibilityHistory.SubGroupCode), TRIM(MEMBERS_EMPNO.SubGroupCode), TRIM(EligibilityHistory_Split.SubGroupCode)) AS SUB_GROUP_CODE,
+COALESCE(TRIM(EligibilityHistory.PlanType), TRIM(MEMBERS_EMPNO.PlanType), TRIM(EligibilityHistory_Split.PlanType)) AS PLAN_TYPE,
+COALESCE(TRIM(EligibilityHistory.PlanCode), TRIM(MEMBERS_EMPNO.PlanCode), TRIM(EligibilityHistory_Split.PlanCode)) AS PLAN_CODE,
+REGEXP_SUBSTR_ALL(ELIGIBILITYHISTORY.RIDERS, '.{1,4}') AS RIDERS
+
+FROM RAWDATA.AVESIS_PAID_CLAIM_EXTRACTS
+
+    JOIN (
+            SELECT 
+                AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO AS CD_CLAIM_NBR, 
+                FILENAME, 
+                FILE_ROW_NUMBER,
+                AVESIS_PAID_CLAIM_EXTRACTS.ITEM_NO AS CD_CLAIM_LINE_NBR,
+                UTIL.FXN_ARRAY_HASH([SUBSCRIBER_ID,CHECK_NO,CLAIM_TYPE,ADJUDICATION_DT,SERVICE_DT,ANSI_CODE,EXCEPTION_CODE,ADJUSTMENT_CODE,PROC_CODE,QUANTITY,TOOTH_ID,PROV_LOC_ID,PRVD_ID,COUNTY_CODE,LOB_IND]) AS CD_CLAIM_LINE_SEQ_NBR
+            FROM RAWDATA.AVESIS_PAID_CLAIM_EXTRACTS
+            WHERE AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO IS NOT NULL
+                QUALIFY ROW_NUMBER() -- get the most current submitted file for a claim line
+                    OVER(PARTITION BY AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO
+                        ORDER BY TO_DATE(SPLIT_PART(SPLIT_PART(AVESIS_PAID_CLAIM_EXTRACTS.FILENAME, '_', 5), '.', 1), 'YYYYMMDD') DESC, FILE_ROW_NUMBER) = 1 
+        ) CURRENT_CLAIM_FILE
+        ON (CURRENT_CLAIM_FILE.CD_CLAIM_NBR = AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO
+        AND CURRENT_CLAIM_FILE.CD_CLAIM_LINE_NBR = AVESIS_PAID_CLAIM_EXTRACTS.ITEM_NO
+        AND CURRENT_CLAIM_FILE.CD_CLAIM_LINE_SEQ_NBR = UTIL.FXN_ARRAY_HASH([SUBSCRIBER_ID,CHECK_NO,CLAIM_TYPE,ADJUDICATION_DT,SERVICE_DT,ANSI_CODE,EXCEPTION_CODE,ADJUSTMENT_CODE,PROC_CODE,QUANTITY,TOOTH_ID,PROV_LOC_ID,PRVD_ID,COUNTY_CODE,LOB_IND])
+        AND CURRENT_CLAIM_FILE.FILENAME = AVESIS_PAID_CLAIM_EXTRACTS.FILENAME
+        AND CURRENT_CLAIM_FILE.FILE_ROW_NUMBER = AVESIS_PAID_CLAIM_EXTRACTS.FILE_ROW_NUMBER
+        )
+
+    LEFT OUTER JOIN --Get full list of members from MC400 to find member for claim
+            (SELECT MemberNbr, TpaClient, TpaIdOfClient, TpaDivision, MedicaidId
+            FROM &{MC400}.DWOAO.MEMBERS
+            UNION ALL
+            SELECT MemberNbr, TpaClient, TpaIdOfClient, TpaDivision, MedicaidId
+            FROM &{MC400}.DWDNV_NONCLAIMS.MEMBERS
+            ) AS MEMBERS_MemberNbr
+        ON (AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID = MEMBERS_MemberNbr.MemberNbr)
+        AND AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO IS NOT NULL
+
+    LEFT OUTER JOIN ELIGIBILITY_HISTORY_CTE AS EligibilityHistory--Get Eligibility for member found by member in mc400
+        ON (EligibilityHistory.TpaClient = MEMBERS_MemberNbr.TpaClient
+        AND EligibilityHistory.TpaIdOfClient = MEMBERS_MemberNbr.TpaIdOfClient
+        AND EligibilityHistory.TpaDivision = MEMBERS_MemberNbr.TpaDivision
+        AND EligibilityHistory.MemberNbr = MEMBERS_MemberNbr.MemberNbr
+        AND EligibilityHistory.EligibilityStartDate <= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31')
+        AND EligibilityHistory.EligibilityEndDate >= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31'))
+
+
+
+     LEFT OUTER JOIN --Find members by EmployeeNbr where eligibility matches
+            (SELECT DISTINCT MEMBERS.MemberNbr, 
+                    MEMBERS.EmployeeNbr,
+                    MEMBERS.TpaClient,
+                    MEMBERS.TpaIdOfClient,
+                    MEMBERS.TpaDivision,
+                    MEMBERS.MedicaidId,
+                    ELIGIBILITY_HISTORY_CTE.EligibilityStartDate,
+                    ELIGIBILITY_HISTORY_CTE.EligibilityEndDate,
+                    ELIGIBILITY_HISTORY_CTE.CoverageGroupCode,
+                    ELIGIBILITY_HISTORY_CTE.SubGroupCode,
+                    ELIGIBILITY_HISTORY_CTE.PlanType,
+                    ELIGIBILITY_HISTORY_CTE.PlanCode,
+                    ELIGIBILITY_HISTORY_CTE.Riders
+            FROM &{MC400}.DWOAO.MEMBERS
+                JOIN ELIGIBILITY_HISTORY_CTE
+                    ON (MEMBERS.MemberNbr = ELIGIBILITY_HISTORY_CTE.MemberNbr
+                    AND MEMBERS.TpaClient = ELIGIBILITY_HISTORY_CTE.TpaClient
+                    AND MEMBERS.TpaIdOfClient = ELIGIBILITY_HISTORY_CTE.TpaIdOfClient
+                    AND MEMBERS.TpaDivision = ELIGIBILITY_HISTORY_CTE.TpaDivision
+                    AND ELIGIBILITY_HISTORY_CTE.PlanType IN ('1','B','D','4')) /*THIS NEEDS TO BE CONVERTED TO A DYNAMIC LOOKUP TO A REF TABLE FOR LOB = MA*/
+            ) AS MEMBERS_EMPNO
+        ON (MEMBERS_EMPNO.EMPLOYEENBR = AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID
+        AND MEMBERS_EMPNO.ELIGIBILITYSTARTDATE <= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31')
+        AND MEMBERS_EMPNO.ELIGIBILITYENDDATE >= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31'))
+    
+    LEFT OUTER JOIN ELIGIBILITY_HISTORY_CTE AS EligibilityHistory_Split --Get Eligibility for members with split policies or surviving annuitants
+        ON (EligibilityHistory_Split.TpaClient = MEMBERS_MemberNbr.TpaClient
+        AND EligibilityHistory_Split.TpaIdOfClient = MEMBERS_MemberNbr.TpaIdOfClient
+        AND EligibilityHistory_Split.TpaDivision = MEMBERS_MemberNbr.TpaDivision
+        AND EligibilityHistory_Split.MemberNbr = SUBSTR(IFNULL(MEMBERS_MemberNbr.MedicaidID, MEMBERS_EMPNO.MedicaidID),1,11)
+        AND EligibilityHistory_Split.EligibilityStartDate <= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31')
+        AND EligibilityHistory_Split.EligibilityEndDate >= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31'))
+
+    LEFT OUTER JOIN &{MC400}.DWOAO.MASTERMEMBERID
+        ON (MASTERMEMBERID.TpaClient = IFNULL(MEMBERS_MemberNbr.TpaClient, MEMBERS_EMPNO.TpaClient)
+        AND MASTERMEMBERID.TpaIdOfClient = IFNULL(MEMBERS_MemberNbr.TpaIdOfClient, MEMBERS_EMPNO.TpaIdOfClient)
+        AND MASTERMEMBERID.TpaDivision = IFNULL(MEMBERS_MemberNbr.TpaDivision, MEMBERS_EMPNO.TpaDivision)
+        AND MASTERMEMBERID.SOURCEID = IFNULL(MEMBERS_MemberNbr.MemberNbr, MEMBERS_EMPNO.MemberNbr))
+
+WHERE IFNULL(MEMBERS_MemberNbr.MemberNbr, MEMBERS_EMPNO.MemberNbr) IS NOT NULL /*handles outlier scenarios where we cant find a match*/ 
+AND AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID <> '9999999999' /*7/27/20123 HOTFIX. Need input from business on if or how we handle these. Very small percentage*/
+AND AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO IS NOT NULL
+ )
+
+,LKP_CTE_MAX AS (
+
+SELECT DISTINCT
+AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO,
+IFNULL(MEMBERS_MemberNbr.TpaClient, MEMBERS_EMPNO.TpaClient) AS TPA_CLIENT_ID,
+IFNULL(MEMBERS_MemberNbr.TpaIdOfClient, MEMBERS_EMPNO.TpaIdOfClient) AS TPA_ID,
+IFNULL(MEMBERS_MemberNbr.TpaDivision, MEMBERS_EMPNO.TpaDivision) AS TPA_DIV_ID,
+'Avesis' AS SOURCE_SYSTEM,
+AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID AS CLAIM_MEMBER_NBR,
+IFNULL(MEMBERS_MemberNbr.MemberNbr, MEMBERS_EMPNO.MemberNbr) AS MEMBER_NBR,
+MASTERMEMBERID.MASTERMEMBER AS MASTER_MEMBER_ID,
+COALESCE(TRIM(EligibilityHistory.CoverageGroupCode), TRIM(MEMBERS_EMPNO.CoverageGroupCode), TRIM(EligibilityHistory_Split.CoverageGroupCode)) AS COVERAGE_GROUP_CODE,
+COALESCE(TRIM(EligibilityHistory.SubGroupCode), TRIM(MEMBERS_EMPNO.SubGroupCode), TRIM(EligibilityHistory_Split.SubGroupCode)) AS SUB_GROUP_CODE,
+COALESCE(TRIM(EligibilityHistory.PlanType), TRIM(MEMBERS_EMPNO.PlanType), TRIM(EligibilityHistory_Split.PlanType)) AS PLAN_TYPE,
+COALESCE(TRIM(EligibilityHistory.PlanCode), TRIM(MEMBERS_EMPNO.PlanCode), TRIM(EligibilityHistory_Split.PlanCode)) AS PLAN_CODE,
+COALESCE(EligibilityHistory.ELIGIBILITY_RANK, MEMBERS_EMPNO.ELIGIBILITY_RANK, EligibilityHistory_Split.ELIGIBILITY_RANK) AS MASTER_ELIGIBILITY_RANK,
+REGEXP_SUBSTR_ALL(ELIGIBILITYHISTORY.RIDERS, '.{1,4}') AS RIDERS
+
+FROM RAWDATA.AVESIS_PAID_CLAIM_EXTRACTS
+
+    JOIN (
+            SELECT 
+                AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO AS CD_CLAIM_NBR, 
+                FILENAME, 
+                FILE_ROW_NUMBER,
+                AVESIS_PAID_CLAIM_EXTRACTS.ITEM_NO AS CD_CLAIM_LINE_NBR,
+                UTIL.FXN_ARRAY_HASH([SUBSCRIBER_ID,CHECK_NO,CLAIM_TYPE,ADJUDICATION_DT,SERVICE_DT,ANSI_CODE,EXCEPTION_CODE,ADJUSTMENT_CODE,PROC_CODE,QUANTITY,TOOTH_ID,PROV_LOC_ID,PRVD_ID,COUNTY_CODE,LOB_IND]) AS CD_CLAIM_LINE_SEQ_NBR
+            FROM RAWDATA.AVESIS_PAID_CLAIM_EXTRACTS
+            WHERE AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO IS NOT NULL
+                QUALIFY ROW_NUMBER() -- get the most current submitted file for a claim line
+                    OVER(PARTITION BY AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO
+                        ORDER BY TO_DATE(SPLIT_PART(SPLIT_PART(AVESIS_PAID_CLAIM_EXTRACTS.FILENAME, '_', 5), '.', 1), 'YYYYMMDD') DESC, FILE_ROW_NUMBER) = 1 
+        ) CURRENT_CLAIM_FILE
+        ON (CURRENT_CLAIM_FILE.CD_CLAIM_NBR = AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO
+        AND CURRENT_CLAIM_FILE.CD_CLAIM_LINE_NBR = AVESIS_PAID_CLAIM_EXTRACTS.ITEM_NO
+        AND CURRENT_CLAIM_FILE.CD_CLAIM_LINE_SEQ_NBR = UTIL.FXN_ARRAY_HASH([SUBSCRIBER_ID,CHECK_NO,CLAIM_TYPE,ADJUDICATION_DT,SERVICE_DT,ANSI_CODE,EXCEPTION_CODE,ADJUSTMENT_CODE,PROC_CODE,QUANTITY,TOOTH_ID,PROV_LOC_ID,PRVD_ID,COUNTY_CODE,LOB_IND])
+        AND CURRENT_CLAIM_FILE.FILENAME = AVESIS_PAID_CLAIM_EXTRACTS.FILENAME
+        AND CURRENT_CLAIM_FILE.FILE_ROW_NUMBER = AVESIS_PAID_CLAIM_EXTRACTS.FILE_ROW_NUMBER
+        )
+
+    LEFT OUTER JOIN --Get full list of members from MC400 to find member for claim
+            (SELECT MemberNbr, TpaClient, TpaIdOfClient, TpaDivision, MedicaidId
+            FROM &{MC400}.DWOAO.MEMBERS
+            UNION ALL
+            SELECT MemberNbr, TpaClient, TpaIdOfClient, TpaDivision, MedicaidId
+            FROM &{MC400}.DWDNV_NONCLAIMS.MEMBERS
+            ) AS MEMBERS_MemberNbr
+        ON (AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID = MEMBERS_MemberNbr.MemberNbr)
+        AND AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO IS NOT NULL
+
+    LEFT OUTER JOIN ELIGIBILITY_HISTORY_CTE AS EligibilityHistory--Get Eligibility for member found by member in mc400
+        ON (EligibilityHistory.TpaClient = MEMBERS_MemberNbr.TpaClient
+        AND EligibilityHistory.TpaIdOfClient = MEMBERS_MemberNbr.TpaIdOfClient
+        AND EligibilityHistory.TpaDivision = MEMBERS_MemberNbr.TpaDivision
+        AND EligibilityHistory.MemberNbr = MEMBERS_MemberNbr.MemberNbr
+        AND EligibilityHistory.EligibilityStartDate <= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31'))
+
+     LEFT OUTER JOIN --Find members by EmployeeNbr where eligibility matches
+            (SELECT DISTINCT MEMBERS.MemberNbr, 
+                    MEMBERS.EmployeeNbr,
+                    MEMBERS.TpaClient,
+                    MEMBERS.TpaIdOfClient,
+                    MEMBERS.TpaDivision,
+                    MEMBERS.MedicaidId,
+                    ELIGIBILITY_HISTORY_CTE.EligibilityStartDate,
+                    ELIGIBILITY_HISTORY_CTE.EligibilityEndDate,
+                    ELIGIBILITY_HISTORY_CTE.CoverageGroupCode,
+                    ELIGIBILITY_HISTORY_CTE.SubGroupCode,
+                    ELIGIBILITY_HISTORY_CTE.PlanType,
+                    ELIGIBILITY_HISTORY_CTE.PlanCode,
+                    ELIGIBILITY_HISTORY_CTE.Riders,
+                    ELIGIBILITY_HISTORY_CTE.ELIGIBILITY_RANK
+            FROM &{MC400}.DWOAO.MEMBERS
+                JOIN ELIGIBILITY_HISTORY_CTE
+                    ON (MEMBERS.MemberNbr = ELIGIBILITY_HISTORY_CTE.MemberNbr
+                    AND MEMBERS.TpaClient = ELIGIBILITY_HISTORY_CTE.TpaClient
+                    AND MEMBERS.TpaIdOfClient = ELIGIBILITY_HISTORY_CTE.TpaIdOfClient
+                    AND MEMBERS.TpaDivision = ELIGIBILITY_HISTORY_CTE.TpaDivision
+                    AND ELIGIBILITY_HISTORY_CTE.PlanType IN ('1','B','D','4')) /*THIS NEEDS TO BE CONVERTED TO A DYNAMIC LOOKUP TO A REF TABLE FOR LOB = MA*/
+            ) AS MEMBERS_EMPNO
+        ON (MEMBERS_EMPNO.EMPLOYEENBR = AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID
+        AND MEMBERS_EMPNO.ELIGIBILITYSTARTDATE <= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31'))
+    
+    LEFT OUTER JOIN ELIGIBILITY_HISTORY_CTE AS EligibilityHistory_Split --Get Eligibility for members with split policies or surviving annuitants
+        ON (EligibilityHistory_Split.TpaClient = MEMBERS_MemberNbr.TpaClient
+        AND EligibilityHistory_Split.TpaIdOfClient = MEMBERS_MemberNbr.TpaIdOfClient
+        AND EligibilityHistory_Split.TpaDivision = MEMBERS_MemberNbr.TpaDivision
+        AND EligibilityHistory_Split.MemberNbr = SUBSTR(IFNULL(MEMBERS_MemberNbr.MedicaidID, MEMBERS_EMPNO.MedicaidID),1,11)
+        AND EligibilityHistory_Split.EligibilityStartDate <= IFNULL(TRY_TO_DATE(AVESIS_PAID_CLAIM_EXTRACTS.SERVICE_DT,'YYYYMMDD'), '9999-12-31'))
+       
+    LEFT OUTER JOIN &{MC400}.DWOAO.MASTERMEMBERID
+        ON (MASTERMEMBERID.TpaClient = IFNULL(MEMBERS_MemberNbr.TpaClient, MEMBERS_EMPNO.TpaClient)
+        AND MASTERMEMBERID.TpaIdOfClient = IFNULL(MEMBERS_MemberNbr.TpaIdOfClient, MEMBERS_EMPNO.TpaIdOfClient)
+        AND MASTERMEMBERID.TpaDivision = IFNULL(MEMBERS_MemberNbr.TpaDivision, MEMBERS_EMPNO.TpaDivision)
+        AND MASTERMEMBERID.SOURCEID = IFNULL(MEMBERS_MemberNbr.MemberNbr, MEMBERS_EMPNO.MemberNbr))
+
+WHERE IFNULL(MEMBERS_MemberNbr.MemberNbr, MEMBERS_EMPNO.MemberNbr) IS NOT NULL /*handles outlier scenarios where we cant find a match*/ 
+AND AVESIS_PAID_CLAIM_EXTRACTS.SUBSCRIBER_ID <> '9999999999' /*7/27/20123 HOTFIX. Need input from business on if or how we handle these. Very small percentage*/
+AND AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO NOT IN (SELECT DISTINCT CLAIM_NO FROM LKP_CTE)
+AND AVESIS_PAID_CLAIM_EXTRACTS.CLAIM_NO IS NOT NULL
+)
+
+SELECT CLAIM_NO,
+TPA_CLIENT_ID,
+TPA_ID,
+TPA_DIV_ID,
+SOURCE_SYSTEM,
+CLAIM_MEMBER_NBR,
+MEMBER_NBR,
+MASTER_MEMBER_ID,
+COVERAGE_GROUP_CODE,
+SUB_GROUP_CODE,
+PLAN_TYPE,
+PLAN_CODE,
+RIDERS
+FROM LKP_CTE
+
+UNION ALL
+
+SELECT CLAIM_NO,
+TPA_CLIENT_ID,
+TPA_ID,
+TPA_DIV_ID,
+SOURCE_SYSTEM,
+CLAIM_MEMBER_NBR,
+MEMBER_NBR,
+MASTER_MEMBER_ID,
+COVERAGE_GROUP_CODE,
+SUB_GROUP_CODE,
+PLAN_TYPE,
+PLAN_CODE,
+RIDERS
+FROM LKP_CTE_MAX
+WHERE MASTER_ELIGIBILITY_RANK = (SELECT MAX(MASTER_ELIGIBILITY_RANK) 
+                          FROM LKP_CTE_MAX AS MAX_RANK
+                          WHERE MAX_RANK.CLAIM_NO = LKP_CTE_MAX.CLAIM_NO
+                          AND MAX_RANK.TPA_CLIENT_ID = LKP_CTE_MAX.TPA_CLIENT_ID
+                          AND MAX_RANK.TPA_ID = LKP_CTE_MAX.TPA_ID
+                          AND MAX_RANK.TPA_DIV_ID = LKP_CTE_MAX.TPA_DIV_ID
+                          AND MAX_RANK.SOURCE_SYSTEM = LKP_CTE_MAX.SOURCE_SYSTEM
+                          )
+;
+
+!set variable_substitution=false;

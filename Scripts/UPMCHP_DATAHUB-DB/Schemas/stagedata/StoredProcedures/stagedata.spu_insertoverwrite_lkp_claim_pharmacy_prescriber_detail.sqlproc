@@ -1,0 +1,113 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_INSERTOVERWRITE_LKP_CLAIM_PHARMACY_PRESCRIBER_DETAIL(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `STAGEDATA.LKP_CLAIM_PHARMACY_PRESCRIBER_DETAIL`
+
+// Create InsertOverwrite statement to be executed.
+var sqlInsertOverwrite =
+`
+INSERT OVERWRITE INTO ${targetTableName}
+(
+	INSERT_DATETIME,
+    PRESCRIBER_ID,
+    PRESCRIBER_SOURCE_CODE,
+    PRESCRIBER_NPI_TYPE,
+    PRESCRIBER_NAME,
+    MAILING_ADDRESS_LINE_PRIMARY,
+    MAILING_ADDRESS_LINE_SECONDARY,
+    MAILING_ADDRESS_CITY,
+    MAILING_ADDRESS_STATE,
+    MAILING_ADDRESS_ZIP_CODE,
+    MAILING_ADDRESS_TELEPHONE_NBR,
+    MAILING_ADDRESS_FAX_NBR,
+    PRACTICE_ADDRESS_LINE_PRIMARY,
+    PRACTICE_ADDRESS_LINE_SECONDARY,
+    PRACTICE_ADDRESS_CITY,
+    PRACTICE_ADDRESS_STATE,
+    PRACTICE_ADDRESS_ZIP_CODE,
+    PRACTICE_ADDRESS_TELEPHONE_NBR,
+    PRACTICE_ADDRESS_FAX_NBR,
+    PRIMARY_TAXONOMY_CODE
+)
+SELECT
+	INSERT_DATETIME,
+    PRESCRIBER_ID,
+    PRESCRIBER_SOURCE_CODE,
+    PRESCRIBER_NPI_TYPE,
+    PRESCRIBER_NAME,
+    MAILING_ADDRESS_LINE_PRIMARY,
+    MAILING_ADDRESS_LINE_SECONDARY,
+    MAILING_ADDRESS_CITY,
+    MAILING_ADDRESS_STATE,
+    MAILING_ADDRESS_ZIP_CODE,
+    MAILING_ADDRESS_TELEPHONE_NBR,
+    MAILING_ADDRESS_FAX_NBR,
+    PRACTICE_ADDRESS_LINE_PRIMARY,
+    PRACTICE_ADDRESS_LINE_SECONDARY,
+    PRACTICE_ADDRESS_CITY,
+    PRACTICE_ADDRESS_STATE,
+    PRACTICE_ADDRESS_ZIP_CODE,
+    PRACTICE_ADDRESS_TELEPHONE_NBR,
+    PRACTICE_ADDRESS_FAX_NBR,
+    PRIMARY_TAXONOMY_CODE
+  FROM ${SOURCE_VIEW_NAME}
+;`;
+
+try 
+{
+
+    //Execute InsertOverwrite Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertOverwrite});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

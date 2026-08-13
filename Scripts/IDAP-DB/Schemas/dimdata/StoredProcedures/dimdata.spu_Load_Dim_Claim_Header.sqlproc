@@ -1,0 +1,392 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_CLAIM_HEADER()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var procedureName = Object.keys(this)[0];
+
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TRANSIENT TABLE STAGEDATA.DIM_CLAIM_HEADER
+AS
+SELECT * FROM STAGEDATA.DIM_CLAIM_HEADER_SELECT_VW
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_CLAIM_HEADER AS tgt
+USING (
+SELECT
+    FALSE AS IS_LOGICAL_DELETE_FLAG
+    ,TPA_CLIENT_ID
+    ,TPA_ID
+    ,TPA_DIV_ID
+    ,DATA_SOURCE_NAME
+    ,CLAIM_NBR
+    ,DATA_HUB_UNIVERSAL_CLAIM_ID
+    ,CARE_TYPE_NAME
+    ,SHOCK_CLAIM_IND
+    ,PROVIDER_ACCT_NBR
+    ,CLAIM_IPA_CODE
+    ,ELECTRONIC_CLAIM_TYPE_CODE
+    ,ELECTRONIC_CLAIM_TYPE_DESC
+    ,BILL_TYPE_CODE
+    ,BILL_TYPE_DESC
+    ,BILLING_PROVIDER_VENDOR_NBR
+    ,DISCHARGE_STATUS_CODE
+    ,DISCHARGE_STATUS_DESC
+    ,DISCHARGE_DATE
+    ,DISCHARGE_HOUR
+	,ADMISSION_DATE
+	,ADMISSION_HOUR    
+    ,ADMISSION_SOURCE_CODE
+    ,ADMISSION_SOURCE_DESC
+    ,ADMISSION_TYPE_CODE
+    ,ADMISSION_TYPE_DESC
+    ,CLAIM_BILL_PROVIDER_PAR_STATUS_CODE
+    ,BILLING_PROVIDER_STATUS_CODE
+    ,PRICE_ZIP_SOURCE_IND
+    ,SERVICE_ZIP_CODE
+    ,EDI_837_FACILITY_NPI_NBR
+    ,EDI_837_FACILITY_NAME
+    ,EDI_837_FACILITY_TELEPHONE_NBR
+    ,EDI_837_FACILITY_ADDRESS_LINE_1_TEXT
+    ,EDI_837_FACILITY_ADDRESS_LINE_2_TEXT
+    ,EDI_837_FACILITY_STATE_ABBREV_NAME
+    ,EDI_837_FACILITY_ZIP_CODE_NBR
+    ,EDI_837_FACILITY_OTHER_ID
+    ,DATA_HUB_UNIVERSAL_DRG_ID
+    ,MICROFILM_NBR
+    ,CLAIM_TYPE_CODE
+    ,ORIGINAL_CLAIM_ID
+    ,MULTISOURCE_CLAIM_IND
+    ,PROVIDER_SPECIALTY
+    ,PAID_STATUS_FOR_CMS
+    ,SOURCE_SYSTEM
+    ,SOURCE_ID
+    FROM STAGEDATA.DIM_CLAIM_HEADER
+MINUS
+SELECT
+    IS_LOGICAL_DELETE_FLAG
+    ,TPA_CLIENT_ID
+    ,TPA_ID
+    ,TPA_DIV_ID
+    ,DATA_SOURCE_NAME
+    ,CLAIM_NBR
+    ,DATA_HUB_UNIVERSAL_CLAIM_ID
+    ,CARE_TYPE_NAME
+    ,SHOCK_CLAIM_IND
+    ,PROVIDER_ACCT_NBR
+    ,CLAIM_IPA_CODE
+    ,ELECTRONIC_CLAIM_TYPE_CODE
+    ,ELECTRONIC_CLAIM_TYPE_DESC
+    ,BILL_TYPE_CODE
+    ,BILL_TYPE_DESC
+    ,BILLING_PROVIDER_VENDOR_NBR
+    ,DISCHARGE_STATUS_CODE
+    ,DISCHARGE_STATUS_DESC
+    ,DISCHARGE_DATE
+    ,DISCHARGE_HOUR
+	,ADMISSION_DATE
+	,ADMISSION_HOUR    
+    ,ADMISSION_SOURCE_CODE
+    ,ADMISSION_SOURCE_DESC
+    ,ADMISSION_TYPE_CODE
+    ,ADMISSION_TYPE_DESC
+    ,CLAIM_BILL_PROVIDER_PAR_STATUS_CODE
+    ,BILLING_PROVIDER_STATUS_CODE
+    ,PRICE_ZIP_SOURCE_IND
+    ,SERVICE_ZIP_CODE
+    ,EDI_837_FACILITY_NPI_NBR
+    ,EDI_837_FACILITY_NAME
+    ,EDI_837_FACILITY_TELEPHONE_NBR
+    ,EDI_837_FACILITY_ADDRESS_LINE_1_TEXT
+    ,EDI_837_FACILITY_ADDRESS_LINE_2_TEXT
+    ,EDI_837_FACILITY_STATE_ABBREV_NAME
+    ,EDI_837_FACILITY_ZIP_CODE_NBR
+    ,EDI_837_FACILITY_OTHER_ID
+    ,DATA_HUB_UNIVERSAL_DRG_ID
+    ,MICROFILM_NBR
+    ,CLAIM_TYPE_CODE
+    ,ORIGINAL_CLAIM_ID
+    ,MULTISOURCE_CLAIM_IND
+    ,PROVIDER_SPECIALTY
+    ,PAID_STATUS_FOR_CMS
+    ,SOURCE_SYSTEM
+    ,SOURCE_ID
+    FROM DIMDATA.DIM_CLAIM_HEADER
+    ) AS src
+ON 
+(
+    tgt.TPA_CLIENT_ID = src.TPA_CLIENT_ID
+    AND tgt.TPA_ID = src.TPA_ID
+    AND tgt.TPA_DIV_ID = src.TPA_DIV_ID
+    AND tgt.DATA_SOURCE_NAME = src.DATA_SOURCE_NAME
+    AND tgt.CLAIM_NBR = src.CLAIM_NBR
+)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.DATA_HUB_UNIVERSAL_CLAIM_ID = src.DATA_HUB_UNIVERSAL_CLAIM_ID,
+    tgt.CARE_TYPE_NAME=src.CARE_TYPE_NAME, 
+    tgt.SHOCK_CLAIM_IND=src.SHOCK_CLAIM_IND, 
+    tgt.PROVIDER_ACCT_NBR=src.PROVIDER_ACCT_NBR, 
+    tgt.CLAIM_IPA_CODE=src.CLAIM_IPA_CODE, 
+    tgt.ELECTRONIC_CLAIM_TYPE_CODE=src.ELECTRONIC_CLAIM_TYPE_CODE, 
+    tgt.ELECTRONIC_CLAIM_TYPE_DESC=src.ELECTRONIC_CLAIM_TYPE_DESC, 
+    tgt.BILL_TYPE_CODE=src.BILL_TYPE_CODE, 
+    tgt.BILL_TYPE_DESC=src.BILL_TYPE_DESC,
+    tgt.BILLING_PROVIDER_VENDOR_NBR=src.BILLING_PROVIDER_VENDOR_NBR, 
+    tgt.DISCHARGE_STATUS_CODE=src.DISCHARGE_STATUS_CODE, 
+    tgt.DISCHARGE_STATUS_DESC=src.DISCHARGE_STATUS_DESC,
+    tgt.DISCHARGE_DATE=src.DISCHARGE_DATE,
+    tgt.DISCHARGE_HOUR=src.DISCHARGE_HOUR,
+	tgt.ADMISSION_DATE=src.ADMISSION_DATE,
+	tgt.ADMISSION_HOUR=src.ADMISSION_HOUR,
+    tgt.ADMISSION_SOURCE_CODE=src.ADMISSION_SOURCE_CODE, 
+    tgt.ADMISSION_SOURCE_DESC=src.ADMISSION_SOURCE_DESC, 
+    tgt.ADMISSION_TYPE_CODE=src.ADMISSION_TYPE_CODE, 
+    tgt.ADMISSION_TYPE_DESC=src.ADMISSION_TYPE_DESC, 
+    tgt.CLAIM_BILL_PROVIDER_PAR_STATUS_CODE=src.CLAIM_BILL_PROVIDER_PAR_STATUS_CODE,
+    tgt.BILLING_PROVIDER_STATUS_CODE=src.BILLING_PROVIDER_STATUS_CODE, 
+    tgt.PRICE_ZIP_SOURCE_IND=src.PRICE_ZIP_SOURCE_IND, 
+    tgt.SERVICE_ZIP_CODE=src.SERVICE_ZIP_CODE,
+    tgt.EDI_837_FACILITY_NPI_NBR = src.EDI_837_FACILITY_NPI_NBR,
+    tgt.EDI_837_FACILITY_NAME = src.EDI_837_FACILITY_NAME,
+    tgt.EDI_837_FACILITY_TELEPHONE_NBR = src.EDI_837_FACILITY_TELEPHONE_NBR,
+    tgt.EDI_837_FACILITY_ADDRESS_LINE_1_TEXT = src.EDI_837_FACILITY_ADDRESS_LINE_1_TEXT,
+    tgt.EDI_837_FACILITY_ADDRESS_LINE_2_TEXT = src.EDI_837_FACILITY_ADDRESS_LINE_2_TEXT,
+    tgt.EDI_837_FACILITY_STATE_ABBREV_NAME = src.EDI_837_FACILITY_STATE_ABBREV_NAME,
+    tgt.EDI_837_FACILITY_ZIP_CODE_NBR = src.EDI_837_FACILITY_ZIP_CODE_NBR,
+    tgt.EDI_837_FACILITY_OTHER_ID = src.EDI_837_FACILITY_OTHER_ID,
+    tgt.DATA_HUB_UNIVERSAL_DRG_ID = src.DATA_HUB_UNIVERSAL_DRG_ID,
+    tgt.MICROFILM_NBR = src.MICROFILM_NBR,
+    tgt.CLAIM_TYPE_CODE = src.CLAIM_TYPE_CODE,
+    tgt.ORIGINAL_CLAIM_ID = src.ORIGINAL_CLAIM_ID,
+    tgt.MULTISOURCE_CLAIM_IND = src.MULTISOURCE_CLAIM_IND,
+    tgt.PROVIDER_SPECIALTY = src.PROVIDER_SPECIALTY,
+    tgt.PAID_STATUS_FOR_CMS = src.PAID_STATUS_FOR_CMS,
+    tgt.SOURCE_SYSTEM = src.SOURCE_SYSTEM,
+    tgt.SOURCE_ID = src.SOURCE_ID
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_CLAIM_HEADER_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,CLAIM_NBR
+        ,DATA_HUB_UNIVERSAL_CLAIM_ID        
+        ,CARE_TYPE_NAME
+        ,SHOCK_CLAIM_IND
+        ,PROVIDER_ACCT_NBR
+        ,CLAIM_IPA_CODE
+        ,ELECTRONIC_CLAIM_TYPE_CODE
+        ,ELECTRONIC_CLAIM_TYPE_DESC
+        ,BILL_TYPE_CODE
+        ,BILL_TYPE_DESC
+        ,BILLING_PROVIDER_VENDOR_NBR
+        ,DISCHARGE_STATUS_CODE
+        ,DISCHARGE_STATUS_DESC
+        ,DISCHARGE_DATE
+        ,DISCHARGE_HOUR
+        ,ADMISSION_DATE
+        ,ADMISSION_HOUR
+        ,ADMISSION_SOURCE_CODE
+        ,ADMISSION_SOURCE_DESC
+        ,ADMISSION_TYPE_CODE
+        ,ADMISSION_TYPE_DESC
+        ,CLAIM_BILL_PROVIDER_PAR_STATUS_CODE
+        ,BILLING_PROVIDER_STATUS_CODE
+        ,PRICE_ZIP_SOURCE_IND
+        ,SERVICE_ZIP_CODE
+        ,EDI_837_FACILITY_NPI_NBR
+        ,EDI_837_FACILITY_NAME
+        ,EDI_837_FACILITY_TELEPHONE_NBR
+        ,EDI_837_FACILITY_ADDRESS_LINE_1_TEXT
+        ,EDI_837_FACILITY_ADDRESS_LINE_2_TEXT
+        ,EDI_837_FACILITY_STATE_ABBREV_NAME
+        ,EDI_837_FACILITY_ZIP_CODE_NBR
+        ,EDI_837_FACILITY_OTHER_ID
+        ,DATA_HUB_UNIVERSAL_DRG_ID
+        ,MICROFILM_NBR
+        ,CLAIM_TYPE_CODE
+        ,ORIGINAL_CLAIM_ID
+        ,MULTISOURCE_CLAIM_IND
+        ,PROVIDER_SPECIALTY
+        ,PAID_STATUS_FOR_CMS
+        ,SOURCE_SYSTEM
+        ,SOURCE_ID
+    )
+VALUES 
+    (
+        (SELECT IFNULL(MAX(DIM_CLAIM_HEADER_KEY), 1000) FROM DIMDATA.DIM_CLAIM_HEADER) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.TPA_CLIENT_ID
+        ,src.TPA_ID
+        ,src.TPA_DIV_ID
+        ,src.DATA_SOURCE_NAME
+        ,src.CLAIM_NBR
+        ,src.DATA_HUB_UNIVERSAL_CLAIM_ID        
+        ,src.CARE_TYPE_NAME
+        ,src.SHOCK_CLAIM_IND
+        ,src.PROVIDER_ACCT_NBR
+        ,src.CLAIM_IPA_CODE
+        ,src.ELECTRONIC_CLAIM_TYPE_CODE
+        ,src.ELECTRONIC_CLAIM_TYPE_DESC
+        ,src.BILL_TYPE_CODE
+        ,src.BILL_TYPE_DESC
+        ,src.BILLING_PROVIDER_VENDOR_NBR
+        ,src.DISCHARGE_STATUS_CODE
+        ,src.DISCHARGE_STATUS_DESC
+        ,src.DISCHARGE_DATE
+        ,src.DISCHARGE_HOUR
+        ,src.ADMISSION_DATE
+        ,src.ADMISSION_HOUR
+        ,src.ADMISSION_SOURCE_CODE
+        ,src.ADMISSION_SOURCE_DESC
+        ,src.ADMISSION_TYPE_CODE
+        ,src.ADMISSION_TYPE_DESC
+        ,src.CLAIM_BILL_PROVIDER_PAR_STATUS_CODE
+        ,src.BILLING_PROVIDER_STATUS_CODE
+        ,src.PRICE_ZIP_SOURCE_IND
+        ,src.SERVICE_ZIP_CODE
+        ,src.EDI_837_FACILITY_NPI_NBR
+        ,src.EDI_837_FACILITY_NAME
+        ,src.EDI_837_FACILITY_TELEPHONE_NBR
+        ,src.EDI_837_FACILITY_ADDRESS_LINE_1_TEXT
+        ,src.EDI_837_FACILITY_ADDRESS_LINE_2_TEXT
+        ,src.EDI_837_FACILITY_STATE_ABBREV_NAME
+        ,src.EDI_837_FACILITY_ZIP_CODE_NBR
+        ,src.EDI_837_FACILITY_OTHER_ID
+        ,src.DATA_HUB_UNIVERSAL_DRG_ID
+        ,src.MICROFILM_NBR
+        ,src.CLAIM_TYPE_CODE
+        ,src.ORIGINAL_CLAIM_ID
+        ,src.MULTISOURCE_CLAIM_IND
+        ,src.PROVIDER_SPECIALTY
+        ,src.PAID_STATUS_FOR_CMS
+        ,src.SOURCE_SYSTEM
+        ,src.SOURCE_ID
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+// The >999 is done to not update any of the static data, inserts start at 1000 from autoincrement
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_CLAIM_HEADER
+SET 
+IS_LOGICAL_DELETE_FLAG = TRUE
+,LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_CLAIM_HEADER_KEY IN
+(
+    SELECT DIM_CLAIM_HEADER.DIM_CLAIM_HEADER_KEY
+    FROM DIMDATA.DIM_CLAIM_HEADER
+        LEFT OUTER JOIN 
+            (SELECT TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, DATA_SOURCE_NAME, CLAIM_NBR
+            FROM STAGEDATA.DIM_CLAIM_HEADER
+            ) STAGE_DATA
+        ON (STAGE_DATA.TPA_CLIENT_ID = DIM_CLAIM_HEADER.TPA_CLIENT_ID
+        AND STAGE_DATA.TPA_ID = DIM_CLAIM_HEADER.TPA_ID
+        AND STAGE_DATA.TPA_DIV_ID = DIM_CLAIM_HEADER.TPA_DIV_ID
+        AND STAGE_DATA.DATA_SOURCE_NAME = DIM_CLAIM_HEADER.DATA_SOURCE_NAME
+        AND STAGE_DATA.CLAIM_NBR = DIM_CLAIM_HEADER.CLAIM_NBR)
+    WHERE STAGE_DATA.CLAIM_NBR IS NULL
+    AND DIM_CLAIM_HEADER.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_CLAIM_HEADER.DIM_CLAIM_HEADER_KEY > 2
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Stage source data to temp table to be reused later.
+    var startTime = new Date().toISOString();
+    var targetTableName = `STAGEDATA.DIM_CLAIM_HEADER`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_CLAIM_HEADER`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+    var targetTableName = `DIMDATA.DIM_CLAIM_HEADER`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

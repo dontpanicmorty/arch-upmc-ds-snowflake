@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE EDW_RPT.PROCESSING_REASON
+(
+PROCESSING_REASON_KEY            NUMBER,
+REASON_CODE                     VARCHAR,
+REASON_TYPE                     VARCHAR,
+REASON_DESC                     VARCHAR,
+LOAD_DATE                 TIMESTAMP_NTZ,
+UPDATE_DATE               TIMESTAMP_NTZ
+)
+COMMENT='Created for EDWRPT Migration'
+;

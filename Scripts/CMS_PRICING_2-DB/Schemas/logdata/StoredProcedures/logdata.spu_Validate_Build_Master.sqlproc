@@ -1,0 +1,101 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_BUILD_MASTER(BUILD_NBR VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var batchId = Date.now()
+var sqlCommand="";
+var result = `FAIL: Something didn't work in the master sproc`
+
+try 
+{
+    //set query_tag for session logging
+    sqlCommand = `CALL UTIL.SPU_SET_QUERY_TAG();`;
+    var resultSet = snowflake.execute({sqlText: sqlCommand});
+ 
+    //*****************************************************************************
+    //Call Build Validation stored procedures
+    //*****************************************************************************
+
+    // Check to make sure all views compile successfully
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_BUILD_VIEW_COMPILE('${BUILD_NBR}', '${batchId}');`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    //*****************************************************************************
+    // End calls to Build Validation procedures
+    //*****************************************************************************
+
+
+    // Seed the results table with a baseline record so we can do a positive assertion
+    sqlCommand = `INSERT INTO LOGDATA.BUILD_VALIDATION_RESULT 
+                (SCHEMA_NAME, TABLE_NAME, BUILD_NBR, BATCH_ID, VALIDATION_PROCEDURE_NAME, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR) 
+                VALUES ('DEFAULT','DEFAULT','${BUILD_NBR}','${batchId}','BASELINE RECORD', 1, 1)`
+    resultSet = snowflake.execute
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // Get results from validation table and determine outcome. This should be the last sproc call
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_BUILD_GET_RESULTS('${BUILD_NBR}', '${batchId}');`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    resultSet.next(); //set to return from getResults sproc
+    result = resultSet.getColumnValue(1);
+
+    var endTime = new Date().toISOString();
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

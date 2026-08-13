@@ -1,0 +1,14 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_CLONE_ARCHIVE_DB ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// Proxy empty arguments to the full-parameter version
+let sqlText = `CALL EXTRACTDATA.SPU_CLONE_ARCHIVE_DB('');`;
+let resultSet = snowflake.execute({sqlText});
+
+// Proxy the result back
+resultSet.next();
+return resultSet.getColumnValue(1);
+$$;

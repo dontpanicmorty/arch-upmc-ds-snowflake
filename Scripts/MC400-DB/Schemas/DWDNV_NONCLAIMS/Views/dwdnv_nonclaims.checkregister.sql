@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.CheckRegister AS
+SELECT * FROM CDC_merge.DBO.CheckRegister
+;

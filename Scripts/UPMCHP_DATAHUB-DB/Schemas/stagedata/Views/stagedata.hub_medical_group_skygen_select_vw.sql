@@ -1,0 +1,19 @@
+CREATE OR REPLACE VIEW STAGEDATA.HUB_MEDICAL_GROUP_SKYGEN_SELECT_VW
+COMMENT = 'This is a HUB View containing Medical Group or billing provider data. Skygen calls them payees'
+AS
+SELECT DISTINCT
+    'N/A' AS SOURCE_KEY,
+    TPA_CLIENT_ID,
+    TPA_ID,
+    TPA_DIV_ID,
+    'Skygen' AS DATA_SOURCE_NAME,
+    PROVIDER_ID AS MEDICAL_GROUP_ID,
+    UTIL.FXN_ARRAY_HASH([
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        'Skygen',
+        PROVIDER_ID
+    ]) AS HUB_MEDICAL_GROUP_HKEY
+FROM RAWDATA.DWSKYGEN_PROVIDER_DETAIL
+WHERE PROVIDER_TYPE = 'Medical Group';

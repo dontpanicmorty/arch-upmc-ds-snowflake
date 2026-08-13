@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW DWOAO.AvalonProcedureCodes
+AS
+SELECT * FROM CDC_MERGE.DBO.AvalonProcedureCodes;

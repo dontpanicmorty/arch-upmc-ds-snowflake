@@ -1,0 +1,306 @@
+{
+  "outputSchema": "MEMBER_COMMUNICATIONS",
+  "outputTable": "PNF_CONTACT_HISTORY_DETAIL",
+  "hasHeader": false,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "MIR_PNF_FILE_FORMAT",
+  "fileFormat": "MIR_PNF_FILE_FORMAT",
+  "truncReload": false,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "RDate",
+          "outputField": "RDATE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "RecordSource",
+          "outputField": "RECORD_SOURCE"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "JobDate",
+          "outputField": "JOB_DATE"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "CompletionDate",
+          "outputField": "COMPLETION_DATE"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "JobID",
+          "outputField": "JOB_ID"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "JobNo",
+          "outputField": "JOB_NO"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "InboundFileName",
+          "outputField": "INBOUND_FILE_NAME"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "SLA_FLag",
+          "outputField": "SLA_FLAG"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "FileError_Flag",
+          "outputField": "FILE_ERROR_FLAG"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "FileName",
+          "outputField": "PNF_FILE_NAME"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "FileReceiveDate",
+          "outputField": "FILE_RECEIVE_DATE"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "DueDate",
+          "outputField": "DUE_DATE"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "JobDescription",
+          "outputField": "JOB_DESCRIPTION"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "Company",
+          "outputField": "COMPANY"
+        },
+        {
+          "columnOrder": 15,
+          "inputField": "ProductCode",
+          "outputField": "PRODUCT_CODE"
+        },
+        {
+          "columnOrder": 16,
+          "inputField": "TypeOfEnvelope",
+          "outputField": "TYPE_OF_ENVELOPE"
+        },
+        {
+          "columnOrder": 17,
+          "inputField": "SLADays",
+          "outputField": "SLA_DAYS"
+        },
+        {
+          "columnOrder": 18,
+          "inputField": "LOB",
+          "outputField": "LOB"
+        },
+        {
+          "columnOrder": 19,
+          "inputField": "Customer",
+          "outputField": "CUSTOMER"
+        },
+        {
+          "columnOrder": 20,
+          "inputField": "ItemID",
+          "outputField": "ITEM_ID"
+        },
+        {
+          "columnOrder": 21,
+          "inputField": "Quantity",
+          "outputField": "QUANTITY"
+        },
+        {
+          "columnOrder": 22,
+          "inputField": "CPP_Production",
+          "outputField": "CPP_PRODUCTION"
+        },
+        {
+          "columnOrder": 23,
+          "inputField": "CPP_Postage",
+          "outputField": "CPP_POSTAGE"
+        },
+        {
+          "columnOrder": 24,
+          "inputField": "SequenceNo",
+          "outputField": "SEQUENCE_NO"
+        },
+        {
+          "columnOrder": 25,
+          "inputField": "MemberNo",
+          "outputField": "MEMBER_NO"
+        },
+        {
+          "columnOrder": 26,
+          "inputField": "VendorNo",
+          "outputField": "VENDOR_NO"
+        },
+        {
+          "columnOrder": 27,
+          "inputField": "ProviderNo",
+          "outputField": "PROVIDER_NO"
+        },
+        {
+          "columnOrder": 28,
+          "inputField": "FullName",
+          "outputField": "FULL_NAME"
+        },
+        {
+          "columnOrder": 29,
+          "inputField": "Address1",
+          "outputField": "ADDRESS_1"
+        },
+        {
+          "columnOrder": 30,
+          "inputField": "Address2",
+          "outputField": "ADDRESS_2"
+        },
+        {
+          "columnOrder": 31,
+          "inputField": "Address3",
+          "outputField": "ADDRESS_3"
+        },
+        {
+          "columnOrder": 32,
+          "inputField": "City",
+          "outputField": "CITY"
+        },
+        {
+          "columnOrder": 33,
+          "inputField": "State",
+          "outputField": "STATE"
+        },
+        {
+          "columnOrder": 34,
+          "inputField": "Zip",
+          "outputField": "ZIP"
+        },
+        {
+          "columnOrder": 35,
+          "inputField": "CityStateZip",
+          "outputField": "CITY_STATE_ZIP"
+        },
+        {
+          "columnOrder": 36,
+          "inputField": "NumberOfPages",
+          "outputField": "NUMBER_OF_PAGES"
+        },
+        {
+          "columnOrder": 37,
+          "inputField": "CID",
+          "outputField": "CID"
+        },
+        {
+          "columnOrder": 38,
+          "inputField": "Prefix",
+          "outputField": "PREFIX"
+        },
+        {
+          "columnOrder": 39,
+          "inputField": "FirstName",
+          "outputField": "FIRST_NAME"
+        },
+        {
+          "columnOrder": 40,
+          "inputField": "MiddleName",
+          "outputField": "MIDDLE_NAME"
+        },
+        {
+          "columnOrder": 41,
+          "inputField": "LastName",
+          "outputField": "LAST_NAME"
+        },
+        {
+          "columnOrder": 42,
+          "inputField": "Suffix",
+          "outputField": "SUFFIX"
+        },
+        {
+          "columnOrder": 43,
+          "inputField": "MISC0",
+          "outputField": "MISC_0"
+        },
+        {
+          "columnOrder": 44,
+          "inputField": "MISC1",
+          "outputField": "MISC_1"
+        },
+        {
+          "columnOrder": 45,
+          "inputField": "MISC2",
+          "outputField": "MISC_2"
+        },
+        {
+          "columnOrder": 46,
+          "inputField": "MISC3",
+          "outputField": "MISC_3"
+        },
+        {
+          "columnOrder": 47,
+          "inputField": "MISC4",
+          "outputField": "MISC_4"
+        },
+        {
+          "columnOrder": 48,
+          "inputField": "MISC5",
+          "outputField": "MISC_5"
+        },
+        {
+          "columnOrder": 49,
+          "inputField": "MISC6",
+          "outputField": "MISC_6"
+        },
+        {
+          "columnOrder": 50,
+          "inputField": "MISC7",
+          "outputField": "MISC_7"
+        },
+        {
+          "columnOrder": 51,
+          "inputField": "MISC8",
+          "outputField": "MISC_8"
+        },
+        {
+          "columnOrder": 52,
+          "inputField": "MISC9",
+          "outputField": "MISC_9"
+        },
+        {
+          "columnOrder": 53,
+          "inputField": "MISC10",
+          "outputField": "MISC_10"
+        },
+        {
+          "columnOrder": 54,
+          "inputField": "IMB",
+          "outputField": "IMB"
+        },
+        {
+          "columnOrder": 55,
+          "inputField": "Reservices",
+          "outputField": "RESERVICES"
+        },
+        {
+          "columnOrder": 56,
+          "inputField": "LoadDate",
+          "outputField": "LOAD_DATE"
+        },
+        {
+          "columnOrder": 57,
+          "inputField": "UpdateDate",
+          "outputField": "UPDATE_DATE"
+        },
+        {
+          "columnOrder": 58,
+          "inputField": "SearchField",
+          "outputField": "SEARCH_FIELD"
+        }
+      ]
+    }
+  }
+}

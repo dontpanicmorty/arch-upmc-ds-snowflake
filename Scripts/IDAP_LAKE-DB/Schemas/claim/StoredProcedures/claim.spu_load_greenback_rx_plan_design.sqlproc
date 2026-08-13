@@ -1,0 +1,144 @@
+CREATE OR REPLACE PROCEDURE CLAIM.SPU_LOAD_GREENBACK_RX_PLAN_DESIGN
+(
+    LOAD_DATE  VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+var load_date = LOAD_DATE.replace(/^\/+/, '');
+var tableName = 'CLAIM.GREENBACK_RX_PLAN_DESIGN';
+var processType = 'TABLE';
+var nextSQL = '';
+
+var stagePath =
+    "@UTIL.HPDSDATALAKE_IDAPLAKE/claim/greenbackhealth/rx_benefits/"
+    + load_date + "/csv/";
+
+var sql_truncate =
+    "TRUNCATE TABLE CLAIM.GREENBACK_RX_PLAN_DESIGN";
+
+var sql_copyInto =
+"COPY INTO CLAIM.GREENBACK_RX_PLAN_DESIGN \
+( \
+    PLAN_EFFECTIVE_DATE, \
+    PLAN_TERM_DATE, \
+    PLAN_ID, \
+    FORMULARY_ID, \
+    MAX_EMBEDDED_DEDUCTIBLE_AMOUNT, \
+    MAX_FAMILY_DEDUCTIBLE, \
+    MAX_INDIVIDUAL_DEDUCTIBLE, \
+    MAX_EMBEDDED_OOP_AMOUNT, \
+    MAX_FAMILY_OOP_AMOUNT, \
+    MAX_INDIVIDUAL_OOP_AMOUNT, \
+    SUBSCRIBER_FAMILY_INDICATOR, \
+    FORMULARY_TIER, \
+    NETWORK_NAME, \
+    IS_DEDUCTIBLE_REQUIRED, \
+    COPAY, \
+    COINSURANCE, \
+    COINSURANCE_MINIMUM_COST, \
+    COINSURANCE_MAXIMUM_COST, \
+    ANNUAL_COINSURANCE_CAP, \
+    FILENAME \
+) \
+FROM ( \
+    SELECT \
+        $1, $2, $3, $4, $5, \
+        $6, $7, $8, $9, $10, \
+        $11, $12, $13, $14, $15, \
+        $16, $17, $18, $19, \
+        METADATA$FILENAME \
+    FROM " + stagePath + " \
+) \
+FILE_FORMAT = (FORMAT_NAME = 'CLAIM.GREENBACK_RX_PLAN_DESIGN_FILE_FORMAT') \
+ON_ERROR = 'ABORT_STATEMENT' \
+";
+
+var logSQL =
+"INSERT INTO LOGDATA.TABLE_LOAD_HISTORY \
+( \
+    name, \
+    type, \
+    start_time, \
+    end_time, \
+    insert_count, \
+    update_count, \
+    delete_count, \
+    result_text, \
+    sql_statement, \
+    error_code, \
+    error_state, \
+    error_message, \
+    error_stack_trace_text \
+) \
+VALUES \
+( \
+    :1, \
+    :2, \
+    CURRENT_TIMESTAMP(), \
+    CURRENT_TIMESTAMP(), \
+    :3, \
+    :4, \
+    :5, \
+    :6, \
+    :7, \
+    :8, \
+    :9, \
+    :10, \
+    :11 \
+)";
+
+try {
+    nextSQL = sql_truncate;
+
+    snowflake.execute({
+        sqlText: sql_truncate
+    });
+
+    nextSQL = sql_copyInto;
+
+    var stmt = snowflake.createStatement({ sqlText: sql_copyInto });
+    stmt.execute();
+
+    snowflake.execute({
+        sqlText: logSQL,
+        binds: [
+            tableName,
+            processType,
+            stmt.getNumRowsInserted(),
+            0,
+            0,
+            'SUCCEEDED',
+            nextSQL,
+            null,
+            null,
+            null,
+            null
+        ]
+    });
+
+    return 'SUCCEEDED (' + stmt.getNumRowsInserted() + ' rows inserted)';
+}
+catch (err) {
+    snowflake.execute({
+        sqlText: logSQL,
+        binds: [
+            tableName,
+            processType,
+            -1,
+            0,
+            0,
+            'FAILED',
+            nextSQL,
+            err.code || null,
+            err.state || null,
+            err.message || null,
+            err.stackTraceTxt || null
+        ]
+    });
+
+    throw err;
+}
+$$;

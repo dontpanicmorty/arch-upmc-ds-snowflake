@@ -1,0 +1,29 @@
+CREATE OR REPLACE TABLE EDW_RPT.AFFILIATION
+(
+AFFILIATION_KEY                    NUMBER,
+PROVIDER_ID                       VARCHAR,
+PROVIDER_GROUP_ID                 VARCHAR,
+PROVIDER_GROUP_NAME               VARCHAR,
+PROVIDER_NAME                     VARCHAR,
+PROVIDER_SPECIALTY                VARCHAR,
+PROVIDER_TYPE                     VARCHAR,
+PHO_ID                            VARCHAR,
+PHO_DESC                          VARCHAR,
+EFFECTIVE_START_DATE        TIMESTAMP_NTZ,
+EFFECTIVE_END_DATE          TIMESTAMP_NTZ,
+LOAD_DATE                   TIMESTAMP_NTZ,
+AFFILIATION_ID                    VARCHAR,
+UPDATE_DATE                 TIMESTAMP_NTZ,
+TAX_ID_NBR                        VARCHAR,
+NY_STATE_IND                      VARCHAR,
+PROVIDER_ROLE                     VARCHAR,
+PROVIDER_STATUS_CODE              VARCHAR,
+PROVIDER_SPECIALTY_DESC           VARCHAR,
+PROVIDER_STATUS_DESC              VARCHAR,
+SUPER_GROUP_ID                    VARCHAR,
+RURAL_CLINIC_IND                  VARCHAR,
+SYSTEM_PROVIDER_CODE              VARCHAR,
+SYSTEM_PROVIDER_DESC              VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.MCO_RECIPIENT
+AS
+SELECT
+MCO_RECIPIENT_KEY,
+RECIPIENT_NBR,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_RPT.MCO_RECIPIENT;
+!set variable_substitution=false;

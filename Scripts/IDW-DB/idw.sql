@@ -1,0 +1,1 @@
+CREATE DATABASE IF NOT EXISTS IDW COMMENT = 'Copied Data From On-Prem Oracle IDW';

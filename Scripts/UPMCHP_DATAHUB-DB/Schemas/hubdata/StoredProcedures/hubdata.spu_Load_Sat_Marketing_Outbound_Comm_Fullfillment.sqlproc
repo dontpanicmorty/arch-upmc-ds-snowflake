@@ -1,0 +1,369 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+    var sqlMergeCommand = 
+`    
+MERGE INTO HUBDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT TGT
+USING (
+SELECT DISTINCT
+        HUB_MARKETING_OCF_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        HASH_DIFF,
+        RDATE,
+        JOB_DATE,
+        COMPLETION_DATE,
+        JOB_NBR,
+        INBOUND_FILE_NAME,
+        SLA_FLAG,
+        FILE_ERROR_FLAG,
+        FILE_NAME,
+        FILE_RECEIVE_DATE,
+        DUE_DATE,
+        JOB_DESCRIPTION,
+        COMPANY,
+        TYPE_OF_ENVELOPE,
+        SLA_DAYS,
+        LOB,
+        ITEM_ID,
+        CPP_PRODUCTION,
+        CPP_POSTAGE,
+        MEMBER_NBR,
+        VENDOR_NBR,
+        PROVIDER_NBR,
+        FULL_NAME,
+        ADDRESS_1,
+        ADDRESS_2,
+        ADDRESS_3,
+        CITY,
+        STATE,
+        ZIP,
+        CITY_STATE_ZIP,
+        NUMBER_OF_PAGES,
+        PREFIX,
+        FIRST_NAME,
+        MIDDLE_NAME,
+        LAST_NAME,
+        SUFFIX,
+        MISC_0,
+        MISC_1,
+        MISC_2,
+        MISC_3,
+        MISC_4,
+        MISC_5,
+        MISC_6,
+        MISC_7,
+        MISC_8,
+        MISC_9,
+        MISC_10,
+        RESERVICES,
+        LOAD_DATE,
+        UPDATE_DATE ,
+        SEARCH_FIELD
+FROM ${SOURCE_VIEW_NAME}
+) SRC
+ON (TGT.HUB_MARKETING_OCF_HKEY = SRC.HUB_MARKETING_OCF_HKEY
+AND TGT.HASH_DIFF = SRC.HASH_DIFF
+AND TGT.IS_CURRENT_ROW_FLAG = TRUE) 
+WHEN NOT MATCHED 
+THEN INSERT 
+    (
+        HUB_MARKETING_OCF_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        HASH_DIFF,
+        RDATE,
+        JOB_DATE,
+        COMPLETION_DATE,
+        JOB_NBR,
+        INBOUND_FILE_NAME,
+        SLA_FLAG,
+        FILE_ERROR_FLAG,
+        FILE_NAME,
+        FILE_RECEIVE_DATE,
+        DUE_DATE,
+        JOB_DESCRIPTION,
+        COMPANY,
+        TYPE_OF_ENVELOPE,
+        SLA_DAYS,
+        LOB,
+        ITEM_ID,
+        CPP_PRODUCTION,
+        CPP_POSTAGE,
+        MEMBER_NBR,
+        VENDOR_NBR,
+        PROVIDER_NBR,
+        FULL_NAME,
+        ADDRESS_1,
+        ADDRESS_2,
+        ADDRESS_3,
+        CITY,
+        STATE,
+        ZIP,
+        CITY_STATE_ZIP,
+        NUMBER_OF_PAGES,
+        PREFIX,
+        FIRST_NAME,
+        MIDDLE_NAME,
+        LAST_NAME,
+        SUFFIX,
+        MISC_0,
+        MISC_1,
+        MISC_2,
+        MISC_3,
+        MISC_4,
+        MISC_5,
+        MISC_6,
+        MISC_7,
+        MISC_8,
+        MISC_9,
+        MISC_10,
+        RESERVICES,
+        LOAD_DATE,
+        UPDATE_DATE,
+        SEARCH_FIELD
+    )
+VALUES 
+    (
+
+        SRC.HUB_MARKETING_OCF_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        SRC.IS_CURRENT_ROW_FLAG,
+        SRC.HASH_DIFF,
+        SRC.RDATE,
+        SRC.JOB_DATE,
+        SRC.COMPLETION_DATE,
+        SRC.JOB_NBR,
+        SRC.INBOUND_FILE_NAME,
+        SRC.SLA_FLAG,
+        SRC.FILE_ERROR_FLAG,
+        SRC.FILE_NAME,
+        SRC.FILE_RECEIVE_DATE,
+        SRC.DUE_DATE,
+        SRC.JOB_DESCRIPTION,
+        SRC.COMPANY,
+        SRC.TYPE_OF_ENVELOPE,
+        SRC.SLA_DAYS,
+        SRC.LOB,
+        SRC.ITEM_ID,
+        SRC.CPP_PRODUCTION,
+        SRC.CPP_POSTAGE,
+        SRC.MEMBER_NBR,
+        SRC.VENDOR_NBR,
+        SRC.PROVIDER_NBR,
+        SRC.FULL_NAME,
+        SRC.ADDRESS_1,
+        SRC.ADDRESS_2,
+        SRC.ADDRESS_3,
+        SRC.CITY,
+        SRC.STATE,
+        SRC.ZIP,
+        SRC.CITY_STATE_ZIP,
+        SRC.NUMBER_OF_PAGES,
+        SRC.PREFIX,
+        SRC.FIRST_NAME,
+        SRC.MIDDLE_NAME,
+        SRC.LAST_NAME,
+        SRC.SUFFIX,
+        SRC.MISC_0,
+        SRC.MISC_1,
+        SRC.MISC_2,
+        SRC.MISC_3,
+        SRC.MISC_4,
+        SRC.MISC_5,
+        SRC.MISC_6,
+        SRC.MISC_7,
+        SRC.MISC_8,
+        SRC.MISC_9,
+        SRC.MISC_10,
+        SRC.RESERVICES,
+        SRC.LOAD_DATE,
+        SRC.UPDATE_DATE,
+        SRC.SEARCH_FIELD
+    )
+;`;
+
+// Create update statement to be executed.
+var sqlUpdateCommand=
+
+`
+UPDATE HUBDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT TGT SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+    , IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_MARKETING_OCF_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+    SELECT HUB_MARKETING_OCF_HKEY, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY,
+            SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY ORDER BY SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT
+            JOIN STAGEDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP
+                ON (SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP.HUB_MARKETING_OCF_HKEY = SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY)
+        WHERE SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+)
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_MARKETING_OCF_HKEY, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY,
+    SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.ROW_EFFECTIVE_DATETIME
+    FROM HUBDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT
+        JOIN HUBDATA.HUB_MARKETING_OUTBOUND_COMM_FULLFILLMENT
+            ON (HUB_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY = SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY)
+        LEFT OUTER JOIN STAGEDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP
+            ON (SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP.HUB_MARKETING_OCF_HKEY = SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.HUB_MARKETING_OCF_HKEY)
+
+    WHERE HUB_MARKETING_OUTBOUND_COMM_FULLFILLMENT.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM STAGEDATA.SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP)
+    AND SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT.IS_CURRENT_ROW_FLAG = TRUE
+    AND SAT_MARKETING_OUTBOUND_COMM_FULLFILLMENT_TMP.HUB_MARKETING_OCF_HKEY IS NULL
+)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlLogCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log MERGE results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // Execute the Update Command
+    var startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME,  UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // Execute the Delete Command
+    var startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

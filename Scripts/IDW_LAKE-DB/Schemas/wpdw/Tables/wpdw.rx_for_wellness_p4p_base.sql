@@ -1,0 +1,23 @@
+CREATE OR REPLACE TABLE WPDW.RX_FOR_WELLNESS_P4P_BASE
+(
+MEMBER_NBR                   VARCHAR,
+MEMBERSHIP_DATE        TIMESTAMP_NTZ,
+NAME_LAST_FIRST              VARCHAR,
+PRODUCT                      VARCHAR,
+BIRTH_DATE             TIMESTAMP_NTZ,
+MASTER_MEMBER_ID             VARCHAR,
+PLAN_CATEGORY                VARCHAR,
+TELEPHONE_NBR                VARCHAR,
+OFFICE_ID                    VARCHAR,
+AUTH_NPI                     VARCHAR,
+DIABETES_FLAG                 NUMBER(33,5),
+CC_FLAG                       NUMBER(33,5),
+MIN_REF                TIMESTAMP_NTZ,
+MAX_REF                TIMESTAMP_NTZ,
+REACHED                       NUMBER(33,5),
+REACHED_DATE           TIMESTAMP_NTZ,
+PARTICIPATION_DATE     TIMESTAMP_NTZ,
+LAST_UPDATED           TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

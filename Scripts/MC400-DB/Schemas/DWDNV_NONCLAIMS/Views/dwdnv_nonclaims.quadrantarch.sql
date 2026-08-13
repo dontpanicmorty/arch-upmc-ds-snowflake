@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.QuadrantArch
+AS
+SELECT * FROM CDC_Merge.dbo.QuadrantArch 
+;

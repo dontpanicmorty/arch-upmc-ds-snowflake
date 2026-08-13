@@ -1,0 +1,278 @@
+/**
+Master stored procedure for running the monthly extract to the WEBSOLUTIONS
+stage. This should be run only once, and all child procedures should be called
+from here.
+*/
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_RUN_EXTRACT (
+  WRITE BOOLEAN,
+  ARCHIVE BOOLEAN
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let write = WRITE === 1; // convert to JS bool
+let archive = ARCHIVE === 1; // convert to JS bool
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+const failedFiles = []; // Printed at the end
+
+try {
+  //generate a JOB_ID for tracing validations and failures
+  sqlText = `CALL LOGDATA.SPU_SET_JOB_ID('${procName}')`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  var jobId = resultSet.getColumnValue(1);
+
+  // Determine what DB environment we're in to use for the Cactus clone sproc source
+  sqlText = `SELECT CURRENT_DATABASE();`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+
+  currentDatabase = resultSet.getColumnValueAsString('CURRENT_DATABASE()');
+  let dbEnv = 'PRD';
+  if (currentDatabase.endsWith('_DEV')) dbEnv = 'DEV';
+  else if (currentDatabase.endsWith('_TST')) dbEnv = 'TST';
+ 
+  /**************************************
+   * Scope: RAWDATA
+   * - Ensure all data is in place and all rawdata tables have been loaded
+   **************************************/
+  sqlText = `CALL RAWDATA.SPU_LOAD_CMS_RAWDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DWOAO_TABLES();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  // Temporarily disabling since we don't really use it:
+  /* sqlText = `CALL LOGDATA.SPU_VALIDATE_CIGNA_URL();`;
+  resultSet = snowflake.execute({sqlText}); */
+
+  sqlText = `CALL RAWDATA.SPU_CLONE_CACTUS_TABLES('${dbEnv}');`;
+  resultSet = snowflake.execute({sqlText});
+
+  sqlText = `CALL RAWDATA.SPU_CLONE_ODSDATA_TABLES('${dbEnv}');`;
+  resultSet = snowflake.execute({sqlText});
+
+  /**************************************
+   * Scope: STAGEDATA
+   * - Convert `rawdata` data into `stagedata` data
+   * - Convert our `stagedata` data into `extractdata` data
+   * - Validation/sanity check sprocs on views as necessary
+   **************************************/
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_IPA();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_PLAN_TYPE();`;
+  resultSet = snowflake.execute({sqlText});
+
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_PRICE_CATEGORY();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_PROVIDER_GROUPING();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_PRACTITIONER_FEE_SCHEDULE();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_INPATIENT_FEE_SCHEDULE();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_NEGOTIATED_PRICE_INTERNAL();`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL STAGEDATA.SPU_INSERT_OVERWRITE_PROVIDER_SET_INTERNAL();`;
+  resultSet = snowflake.execute({sqlText});
+
+  /* Note: if stuff starts slowing down due to how massive the PROVIDER_NETWORK_VW
+  is, you can run something like:
+
+  SELECT REPLACE(
+    GET_DDL('view', 'STAGEDATA.PROVIDER_NETWORKS_VW'), 
+    'create or replace view PROVIDER_NETWORKS_VW', 
+    'create or replace transient table PROVIDER_NETWORKS_HOLD'
+  );
+
+  ...here, and update the two PROVIDER_SET views to reference PROVIDER_NETWORKS_HOLD
+  instead. The view's now pretty performant for how often we need to use it, but
+  as data scales out, who knows how the system will react to doing stuff like
+  that.
+  
+  If you do this, run a `DROP TABLE PROVIDER_NETWORKS_HOLD;` at some point in
+  this sproc after the merges are done. */
+
+
+  // Truncate Extractdata table
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.ALLOWED_AMOUNTS');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.BILLING_CODE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.BUNDLE_CODE_REL');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.IN_NETWORK_BASE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.NEGOTIATED_PRICE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.NEGOTIATED_RATES');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.OUT_OF_NETWORK_BASE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PAYMENT_PROVIDERS');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PAYMENTS');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PRICING_FILE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PRICING_PLAN_FILE_REL');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PRICING_PLAN');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PRICING_PROVIDER_GROUP');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PROVIDER_GROUP_FILE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_TRUNCATE_TABLE('EXTRACTDATA.PROVIDER_SET');`;
+  resultSet = snowflake.execute({sqlText});
+
+
+  // Merge all in-network data from stagedata into extractdata. ORDER-SENSITIVE
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PRICING_FILE_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PRICING_PLAN_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PRICING_PLAN_FILE_REL_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PROVIDER_SET_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_NEGOTIATED_PRICE_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_BILLING_CODE_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PRICING_PROVIDER_GROUP_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_IN_NETWORK_BASE_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_NEGOTIATED_RATES_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+
+
+  // Merge all out-of-network data from stagedata into extractdata. ORDER-SENSITIVE
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_OUT_OF_NETWORK_BASE_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_ALLOWED_AMOUNTS_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PAYMENTS_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_PAYMENT_PROVIDERS_FROM_STAGEDATA();`;
+  resultSet = snowflake.execute({sqlText});
+
+
+  // Merge all misc data from IDAP_LAKE in
+  sqlText = `CALL EXTRACTDATA.SPU_MERGE_CIGNA_URL_FROM_IDAP_LAKE();`;
+  resultSet = snowflake.execute({sqlText});
+   
+  /**************************************
+   * Scope: EXTRACTDATA
+   * - Final validations
+   * - Everything building EXTRACTDATA should pass in ${jobId} then call the 
+      VALIDATE_DATA sprocs after executing the relevant DML above.
+   * - If validation results in a failure (dupes or orphaned FKs), these calls will
+      throw an error, which'll bubble all the way up. Results are stored in 
+      LOGDATA.DATA_VALIDATION_RESULTS
+   * - Run SPU_COPY_VIEW_TO_BLOB() once per file required
+   **************************************/
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.BILLING_CODE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.IN_NETWORK_BASE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.NEGOTIATED_PRICE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.NEGOTIATED_RATES');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PRICING_FILE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PRICING_PLAN');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PRICING_PLAN_FILE_REL');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PRICING_PROVIDER_GROUP');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PROVIDER_SET');`;
+  resultSet = snowflake.execute({sqlText});
+  
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.OUT_OF_NETWORK_BASE');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.ALLOWED_AMOUNTS');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PAYMENTS');`;
+  resultSet = snowflake.execute({sqlText});
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'EXTRACTDATA.PAYMENT_PROVIDERS');`;
+  resultSet = snowflake.execute({sqlText});
+
+  sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK_BULK(${jobId}, '${currentDatabase}', 'EXTRACTDATA');`;
+  resultSet = snowflake.execute({sqlText});
+
+  if (!write) {
+    return 'Extract process finished. No files written.'
+  }
+
+  sqlText = `CALL EXTRACTDATA.SPU_WRITE_EXTRACT_FILES();`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+
+  if (!archive) {
+    return 'Extract and write process finished. Not archiving.';
+  }
+  
+  sqlText = `CALL EXTRACTDATA.SPU_CLONE_ARCHIVE_DB();`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  
+  let baseDiag = 'Congratulations!';
+  let failedFileDiag = resultSet.getColumnValue(1);
+  if (failedFileDiag) {
+    baseDiag += ` ${failedFileDiag}`;
+  }
+  return baseDiag;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  if (failedFiles.length > 0) {
+    message += ` (the following files could not be written: ${failedFiles.join(' | ')})`;
+  }
+
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw new Error(message + ' | ' + stack);
+}
+$$;

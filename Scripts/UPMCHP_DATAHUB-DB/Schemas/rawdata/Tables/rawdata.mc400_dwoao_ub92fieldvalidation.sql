@@ -1,0 +1,6 @@
+!set variable_substitution=true;
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_UB92FIELDVALIDATION 
+LIKE &{CDC_MERGE}.DBO.UB92FIELDVALIDATION
+;
+
+!set variable_substitution=false;

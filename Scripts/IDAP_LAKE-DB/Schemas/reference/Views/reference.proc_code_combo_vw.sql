@@ -1,0 +1,43 @@
+CREATE OR REPLACE VIEW REFERENCE.PROC_CODE_COMBO_VW 
+COMMENT = 'This view reads file from storage blob and removes duplicates based on CPT4 CODE'
+AS
+WITH LATEST_FILE AS (
+    SELECT
+        METADATA$FILENAME AS FILENAME
+    FROM
+        @UTIL.HPDSDATALAKE_IDAPLAKE/referencedata/claim/cpt_codes/
+    QUALIFY
+        ROW_NUMBER() OVER (ORDER BY TO_DATE(SUBSTR(METADATA$FILENAME, 47, 8), 'YYYYMMDD') DESC) = 1
+),
+DATA AS (
+    SELECT
+        $1 AS CPT4_CODE,
+        $2 AS LOB,
+        $3 AS PROPOSED_DESCRIPTION,
+        $4 AS PROPOSED_DESCRIPTION_SPA,
+        $5 AS DATE_UPDATED
+    FROM
+        @UTIL.HPDSDATALAKE_IDAPLAKE/referencedata/claim/cpt_codes/ 
+        (FILE_FORMAT => 'REFERENCE.PUBLIC_DATA_IMPORT_FILE_FORMAT')
+    WHERE
+        METADATA$FILENAME = (SELECT FILENAME FROM LATEST_FILE)
+)
+SELECT
+    REPLACE(CPT4_CODE, '_', ' ') AS "CPT4 CODE", 
+    REPLACE(LOB, '_', ' ') AS "LOB",
+    REPLACE(PROPOSED_DESCRIPTION, '_', ' ') AS "Proposed Description",
+    REPLACE(PROPOSED_DESCRIPTION_SPA, '_', ' ') AS "Proposed Description - SPA",
+    REPLACE(DATE_UPDATED, '_', ' ') AS "Date Updated"
+FROM (
+    SELECT
+        CPT4_CODE, 
+        LOB,
+        PROPOSED_DESCRIPTION,
+        PROPOSED_DESCRIPTION_SPA,
+        DATE_UPDATED,
+        ROW_NUMBER() OVER (PARTITION BY CPT4_CODE ORDER BY TO_DATE(DATE_UPDATED, 'MM/DD/YY') DESC) AS RN
+    FROM
+        DATA
+)
+WHERE
+    RN = 1;

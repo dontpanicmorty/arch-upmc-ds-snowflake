@@ -1,0 +1,47 @@
+CREATE OR REPLACE FUNCTION STAGEDATA.FXN_GET_CLAIM_LINE_PROCEDURE_ADJ_CODE_MC400(DATA_SOURCE_NAME VARCHAR, PROCEDURE_ADJ VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT ='Returns the procedure_adj for a given claim detail record in MC400'
+AS
+$$
+const validDataSources = ['MC400Dnt','MC400Upm'];
+
+// Validate the data source
+
+if (!validDataSources.includes(DATA_SOURCE_NAME))
+{
+    throw 'Invalid DATA_SOURCE_NAME: '+DATA_SOURCE_NAME;
+}
+
+let procedureAdj = PROCEDURE_ADJ;
+if (
+    procedureAdj == null ||
+    procedureAdj == undefined ||
+    procedureAdj.trim() == '' ||
+    procedureAdj == ' ' ||
+    procedureAdj == '  '
+  ) 
+{
+  procedureAdj = '#';
+}
+else 
+  if (procedureAdj.length > 0)
+    {
+      if (procedureAdj[0] === '#')
+        {
+          procedureAdj = procedureAdj = 'z' + procedureAdj.slice(1);
+        }
+      else
+        if (procedureAdj === 'R' || procedureAdj === ' R')
+          {
+            procedureAdj = '#R';
+          }
+        else
+          {
+            procedureAdj = procedureAdj.trim();
+          }
+    };
+
+return procedureAdj;
+$$
+;

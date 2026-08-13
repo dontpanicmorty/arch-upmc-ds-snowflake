@@ -1,0 +1,6 @@
+!set variable_substitution=true;
+CREATE OR REPLACE TABLE RAWDATA.HEALTHPLANET_RS_DBO_OLAP_CMS_FLAG
+LIKE &{IDAP_LAKE}.HEALTHPLANET_RS_STAGE.DBO__OLAP_CMS_FLAG
+;
+
+!set variable_substitution=false;

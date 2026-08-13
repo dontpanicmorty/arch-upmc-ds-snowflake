@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.SYSTEM_RULE_SERVICE_PLAN
+(
+SYSTEM_RULE_ID                 INT,
+NAME                       VARCHAR,
+DESCRIPTION               VARCHAR,
+SERVICE_CATEGORY_ID            INT,
+SERVICE_DESCRIPTION_ID         INT,
+ACTIVITY_SUPPORT_ID            INT,
+AMOUNT                      FLOAT,
+FREQUENCY                      INT,
+REC_MIN                      FLOAT,
+REC_MAX                      FLOAT,
+LAST_UPDATED_BY                INT,
+ACTION                    VARCHAR,
+OVERWRITE_AMOUNT               INT
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

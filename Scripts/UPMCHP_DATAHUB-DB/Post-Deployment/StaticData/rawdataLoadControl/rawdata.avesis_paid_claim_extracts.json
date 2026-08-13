@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "Avesis",
+  "targetTableName": "RAWDATA.AVESIS_PAID_CLAIM_EXTRACTS",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/avesis",
+  "sourceFileFormatName": "RAWDATA.AVESIS_CLAIM_FILE_FORMAT",
+  "sourceFilePattern": "(?i)claim\\/avesis\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}\\/.*DW_Utilization.*[.]txt(.gz|)",
+  "sourceFileDelimitedColumnCount": 51,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

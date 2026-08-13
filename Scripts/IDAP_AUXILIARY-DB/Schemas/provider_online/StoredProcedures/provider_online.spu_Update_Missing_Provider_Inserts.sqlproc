@@ -1,0 +1,82 @@
+!set variable_substitution=true;
+CREATE OR REPLACE PROCEDURE PROVIDER_ONLINE.SPU_UPDATE_MISSING_PROVIDER_INSERTS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = "PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT_PREVIOUS";
+var sourceTableName = "&{IDAP_LAKE}" + ".PROVIDER.PROVIDER_ONLINE_COSMOS_SYNC"
+var sqlLogCommand = "", result = "", statement = "";
+
+// Create Insert Overwrite command
+var sqlCommand = `
+UPDATE 
+    ${targetTableName} p
+SET
+    LAST_AUDIT_ACTION = 'INSERT',
+    PROVIDER_DIRECTORY_JSON_PREVIOUS_MD5 = NULL,
+    LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHERE
+    p.LAST_AUDIT_ACTION = 'UPDATE'
+    AND p.PROVIDER_DIRECTORY_JSON_PREVIOUS_MD5 = p.PROVIDER_DIRECTORY_JSON_CURRENT_MD5
+    AND NOT EXISTS (
+        SELECT 1
+        FROM ${sourceTableName} s
+        WHERE s.ID = p.ID
+    );`;
+
+
+try
+{
+    //Execute SQL Command
+    statement = snowflake.createStatement({ sqlText: sqlCommand });
+    let sqlResult = statement.execute();
+    sqlResult.next();
+    let affectedNum = sqlResult.getNumRowsAffected();
+    result += targetTableName + " succeeded and affected " + affectedNum + " rows " + "\n";
+    let endTime = new Date().toISOString();
+
+    //Log results to table
+      sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+          (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+          VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [targetTableName, "TABLE", startTime, endTime, statement.getNumRowsInserted(), statement.getNumRowsUpdated(), statement.getNumRowsDeleted(), result, statement.getSqlText()]
+          }
+      );
+    
+
+}
+catch (err)
+{
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed'
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message, stack]
+        }
+    );
+    throw message;
+}
+return result;
+$$
+;
+!set variable_substitution=false;

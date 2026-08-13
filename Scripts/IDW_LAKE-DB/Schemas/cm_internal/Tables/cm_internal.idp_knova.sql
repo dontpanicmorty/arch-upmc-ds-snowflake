@@ -1,0 +1,35 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_KNOVA
+(
+HCID                               VARCHAR,
+START_MONTH                         NUMBER(33,5),
+END_MONTH                           NUMBER(33,5),
+TERMED_GE_6_MO_AGO                  NUMBER(33,5),
+TERMED_LAST_6                       NUMBER(33,5),
+PROGRAM_PAID_12                     NUMBER(33,5),
+PROGRAM_PAID_LAST_6                 NUMBER(33,5),
+PROGRAM_PAID_LAST_3                 NUMBER(33,5),
+PERCENT_5_FLAG_PROG                 NUMBER(33,5),
+PERCENT_15_FLAG_PROG                NUMBER(33,5),
+PERCENT_80_FLAG_PROG                NUMBER(33,5),
+INTEGRATED_COST_12                  NUMBER(33,5),
+INTEGRATED_COST_LAST_6              NUMBER(33,5),
+PERCENT_5_FLAG_INT                  NUMBER(33,5),
+PERCENT_15_FLAG_INT                 NUMBER(33,5),
+PERCENT_80_FLAG_INT                 NUMBER(33,5),
+MATERNITY_PAID_12                   NUMBER(33,5),
+MATERNITY_PAID_LAST_6               NUMBER(33,5),
+MATERNITY_STD_12                    NUMBER(33,5),
+MATERNITY_STD_6                     NUMBER(33,5),
+HUI                                 NUMBER(33,5),
+KNOVA_IDENTIFIED_PART_1             NUMBER(33,5),
+KNOVA_IDENTIFIED_PART_2             NUMBER(33,5),
+KNOVA_IDENTIFIED                    NUMBER(33,5),
+HUI_OVER_2                          NUMBER(33,5),
+PROG_PAID_OVER_10K                  NUMBER(33,5),
+PROG_PAID_LAST_3_OVER_3K            NUMBER(33,5),
+NO_MATERNITY_PAID                   NUMBER(33,5),
+KNOVA_ID_NEW_CRITERIA               NUMBER(33,5),
+LAST_UPDATED                 TIMESTAMP_NTZ
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

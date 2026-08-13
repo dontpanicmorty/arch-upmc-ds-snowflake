@@ -1,0 +1,41 @@
+CREATE OR REPLACE TABLE RAWDATA.Dwoao_Vendors
+(     
+       Address1 varchar
+      ,Address2 varchar
+      ,Category varchar
+      ,City varchar
+      ,EmailAddress varchar
+      ,FaxNumber varchar
+      ,FEIN varchar
+      ,HoldPaymentFlagY varchar
+      ,Name varchar
+      ,PhoneNbr varchar
+      ,PrimaryPrefDeliveryMethod varchar
+      ,PrintRemittanceAdvice varchar
+      ,SecondaryPrefDeliveryMeth varchar
+      ,ShortName varchar
+      ,State varchar
+      ,VendorNbr varchar
+      ,VendorPendDate int
+      ,ZipCode varchar
+      ,LastUpdated datetime
+      ,LastApplied datetime
+      ,DeletedFlag datetime
+      ,VendorsSeqNbr int
+      ,CASSCertifiedAddress char
+      ,ElectronicFund char(1)
+      ,SubmitterID char(16)
+      ,CHGLAST datetime
+      ,CHGORIG datetime
+      ,CHGUSER varchar
+      ,TPACLIENT  varchar
+      ,TPADIVISION varchar
+      ,TPAIDOFCLIENT varchar
+      ,TPARowID int
+      ,RowId int
+      ,IRSLienYN  varchar
+      ,IRSLienStartDate decimal(8,0)
+      ,IRSLienEndDate decimal(8,0)
+      ,EDI835 varchar
+      ,NegRemit varchar
+)COMMENT='Replicated from dwOAO database';

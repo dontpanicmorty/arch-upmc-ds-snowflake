@@ -1,0 +1,138 @@
+/*
+Validates that all DWOAO_-prefixed tables in RAWDATA have been updated within
+a certain period of time, and validates that no row counts have changed since
+the most recent logged updates.
+*/
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_DWOAO_TABLES ()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+try {
+  // First: load all dwOAO tables that have been updated within the last N days,
+  // then get the total number of records inserted as part of that last update
+  const LAST_N_DAYS = 10;
+  sqlText = `SELECT TABLE_NAME, INSERT_COUNT
+  FROM INFORMATION_SCHEMA.TABLES
+  LEFT JOIN (
+    -- intermediate query: refining subquery to only tables updated within the last N days
+    SELECT * FROM (
+      -- subquery: most recent end_time for each table, with the number of days since
+      SELECT NAME, TYPE, MAX(END_TIME) AS END_TIME, DATEDIFF('day', MAX(END_TIME), CURRENT_DATE()) AS DAYS_SINCE
+      FROM LOGDATA.TABLE_LOAD_HISTORY 
+      WHERE STARTSWITH(UPPER(NAME), 'DWOAO_')
+      GROUP BY NAME, TYPE
+    ) WHERE DAYS_SINCE < ${LAST_N_DAYS}
+  ) MAX_TABLE_LOAD_HISTORY ON LOWER(MAX_TABLE_LOAD_HISTORY.NAME) = LOWER(TABLE_NAME)
+
+  -- Join on unique keys
+  LEFT JOIN LOGDATA.TABLE_LOAD_HISTORY ON 
+    MAX_TABLE_LOAD_HISTORY.NAME = TABLE_LOAD_HISTORY.NAME 
+    AND MAX_TABLE_LOAD_HISTORY.TYPE = TABLE_LOAD_HISTORY.TYPE 
+    AND MAX_TABLE_LOAD_HISTORY.END_TIME = TABLE_LOAD_HISTORY.END_TIME
+
+  -- Restrictions
+  WHERE STARTSWITH(UPPER(TABLE_NAME), 'DWOAO_') -- OAO tables only
+    AND TABLE_SCHEMA = 'RAWDATA' -- raw tables only
+    AND NOT ENDSWITH(UPPER(TABLE_NAME), 'AUTOREPO') -- exclude build script artifacts
+  ;`;
+
+  resultSet = snowflake.execute({sqlText});
+  let invalidTables = []; // String list of table names with NULL counts
+  let validTableSelects = []; // Set of `SELECT` calls to get actual table counts
+  let countLookup = {}; // Keys are table names, values are counts
+  while (resultSet.next()) {
+    let tableName = resultSet.getColumnValue('TABLE_NAME');
+    let count = resultSet.getColumnValue('INSERT_COUNT');
+
+    // If count is either 0 or NULL, it's not valid
+    if (!count) {
+      invalidTables.push(tableName);
+      continue;
+    }
+    
+    // Otherwise, in case all tables were valid, populate tracking variables
+    countLookup[tableName] = count;
+    validTableSelects.push(`SELECT '${tableName}' AS TABLE_NAME, (SELECT COUNT(*) FROM RAWDATA.${tableName}) AS DB_COUNT`);
+  }
+
+  // If we found invalid tables, terminate early
+  if (invalidTables.length > 0) {
+    throw new Error(`The following tables have not been updated within the last ${LAST_N_DAYS} days: ${invalidTables.join(', ')}.`);
+  }
+
+  // Once the lookup is populated, make a big ol' UNION between all the table/count queries
+  sqlText = validTableSelects.join('\n\nUNION\n\n');
+  resultSet = snowflake.execute({sqlText});
+  while (resultSet.next()) {
+    let tableName = resultSet.getColumnValue('TABLE_NAME');
+    let count = resultSet.getColumnValue('DB_COUNT');
+
+    // Delete all the keys that matched; remaining keys in the object are invalid tables
+    if (count === countLookup[tableName])
+      delete countLookup[tableName];
+  }
+
+  let misalignedTables = Object.keys(countLookup)
+  if (misalignedTables.length > 0) {
+    throw new Error(`The following tables had row counts that did not line up with the most recent logged updates: ${misAlignedTables.join(', ')}.`);
+  }
+
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${validTableSelects.length} tables had counts that lined up with most recent imports from the last ${LAST_N_DAYS} days.',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+  return 'SUCCESS'
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return 'FAILURE';
+}
+$$;

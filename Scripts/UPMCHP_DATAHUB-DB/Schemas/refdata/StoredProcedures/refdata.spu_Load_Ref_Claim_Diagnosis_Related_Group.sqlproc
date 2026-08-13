@@ -1,0 +1,216 @@
+CREATE OR REPLACE PROCEDURE REFDATA.SPU_LOAD_REF_CLAIM_DIAGNOSIS_RELATED_GROUP(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `REFDATA.CLAIM_DIAGNOSIS_RELATED_GROUP`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO REFDATA.CLAIM_DIAGNOSIS_RELATED_GROUP tgt
+USING (
+
+    SELECT
+        CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY,
+        DIAGNOSIS_RELATED_GROUP_CODE,
+        DIAGNOSIS_RELATED_GROUP_CODE_DESC,
+        SEVERITY_OF_ILLNESS_NBR,
+        DIAGNOSIS_RELATED_GROUP_TYPE_CODE,
+        DIAGNOSIS_RELATED_GROUP_VERSION_NBR,
+        DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME,
+        MDC_CODE,
+        MDC_DESC,
+        TO_NUMBER(RELATIVE_VALUE_NBR,9,4) AS RELATIVE_VALUE_NBR,
+        TO_NUMBER(AVERAGE_LENGTH_OF_STAY_NBR,9,4) AS AVERAGE_LENGTH_OF_STAY_NBR,
+        EFFECTIVE_START_DATE,
+        EFFECTIVE_END_DATE
+        FROM ${SOURCE_VIEW_NAME}
+    MINUS
+        SELECT
+        CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY,
+        DIAGNOSIS_RELATED_GROUP_CODE,
+        DIAGNOSIS_RELATED_GROUP_CODE_DESC,
+        SEVERITY_OF_ILLNESS_NBR,
+        DIAGNOSIS_RELATED_GROUP_TYPE_CODE,
+        DIAGNOSIS_RELATED_GROUP_VERSION_NBR,
+        DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME,
+        MDC_CODE,
+        MDC_DESC,
+        TO_NUMBER(RELATIVE_VALUE_NBR,9,4) AS RELATIVE_VALUE_NBR,
+        TO_NUMBER(AVERAGE_LENGTH_OF_STAY_NBR,9,4) AS AVERAGE_LENGTH_OF_STAY_NBR,
+        EFFECTIVE_START_DATE,
+        EFFECTIVE_END_DATE       
+    FROM REFDATA.CLAIM_DIAGNOSIS_RELATED_GROUP
+    ) src
+
+ON (tgt.CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY = src.CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY)  
+
+WHEN MATCHED
+THEN UPDATE
+    SET
+        tgt.LAST_UPDATED_DATETIME = :1
+        ,tgt.DIAGNOSIS_RELATED_GROUP_CODE = src.DIAGNOSIS_RELATED_GROUP_CODE
+        ,tgt.DIAGNOSIS_RELATED_GROUP_CODE_DESC = src.DIAGNOSIS_RELATED_GROUP_CODE_DESC
+        ,tgt.SEVERITY_OF_ILLNESS_NBR = src.SEVERITY_OF_ILLNESS_NBR
+        ,tgt.DIAGNOSIS_RELATED_GROUP_TYPE_CODE = src.DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+        ,tgt.DIAGNOSIS_RELATED_GROUP_VERSION_NBR = src.DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+        ,tgt.DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME= src.DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME
+        ,tgt.MDC_CODE = src.MDC_CODE
+        ,tgt.MDC_DESC = src.MDC_DESC
+        ,tgt.RELATIVE_VALUE_NBR = src.RELATIVE_VALUE_NBR
+        ,tgt.AVERAGE_LENGTH_OF_STAY_NBR = src.AVERAGE_LENGTH_OF_STAY_NBR
+        ,tgt.EFFECTIVE_START_DATE = src.EFFECTIVE_START_DATE
+        ,tgt.EFFECTIVE_END_DATE = src.EFFECTIVE_END_DATE
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY,
+        INSERT_DATETIME,
+        LAST_UPDATED_DATETIME,
+        DIAGNOSIS_RELATED_GROUP_CODE,
+        DIAGNOSIS_RELATED_GROUP_CODE_DESC,
+        SEVERITY_OF_ILLNESS_NBR,
+        DIAGNOSIS_RELATED_GROUP_TYPE_CODE,
+        DIAGNOSIS_RELATED_GROUP_VERSION_NBR,
+        DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME,
+        MDC_CODE,
+        MDC_DESC,
+        RELATIVE_VALUE_NBR,
+        AVERAGE_LENGTH_OF_STAY_NBR,
+        EFFECTIVE_START_DATE,
+        EFFECTIVE_END_DATE        
+    )
+ VALUES 
+    (
+        src.CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY
+        ,:1
+        ,:1
+        ,src.DIAGNOSIS_RELATED_GROUP_CODE
+        ,src.DIAGNOSIS_RELATED_GROUP_CODE_DESC
+        ,src.SEVERITY_OF_ILLNESS_NBR
+        ,src.DIAGNOSIS_RELATED_GROUP_TYPE_CODE  
+        ,src.DIAGNOSIS_RELATED_GROUP_VERSION_NBR  
+        ,src.DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME  
+        ,src.MDC_CODE  
+        ,src.MDC_DESC  
+        ,src.RELATIVE_VALUE_NBR  
+        ,src.AVERAGE_LENGTH_OF_STAY_NBR  
+        ,src.EFFECTIVE_START_DATE       
+        ,src.EFFECTIVE_END_DATE  
+    )
+;`;
+
+// Delete command to remove any entries not in the source data but need to ensure none source data is perserved.
+var sqlDeleteCommand =
+`
+DELETE FROM REFDATA.CLAIM_DIAGNOSIS_RELATED_GROUP
+WHERE CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY NOT IN (SELECT CLAIM_DIAGNOSIS_RELATED_GROUP_HKEY FROM ${SOURCE_VIEW_NAME})
+;
+`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    };
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        };
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Delete Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

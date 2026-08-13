@@ -1,0 +1,14 @@
+CREATE OR REPLACE VIEW DBO.FactAuthorizationNotes_VW
+AS 
+SELECT 	$1:AuthorizationNoteTypeKey::NUMBER(38, 0) AS AuthorizationNoteTypeKey, 
+		$1:DomainSourceKey::NUMBER(38, 0) AS DomainSourceKey, 
+		$1:AUTHORIZATION_ID::NUMBER(38, 0) AS AUTHORIZATION_ID, 
+		$1:NOTE_NUMBER::NUMBER(38, 0) AS NOTE_NUMBER, 
+		$1:NOTES::VARCHAR AS NOTES, 
+		$1:CREATION_DATE::TIMESTAMP_NTZ AS CREATION_DATE, 
+		$1:Partition::NUMBER(38, 0) AS Partition, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime--, 
+		--$1:DW_Hash::VARCHAR AS DW_Hash
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/FactAuthorizationNotes/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);
+

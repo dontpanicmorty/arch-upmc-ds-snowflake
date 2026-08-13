@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+!load ./&{tokenFileName}
+!set variable_substitution=false;
+!load ./StaticData/util.file_loader_control.staticdata.sql;
+!load ./StaticData/util.adf_copy_control.staticdata.sql;
+!load ./StaticData/util.adf_oracle_copy_control.staticdata.sql;
+!load ./StaticData/util.adf_sharepoint_copy_control.staticdata.sql;
+!load ./StaticData/util.adf_sqldb_load_control.staticdata.sql;
+!load ./StaticData/util.adf_hpdsdatalake_file_copy_control.staticdata.sql;
+!load ./StaticData/cms.response_mor_types.staticdata.sql;
+!load ./StaticData/util.adf_mysqldb_load_control.staticdata.sql;

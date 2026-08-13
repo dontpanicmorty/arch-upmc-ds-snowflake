@@ -1,0 +1,6 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_PLANCODESEGMENTIDMASTER
+LIKE &{CDC_MERGE}.DBO.PLANCODESEGMENTIDMASTER;
+ 
+!set variable_substitution=false;

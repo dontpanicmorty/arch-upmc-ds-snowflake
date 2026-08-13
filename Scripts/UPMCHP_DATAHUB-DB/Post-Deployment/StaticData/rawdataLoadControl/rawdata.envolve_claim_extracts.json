@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "claim",
+  "dataSourceName": "Envolve",
+  "targetTableName": "RAWDATA.ENVOLVE_CLAIM_EXTRACTS",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/claim/envolve",
+  "sourceFileFormatName": "RAWDATA.IDAPLAKE_ENVOLVE_CLAIM_FILE_FORMAT",
+  "sourceFilePattern": "claim\\/envolve\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}/\\.*upmchp_datawarehouse_claims_extract_.*\\.txt(\\.gz|)",
+  "sourceFileDelimitedColumnCount": 53,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

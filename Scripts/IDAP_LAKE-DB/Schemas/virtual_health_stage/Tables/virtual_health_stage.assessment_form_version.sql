@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.ASSESSMENT_FORM_VERSION
+(
+ID                              INT,
+IS_ACTUAL                       INT,
+FORM_ID                         INT,
+LAYOUT_ID                       INT,
+LAYOUT_DATA                 VARCHAR,
+LAYOUT_CONTAINERS           VARCHAR,
+LAYOUT_MD5                  VARCHAR,
+FORM_MD5                    VARCHAR,
+CREATED_DATE          TIMESTAMP_NTZ,
+UPDATED_DATE          TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

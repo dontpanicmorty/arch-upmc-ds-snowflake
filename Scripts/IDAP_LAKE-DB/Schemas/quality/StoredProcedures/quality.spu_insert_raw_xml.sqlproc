@@ -1,0 +1,165 @@
+
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_INSERT_RAW_XML("JOB_ID" VARCHAR(16777216), "YEARVAL" VARCHAR(4) DEFAULT '-', "MONTHVAL" VARCHAR(2) DEFAULT '-', "DAYVAL" VARCHAR(2) DEFAULT '-')
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load IDAP_LAKE.QUALITY.RAW_XML'
+EXECUTE AS OWNER
+AS $$
+
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_INSERT_RAW_XML";
+    
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY 
+(RUN_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT,RESULT_TEXT, SQL_STATEMENT,ADF_CONTROL_KEY)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+
+var sqlTruncateCommand = 
+`TRUNCATE TABLE QUALITY.RAW_XML;`;
+
+var sqlUpdateCommand =
+`
+UPDATE QUALITY.RAW_XML
+    SET CS_TRANSACTION_ID = TO_NUMBER( SUBSTR(BASE_FILENAME, 0, LENGTH( BASE_FILENAME ) -4 ));
+`
+
+    try
+    {
+    
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//---------------------------------------
+
+    // truncate QUALITY.CCD_CONTROL table 
+    var sfStatement = snowflake.createStatement({sqlText: sqlTruncateCommand});
+    sfStatement.execute();
+
+
+    var filterPattern = "";    
+
+    // EXAMINE INPUT PARMS AND DETERMINE IF WE SHOULD LIMIT THE COPY
+    // BY YEAR AND/OR MONTH AND/OR DAY
+    if(YEARVAL != ''-'')
+    {
+        filterPattern += "/" + YEARVAL;
+        if(MONTHVAL != ''-'')
+        {
+            filterPattern += "/" + MONTHVAL;
+            if(DAYVAL != ''-'')
+            {
+                filterPattern += "/" + DAYVAL;
+            }
+        }
+    }
+
+    var sqlCopyCommand = `COPY INTO QUALITY.RAW_XML ( XML, FULL_FILENAME, BASE_FILENAME, ROW_NUM, TS_LAST_MODIFY, SCAN_TIME ) 
+           FROM ( 
+               SELECT 
+                  $1 AS XML, 
+                  metadata$filename AS FULL_FILENAME, 
+                  substr( metadata$filename, regexp_instr( metadata$filename,\'[/][^/]*$\') + 1, length(metadata$filename )) AS BASE_FILENAME, 
+                  metadata$file_row_number AS ROW_NUM, 
+                  metadata$file_last_modified AS TS_LAST_MODIFY, 
+                  METADATA$START_SCAN_TIME AS SCAN_TIME 
+               FROM @QUALITY.CLEARSENSE_CCD_XML` + filterPattern + `) 
+               FILE_FORMAT = QUALITY.FF_RAW_XML PATTERN=\'.*.xml\' 
+               ON_ERROR=CONTINUE `;
+         
+    var sfStatement = snowflake.createStatement({sqlText: sqlCopyCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    // Log results to LOGDATA.ADF_TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, "QUALITY.RAW_XML", "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), result, sfStatement.getSqlText(),"QUALITY.SPU_INSERT_RAW_XML"]
+        }
+    );    
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    // Log results to LOGDATA.ADF_TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, "QUALITY.RAW_XML", "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), result, sfStatement.getSqlText(),"QUALITY.SPU_INSERT_RAW_XML"]
+        }
+    ); 
+    
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+     return "Success";
+
+   }
+   catch (err)    
+   {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+
+    
+    endTime = new Date().toISOString();    
+    
+    // Log ERROR results to table ADF_TABLE_LOAD_HISTORY
+    var logErrorCommand = `INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY
+        (RUN_ID,NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT,ADF_CONTROL_KEY)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {sqlText: logErrorCommand,
+        binds:[JOB_ID,
+               "QUALITY.RAW_XML", 
+               "TABLE", 
+               startTime, 
+               endTime, 
+               "FAILURE", 
+               sfStatement.getSqlText(), 
+               err.code, 
+               err.state, 
+               err.message, 
+               err.stackTraceTxt,
+			   "QUALITY.SPU_INSERT_RAW_XML"
+			   ]
+        }
+    );
+        
+        throw err;
+    }
+
+$$;
+

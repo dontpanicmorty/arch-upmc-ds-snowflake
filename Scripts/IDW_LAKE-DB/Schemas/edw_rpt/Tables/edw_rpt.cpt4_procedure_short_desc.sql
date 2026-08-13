@@ -1,0 +1,19 @@
+CREATE OR REPLACE TABLE EDW_RPT.CPT4_PROCEDURE_SHORT_DESC
+(
+CPT4_PROCEDURE_KEY             NUMBER,
+CPT4_CODE                     VARCHAR,
+CPT4_DESC                     VARCHAR,
+CPT4_TYPE                     VARCHAR,
+CPT4_CLASS                    VARCHAR,
+MODIFIER_CODE                 VARCHAR,
+LOAD_DATE               TIMESTAMP_NTZ,
+MODIFIER_DESC                 VARCHAR,
+UPDATE_DATE             TIMESTAMP_NTZ,
+CPT4_CATEGORY_1_KEY            NUMBER,
+CPT4_CATEGORY_2_KEY            NUMBER,
+CPT4_CATEGORY_3_KEY            NUMBER,
+CPT4_CATEGORY_4_KEY            NUMBER,
+CPT4_CATEGORY_5_KEY            NUMBER
+)
+COMMENT='Created for EDWRPT Migration'
+;

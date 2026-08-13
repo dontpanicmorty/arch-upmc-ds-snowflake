@@ -1,0 +1,361 @@
+/***************************************
+***   Static data management script  ***
+***************************************/
+
+-- This script will manage the static data from for UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL
+
+SELECT 'Updating static data table UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL';
+
+-- 1: Define table variable
+CREATE OR REPLACE TEMPORARY TABLE UTIL.TMP_ADF_HPDSDATALAKE_FILE_COPY_CONTROL (
+	ADF_FILE_COPY_CONTROL_KEY VARCHAR(32) NULL,
+    INSERT_DATETIME TIMESTAMP_TZ(9) NOT NULL,
+    UPDATE_DATETIME TIMESTAMP_TZ(9) NOT NULL,
+	IS_ACTIVE BOOLEAN NOT NULL,
+	SOURCE_FILENAME_PATTERN VARCHAR NOT NULL,
+	TARGET_DATA_LAKE_PATH VARCHAR NOT NULL,
+    TARGET_SCHEMA_NAME VARCHAR ,
+	TARGET_TABLE_NAME VARCHAR,
+    TRUNCATE_TABLE_FLAG BOOLEAN NOT NULL,
+    IS_COPY_INTO_FLAG BOOLEAN NOT NULL,
+    COPY_INTO_QUERY VARCHAR,
+    QUERY_FILE_FORMAT VARCHAR,
+    FIXED_WIDTH VARCHAR,
+    CHILD_PIPELINE VARCHAR,
+    ALLOW_DUPLICATE_FILENAME_FLAG BOOLEAN NOT NULL,
+--	CONSTRAINT PK_ADF_FILE_COPY_CONTROL PRIMARY KEY (ADF_FILE_COPY_CONTROL_KEY),
+	CONSTRAINT UK_ADF_FILE_COPY_CONTROL UNIQUE (SOURCE_FILENAME_PATTERN,TARGET_DATA_LAKE_PATH)
+);
+-- 2: Populate the table variable with data
+-- This is where you manage your data in source control. You
+-- can add and modify entries, but because of potential foreign
+-- key contraint violations this script will not delete any
+-- removed entries. If you remove an entry then it will no longer
+-- be added to new databases based on your schema, but the entry
+-- will not be deleted from databases in which the value already exists.
+INSERT INTO UTIL.TMP_ADF_HPDSDATALAKE_FILE_COPY_CONTROL (IS_ACTIVE, INSERT_DATETIME, UPDATE_DATETIME, SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH, TARGET_SCHEMA_NAME, TARGET_TABLE_NAME, TRUNCATE_TABLE_FLAG, IS_COPY_INTO_FLAG, COPY_INTO_QUERY, QUERY_FILE_FORMAT, FIXED_WIDTH, CHILD_PIPELINE, ALLOW_DUPLICATE_FILENAME_FLAG)
+    VALUES 
+(TRUE, '2023-07-10 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-assessment-snpScan__surveyResponse_HASTEXTB', '/assessment/snp/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2023-07-27 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-mmr__', '/cms/mmr/', 'CMS', 'MMR', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_ROW_NUMBER, METADATA$FILE_LAST_MODIFIED AS FILE_LOAD_DATETIME, $1 AS RECORD_DATA FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MMR_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2023-07-19 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000000000000000-claim-ESIF14__F14_BILL_FILE_PMD', '/claim/esi/pmd_weekly/', '', '', FALSE, FALSE, '', '', 'Y', 'PL_MAIN_PHARMACY_LOAD_DIMENSIONS', FALSE ),
+(TRUE, '2026-05-18 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'SPE384_UPMC', '/claim/esi/spe_gcn/', 'CLAIM', 'ESI_SPE384', FALSE, TRUE, '', 'CLAIM.ESI_SPE384_FILE_FORMAT', 'N', 'PL_PharmacyGCNValidation', FALSE),
+(TRUE, '2023-07-27 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-NVA__UPMC_', '/claim/nva/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__HSQ_500_Services', '/pricing/hsq500services/', 'PRICING', 'HEALTHSPARQ_SHOPPABLE_SERVICES', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__HSQ_OONAllowed_Inpatient_Addendum', '/pricing/hsqoonallowedinpatientaddendum/', 'PRICING', 'HEALTHSPARQ_OON_INPATIENT_ALLOWED_AMOUNT', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__HSQ_Product_Code_Xwalk', '/pricing/hsqproductcodexwalk/', 'PRICING', 'HEALTHSPARQ_PRODUCT_CODE_CROSSWALK', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-07-20 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__PlanInfo_', '/pricing/planinfo/', 'PRICING', 'PLAN_INFO', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-07-20 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__Billing_Code_Version_', '/pricing/billingcodeversion/', 'PRICING', 'BILLING_CODE_TYPE', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__PractitionerFeeSchedule', '/pricing/practicionerfeeschedule/', 'PRICING', 'PRACTITIONER_FEE_SCHEDULE', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__InpatientFeeSchedule', '/pricing/inpatientfeeschedule/', 'PRICING', 'INPATIENT_FEE_SCHEDULE', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__ScheduleType', '/pricing/scheduletype/', 'PRICING', 'SCHEDULE_TYPE', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-01 04:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__Billing_Code_LKUP', '/pricing/billingcodelkup/', 'PRICING', 'BILLING_CODE_LKP', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__HSQ_REGION_XWALK_', '/pricing/hsqregionxwalk/', 'PRICING', 'HEALTHSPARQ_ISSUER_REGIONS', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-pricing-UPMC-SF__Location_', '/pricing/location/', 'PRICING', 'LOCATION', TRUE, TRUE, '', 'PRICING.BUSINESS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__UPMC_Medicare_SS_YMCA_', '/provider/upmcmedicaressymca/', 'PROVIDER', 'UPMC_MEDICARE_SILVER_SNEAKERS_YMCA', TRUE, TRUE, '', 'PROVIDER.UPMC_MEDICARE_SILVER_SNEAKERS_YMCA_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__Envolve_UPMC_for_Kids_Print_Directory_', '/provider/envolveupmcforkidsprintdirectory/', 'PROVIDER', 'UPMC_FOR_KIDS', TRUE, TRUE, '', 'PROVIDER.UPMC_FOR_KIDS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__Envolve_UPMC_for_Life_Print_Directory_', '/provider/envolveupmcforlifeprintdirectory/', 'PROVIDER', 'UPMC_FOR_LIFE', TRUE, TRUE, '', 'PROVIDER.UPMC_FOR_LIFE_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__UPMC_Medicare_SilverSneakers_', '/provider/upmcmedicaresilversneakers/', 'PROVIDER', 'UPMC_MEDICARE_SILVER_SNEAKERS', TRUE, TRUE, '', 'PROVIDER.UPMC_MEDICARE_SILVER_SNEAKERS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-11-04 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-PRV414-SF__PRV414W.34', '/provider/prv414/34/', 'PROVIDER', 'PRV414_RAW', TRUE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS INSERT_DATETIME, SUBSTR($1, 1,2000) AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'PROVIDER.PRV414_FILE_FORMAT', 'Y', 'NONE', TRUE ),
+(TRUE, '2025-11-04 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-PRV430-SF__PRV430W.54', '/provider/prv430/54/', 'PROVIDER', 'PRV430', TRUE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS INSERT_DATETIME, SUBSTR($1, 1,9) AS PROMISEPROVIDERNUMBER, SUBSTR($1, 10,4) AS SERVICELOCATION, SUBSTR($1, 14,10) AS NPINUMBER, SUBSTR($1, 24,10) AS TAXONOMYCODE, SUBSTR($1, 34,9) AS ADDRESSZIP, SUBSTR($1, 43,8) AS EFFECTIVEDATE, SUBSTR($1, 51,8) AS ENDDATE, SUBSTR($1, 59,1) AS VALIDATIONINDICATOR, SUBSTR($1, 60,256) AS CURRENTLYPROCESSEDFILENAME FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'PROVIDER.PRV430_FILE_FORMAT', 'Y', 'NONE', TRUE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__ancillaryfile_UPMCHS_locations_', '/provider/ancillaryfileupmchslocations/', 'PROVIDER', 'UPMC_CANCER_CENTER_ANCILLARY', TRUE, TRUE, '', 'PROVIDER.UPMC_CANCER_CENTER_ANCILLARY_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__Envolve_UPMC_for_You_Print_Directory_', '/provider/envolveupmcforyouprintdirectory/', 'PROVIDER', 'UPMC_FOR_YOU', TRUE, TRUE, '', 'PROVIDER.UPMC_FOR_YOU_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-empi-SF__idapProviderGlobal', '/provider/empi/', 'PROVIDER', 'HEALTHPLAN_ID_XWALK', TRUE, TRUE, '', 'PROVIDER.HEALTHPLAN_ID_XWALK_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-10-25 12:12:06.241 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-LexisNexis__', '/provider/lexisnexis/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-10-25 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'U135BU_UPMCLCR_UPMCL_Provider', '/provider/nva/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-07-19 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '_NationsBenefits_Kit_Utilization_UPMC_', '/claim/nationsbenefits/kit_utilization/', 'CLAIM', 'NATIONS_BENEFITS_DATA', FALSE, TRUE, '', 'CLAIM.NATIONS_BENEFITS_DATA_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-07-19 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PaHub_UserProductivityReport', '/claim/pahubuserproductivityreport/', 'CLAIM', 'PAHUB_USER_PRODUCTIVITY', FALSE, TRUE, '', 'CLAIM.PAHUB_USER_PRODUCTIVITY_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'OB_UPMC_Facilities', '/incentive/aver/', 'INCENTIVE', 'AVER_OB_DATA', FALSE, FALSE, '', 'INCENTIVE.AVER_OB_DATA_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), 'upmcp_ppm_idr_outgoing_', '/claim/cotivitippmidr/', 'CLAIM', 'COTIVITI_PPM_DATA_STG', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS INSERT_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CLAIM.COTIVITI_PPM_IDR_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(TRUE, '2023-08-02 12:36:21.113 -0400', CURRENT_TIMESTAMP(), 'UPMC_data_sharing', '/member/carrot_fertility_data/', 'MEMBER', 'CARROT_FERTILITY_DATA', FALSE, TRUE, '', 'MEMBER.CARROT_FERTILITY_DATA_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-03 12:36:21.113 -0400', CURRENT_TIMESTAMP(), 'CCD_FILE_ID_*txt', '/quality/clearsenseccd/drop/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-03 12:36:21.113 -0400', CURRENT_TIMESTAMP(), 'CCD_FILE_ID_*zip', '/quality/clearsenseccd/drop/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'VBID_ACE_', '/incentive/aces/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-enrollment-aetna__IPData_DSNP_AETNA_UPMC', '/enrollment/aetna/dsnp_admissions/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'IPData_DSNP_AC_UPMC_', '/claim/amerihealth/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UPMC_Utilization_File_', '/claim/amplifon/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'AonExchangeHealthData', '/incentive/aon/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CAA25186001_.*_204_D6_Summary_', '/plan/esi/caa_d6_summary/', 'PLAN', 'CAA_D6_SUMMARY', FALSE, TRUE, 'SELECT METADATA$FILENAME, METADATA$FILE_LAST_MODIFIED, METADATA$FILE_ROW_NUMBER, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, \'000001\', \'000001\', \'0001\' FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'PLAN.CAA_D6_SUMMARY_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CAA25186001_.*_204_Main_', '/plan/esi/caa_main/', 'PLAN', 'CAA_MAIN', FALSE, TRUE, 'SELECT METADATA$FILENAME, METADATA$FILE_LAST_MODIFIED, METADATA$FILE_ROW_NUMBER, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, \'000001\', \'000001\', \'0001\', $30 FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'PLAN.CAA_MAIN_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '_204_rxdc_mapping.txt', '/plan/esi/caa_rxdc/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CAA25186001_.*_204_Summary_', '/plan/esi/caa_summary/', 'PLAN', 'CAA_SUMMARY', FALSE, TRUE, 'SELECT METADATA$FILENAME, METADATA$FILE_LAST_MODIFIED, METADATA$FILE_ROW_NUMBER, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, \'000001\', \'000001\', \'0001\' FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'PLAN.CAA_SUMMARY_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CarnegieMellon_', '/claim/cmu/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'ContactDataSnapshot', '/interaction/cavulus/ext/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CommissionEffectiveDateExport', '/interaction/cavulus/sales/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '8Tinp_', '/claim/chip/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '8Tmed_', '/claim/chip/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '8Tpha_', '/claim/chip/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '8Trev_', '/claim/chip/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-enrollment-cigna__CHS_Out_UPMC_', '/enrollment/cigna/dsnp_rx_admissions/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-enrollment-cigna__CHS_OUT_PA_UPMC_Med_CHG', '/enrollment/cigna/dsnp_admissions/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CologuardOrderStatusReport', '/claim/cologuard/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CNV_UPMC_Order_Detail_', '/interaction/convey/returns/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'CNV_UPMC_Return_Detail_', '/interaction/convey/order/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'COVAX_ADMIN', '/claim/covid19/vaccination/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'MAB_ADMIN', '/claim/covid19/mab_data/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UPMC_PBPRESPONSE_', '/member/dhs/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'FFM820-OUTPUT-FILE-UPMC-', '/claim/in820/ind_hdr/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'FFM820-OUTPUT-FILE-UPMC-', '/claim/in820/ind_det/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-enrollment-gateway__GTWY_D_UPMC_', '/enrollment/gateway/dsnp_admissions/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-enrollment-gateway__GTWY_UPMC_RX_', '/enrollment/gateway/dsnp_rx_admissions/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UPMC_IPData_DSNP_GGS_AC_', '/claim/geisinger/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'HP_UPMC_CHC_DSNP_', '/claim/health/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UPMC_GA_EXTRACT_', '/interaction/healthsparq/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'MTH_TRANSACTION_SETTLEMENT_SUM', '/interaction/healthy/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_14475_Caregivers_', '/member/hha_exchange/caregiver/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_PA_*_EVVData_', '/member/hha_exchange/evv_visit/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_14475_Provider_', '/provider/hha_exchange/provider/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'HUM_Out_UPMC_', '/claim/humana/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PPR*.P.OUT', '/claim/in820/ppr/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'SHOP820-OUTPUT', '/claim/in820/shop_hdr/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'SHOP820-OUTPUT', '/claim/in820/shop_det/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'IRT_Detail_Report.csv', '/member/irt/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'Limber_Data', '/interaction/limber/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'WorkPartners_MonValley_Claims', '/incentive/mon/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PTDMODD.D', '/claim/mor/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'MyHealth_Central_PA_Visits', '/incentive/myhealth/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'oasis_dohe_return_', '/claim/oasis/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'OMW_Report', '/interaction/omw/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UCCIDENTALPACYBERDEL', '/incentive/ucci/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-authorization-pahub__PaHub_All_EOC', '/authorization/dhs/pahub/all_eoc/', 'AUTHORIZATION', 'PAHUB_ALL_EOC', FALSE, TRUE, '', 'AUTHORIZATION.PAHUB_ALL_EOC_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PaHub_Authorizations', '/claim/pahub/prior_authorizations/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PaHub_Test_Claims', '/claim/pahub/test_claims/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PHW_Out_D_UPMC_', '/claim/pahw/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'RESULTS_HEDIS_*UPMC', '/claim/results/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-enrollment-aetna__SignMedChg_DSNP_AETNA_UPMC_', '/enrollment/aetna/dsnp_rx_admissions/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'Time_and_Outcome_Report_UPMC_', '/incentive/time/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'HNB_FHLBANK_StopLoss_', '/claim/truescripts/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UHC_TO_UPMC_PA_DSNP_CARETRANSDATA', '/claim/united/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'User_Summary_UPMC_', '/incentive/user/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'Washington_*StopLoss_', '/claim/washington/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2024-05-10 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'MedicareTransactionReport', '/incentive/wex/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-05-28 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-assessment-snpScan__surveyResponse_HASCMSTEXTB', '/assessment/cms/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-05-28 11:36:21.113 -0400', CURRENT_TIMESTAMP(), 'UPMC_Coding_Gap_Resp_Extract_', '/member/holon/', 'MEMBER', 'HOLON_GAP_RESP_DATA', FALSE, TRUE, '', 'MEMBER.HOLON_GAP_RESP_DATA_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(FALSE, '2023-06-25 11:36:21.113 -0400', CURRENT_TIMESTAMP(), 'dds_claims_', '/incentive/dominionarchive/DOMINION/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(FALSE, '2023-07-05 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-assessment-snpScan__surveyResponse_HASBACKDATE', '/assessment/snp_hasbackdate/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-07-05 11:36:21.113 -0400', CURRENT_TIMESTAMP(), '0000010000010001-assessment-snpScan__surveyResponse_HASCMSBACKDATE', '/assessment/cms_hasbackdate/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-10-17 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000000000000000-drug-MediSpanMasterDrugDatabase', '/drug/medispan/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2023-10-17 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-esiClaimRecordDaily-SF__esiClaimRecordDaily_PMD_DAILY_CLAIMS_', '/claim/esi/pmd_daily/', '', '', FALSE, FALSE, '', '', 'Y', 'NONE', FALSE ),
+(TRUE, '2023-01-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-wex__UMA_STDMATransactionExtract', '/claim/wex/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2024-10-09 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'HHAX_OUT_Encounter_', '/claim/hha_exchange/evv_acceptance_outcomes/', 'CLAIM','EVV_ACCEPTANCE_OUTCOMES', FALSE, TRUE, '', 'CLAIM.EVV_ACCEPTANCE_OUTCOMES_CSV_FILE_FORMAT' , 'N', 'NONE', FALSE ),
+(TRUE, '2026-05-27 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'UPMC_Conversio_Dispensing_File_', '/claim/conversio_claims/', 'CLAIM','CONVERSIO_CLAIMS', FALSE, TRUE, '', 'CLAIM.CONVERSIO_CLAIMS_CSV_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2025-06-10 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-member-wex-SF__uma_call_log_details', '/member/wex/call_log_details/', 'MEMBER', 'WEX_REPRESENTATIVE_INTERACTIONS', FALSE, TRUE, '', 'MEMBER.WEX_REPRESENTATIVE_INTERACTIONS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-11 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__Specialty_NUCC', '/provider/specialty_nucc/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-11 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__Facility_Service_Whitelist', '/provider/facility_service_whitelist/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-11 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-UPMC-SF__Facility_Whitelist_Code_Key', '/provider/facility_whitelist_code_key/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-12 15:41:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-nationsbenefits-SF__NationsBenefits_PostDischarge_Utilization', '/claim/nationsbenefits/post_discharge_meals/', 'CLAIM', 'NATIONS_BENEFITS_POST_DISCHARGE_MEALS', FALSE, TRUE, '', 'CLAIM.NATIONS_BENEFITS_POST_DISCHARGE_MEALS_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-23 15:23:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-amplifon-SF__UPMC_Commercial_Claim_Utilization', '/claim/amplifon/commercial_utilization/', 'CLAIM', 'AMPLIFON_COMMERCIAL_UTILIZATION', FALSE, TRUE, '', 'CLAIM.AMPLIFON_COMMERCIAL_UTILIZATION_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-24 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-Envolve__upmchp_datawarehouse_claims_extract', '/claim/envolve/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-24 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-providerClaim-Envolve__upmchp_datawarehouse_providers_extract', '/provider/envolve/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-24 09:09:00.000 -0400', CURRENT_TIMESTAMP(), 'upmchp_invoice_summary', '/claim/envolve/invoice/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-06-30 08:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-member-WellBe-SF__UPMCengagement', '/member/wellbe/UPMCengagement/', 'MEMBER', 'WELLBE_ENGAGEMENT_REPORT', TRUE, TRUE, '', 'MEMBER.WELLBE_ENGAGEMENT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]H[0-9]{4}[.]EDPS_001_DataDuplicate_File[.][0-9]+', '/cms/response/mao-01/data/', 'CMS', 'RESPONSE_MAO_001_STAGE', FALSE, FALSE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, LEFT($1, 1) AS RECORD_TYPE, REGEXP_SUBSTR(FILENAME, \'__(\\\\w*[.]\\\\w*)[.]\', 1, 1, \'ei\', 1) AS FILE_PREFIX, REGEXP_SUBSTR(FILENAME, \'[.]([^\\\\.]*EDPS_001_DataDuplicate[^.]*)[.]\', 1, 1, \'e\', 1) AS FILE_TYPE, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.RESPONSE_FIXED_FILE_FORMAT', 'Y', 'NONE', TRUE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]H[0-9]{4}[.]EDPS_001_DataDuplicate_Rpt[.][0-9]+', '/cms/response/mao-01/report/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]H[0-9]{4}[.]EDPS_002_DataProcessingStatus_File[.][0-9]+', '/cms/response/mao-02/data/', 'CMS', 'RESPONSE_MAO_002_STAGE', FALSE, FALSE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, LEFT($1, 1) AS RECORD_TYPE, REGEXP_SUBSTR(FILENAME, \'__(\\\\w*[.]\\\\w*)[.]\', 1, 1, \'ei\', 1) AS FILE_PREFIX, REGEXP_SUBSTR(FILENAME, \'[.]([^\\\\.]*EDPS_002_DataProcessing[^.]*)[.]\', 1, 1, \'e\', 1) AS FILE_TYPE, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.RESPONSE_FIXED_FILE_FORMAT', 'Y', 'NONE', TRUE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]H[0-9]{4}[.]EDPS_002_DataProcessingStatus_Rpt[.][0-9]+', '/cms/response/mao-02/report/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]RH[0-9]{4}[.]MAO00440[.]D[0-9]+[.]T[0-9]+', '/cms/response/mao-04/data/', 'CMS', 'RESPONSE_MAO_004_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, LEFT($1, 1) AS RECORD_TYPE, $1 AS RECORD, LENGTH($1) AS REC_LEN, REGEXP_SUBSTR(METADATA$FILENAME, \'__(\\\\w*[.]\\\\w*)[.]\', 1, 1, \'ei\', 1) AS FILE_PREFIX, REGEXP_SUBSTR(METADATA$FILENAME, \'[.](\\\\w*)\', 1, 2, \'ei\', 1) AS FILE_TYPE, REGEXP_SUBSTR(METADATA$FILENAME, \'[.](\\\\w*)\', 1, 3, \'ei\', 1) AS FILE_DATE, REGEXP_SUBSTR(METADATA$FILENAME, \'[.](\\\\w*)\', 1, 4, \'ei\', 1) AS FILE_TIME, SUBSTR(RECORD, 3, 7) AS REPORT_TYPE FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.RESPONSE_FIXED_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]RH[0-9]+[.]MAO004[.]D[0-9]+[.]T[0-9]+', '/cms/response/mao-04/report/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-30 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]RH[0-9]+[.]MAO00440[.]D[0-9]{6}[.][0-9]+', '/cms/response/mao-04/report/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P.H*EDS_RESP_CLAIM_NUM', '/cms/response/277/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__*EDS_ACCPT_FUNCT_TRANS', '/cms/response/999/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__P[.]RH[0-9]+[.]HCCMODD[.]D[0-9]+[.]T[0-9]+', '/cms/response/mor/', 'CMS', 'RESPONSE_MOR_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, LEFT($1, 1) AS RECORD_TYPE, REGEXP_SUBSTR(FILENAME, \'__(\\\\w*[.]\\\\w*)[.]\', 1, 1, \'ei\', 1) as FILE_PREFIX, REGEXP_SUBSTR(FILENAME, \'[.](\\\\w*MODD)[.]\', 1, 1, \'e\', 1) AS FILE_TYPE, REGEXP_SUBSTR(FILENAME, \'[.](\\\\w*)\', 1, 3, \'ei\', 1) as FILE_DATE, REGEXP_SUBSTR(FILENAME, \'[.](\\\\w*)\', 1, 4, \'ei\', 1) as FILE_TIME, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.RESPONSE_FIXED_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(TRUE, '2025-07-03 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-response-CMS-SF__.*PTDMODD.D', '/cms/response/mor/', 'CMS', 'RESPONSE_MOR_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, LEFT($1, 1) AS RECORD_TYPE, REGEXP_SUBSTR(FILENAME, \'__(\\\\w*[.]\\\\w*)[.]\', 1, 1, \'ei\', 1) as FILE_PREFIX, REGEXP_SUBSTR(FILENAME, \'[.](\\\\w*MODD)[.]\', 1, 1, \'e\', 1) AS FILE_TYPE, REGEXP_SUBSTR(FILENAME, \'[.](\\\\w*)\', 1, 3, \'ei\', 1) as FILE_DATE, REGEXP_SUBSTR(FILENAME, \'[.](\\\\w*)\', 1, 4, \'ei\', 1) as FILE_TIME, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.RESPONSE_FIXED_FILE_FORMAT', 'Y', 'NONE', FALSE ),
+(TRUE, '2025-07-31 15:36:43.073 -0400', CURRENT_TIMESTAMP(), 'campaign_history_export_', '/evolve_crm/evolve/campaign_history_export/', 'EVOLVE_CRM', 'CAMPAIGN_HISTORY_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.CAMPAIGN_HISTORY_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-08-01 11:03:32.599 -0400', CURRENT_TIMESTAMP(), 'campaign_report_export_', '/evolve_crm/evolve/campaign_report_export/', 'EVOLVE_CRM', 'CAMPAIGN_REPORT_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.CAMPAIGN_REPORT_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-08-01 12:36:52.880 -0400', CURRENT_TIMESTAMP(), 'event_data_export_', '/evolve_crm/evolve/event_data_export/', 'EVOLVE_CRM', 'EVENT_DATA_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.EVENT_DATA_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-08-01 14:42:47.590 -0400', CURRENT_TIMESTAMP(), 'event_rsvp_data_export_', '/evolve_crm/evolve/event_rsvp_data_export/', 'EVOLVE_CRM', 'EVENT_RSVP_DATA_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.EVENT_RSVP_DATA_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-08-06 10:22:01.375 -0400', CURRENT_TIMESTAMP(), 'repdata_export_', '/evolve_crm/evolve/repdata_export/', 'EVOLVE_CRM', 'REPDATA_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.REPDATA_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-08-08 13:11:42.667 -0400', CURRENT_TIMESTAMP(), 'lead_data_profile_export_', '/evolve_crm/evolve/lead_data_profile_export/', 'EVOLVE_CRM', 'LEAD_DATA_PROFILE_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.LEAD_DATA_PROFILE_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-08-18 15:43:42.928 -0400', CURRENT_TIMESTAMP(), 'Automatic_Membership_', '/evolve_crm/evolve/automatic_membership/', 'EVOLVE_CRM', 'AUTOMATIC_MEMBERSHIP', TRUE, TRUE, '', 'EVOLVE_CRM.AUTOMATIC_MEMBERSHIP_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2025-08-27 16:09:03.193 -0400', CURRENT_TIMESTAMP(), 'notes_export_', '/evolve_crm/evolve/notes_export/', 'EVOLVE_CRM', 'NOTES_EXPORT', TRUE, TRUE, '', 'EVOLVE_CRM.NOTES_EXPORT_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2025-09-19 14:10:30.507 -0400', CURRENT_TIMESTAMP(), 'UPMC_Genesys_Log_', '/evolve_crm/evolve/upmc_genesys_log/', 'EVOLVE_CRM', 'UPMC_GENESYS_LOG', FALSE, TRUE, '', 'EVOLVE_CRM.UPMC_GENESYS_LOG_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Armstrong__ACMH_LAB', '/lab/armstrong/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Butler__BUTLER_LAB', '/lab/butler/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Conemaugh__Conemaugh_Lab', '/lab/conemaugh/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Excela__excela_lab', '/lab/excela/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Genesis__GENESIS_UPMC_LAB', '/lab/genesis/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Indiana__indiana_lab', '/lab/indiana/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Kirby__KIRBY_LAB', '/lab/kirby/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Lancaster__LGH_UPMC', '/lab/lancaster/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Mars__healthscreen2', '/lab/mars/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Mars__Mars_lab_LKP', '/lab/mars/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-MonValley__MVH_1_LAB', '/lab/monvalley/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Pinnacle__PINNACLE_LAB', '/lab/pinnacle/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-PPCP__PPCP_LAB', '/lab/ppcp/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Quest__UPMC_HP', '/lab/quest/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Somerset__Somerset_LAB_LEAD', '/lab/somerset/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-StClair__StClair_Lab', '/lab/stclair/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ), 
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-Washington__Washington_lab', '/lab/washington/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-02 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-ChcPde__2[FCJNS]KPMD', '/claim/chc/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-esi__ESI_UPMC_CM_NATL_WAG_CustomWAN', '/provider/esi/upmc_cm_natl/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-esi__ESI_UPMC_COMMERCIAL', '/provider/esi/upmc_commercial/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-esi__ESI_UPMC_CUSTOM_EAN', '/provider/esi/upmc_custom/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-esi__ESI_UPMC_MEDICAID', '/provider/esi/upmc_medicaid/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-esi__ESI_UPMC_MEDICARE', '/provider/esi/upmc_medicare/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-cigna__Cigna_PPO', '/provider/cigna/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2025-10-23 09:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-member-empi__hp_member_extract', '/member/empi/member_extract/', 'MEMBER', 'EMPI_DAILY_GLOBAL', TRUE, TRUE, '', 'MEMBER.EMPI_DAILY_GLOBAL_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-04 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-PRV414-SF__PRV414W.35', '/provider/prv414/35/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-04 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-PRV414-SF__PRV414W.54', '/provider/prv414/54/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-04 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-PRV430-SF__PRV430W.34', '/provider/prv430/34/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-04 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-PRV430-SF__PRV430W.35', '/provider/prv430/35/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-2C', '/dhs/chc_mco/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-2F', '/dhs/chc_mco/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-2J', '/dhs/chc_mco/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-2N', '/dhs/chc_mco/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-2S', '/dhs/chc_mco/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-34', '/dhs/warehouse1434/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-35', '/dhs/warehouse1434/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-3E', '/dhs/warehouse1434/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-3G', '/dhs/warehouse1434/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-54', '/dhs/warehouse1434/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-12 08:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__Warehouse-File-8T', '/dhs/warehouse1434/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-19 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-member-government_programs__MACountyCodes', '/member/government_programs/ma_county_codes/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-11-28 12:40:30.000 -0500', CURRENT_TIMESTAMP(), '0000010000010001-claim-helpscript-SF__UPMC.SRXABLDTI.PDN', '/claim/helpscript/medical_claims/', 'CLAIM', 'HELPSCRIPTS_BILLING_DETAIL', FALSE, TRUE, '', 'CLAIM.HELPSCRIPTS_BILLING_DETAIL_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-12-09 15:10:00.000 -0400', CURRENT_TIMESTAMP(), 'F14_BILL_ADJ_FILE_PMD', '/claim/esi/pmd_weekly_adj/', 'CLAIM', 'ESI_CLAIM_RECORD_ADJ_F14', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS INSERT_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CLAIM.ESI_CLAIM_RECORD_ADJ_F14_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2025-12-17 12:40:30.000 -0500', CURRENT_TIMESTAMP(), '0000010000010001-claim-newserhist-SF__8Tinp', '/claim/newserhist/chip_history/', 'CLAIM', 'CHIP_NEWSERHIST_INPATIENT', FALSE, TRUE, '', 'CLAIM.CHIP_NEWSERHIST_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-12-17 12:40:30.000 -0500', CURRENT_TIMESTAMP(), '0000010000010001-claim-newserhist-SF__8Tmed', '/claim/newserhist/chip_history/', 'CLAIM', 'CHIP_NEWSERHIST_MEDICAL', FALSE, TRUE, '', 'CLAIM.CHIP_NEWSERHIST_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-12-17 12:40:30.000 -0500', CURRENT_TIMESTAMP(), '0000010000010001-claim-newserhist-SF__8Tpha', '/claim/newserhist/chip_history/', 'CLAIM', 'CHIP_NEWSERHIST_PHARMACY', FALSE, TRUE, '', 'CLAIM.CHIP_NEWSERHIST_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-12-17 12:40:30.000 -0500', CURRENT_TIMESTAMP(), '0000010000010001-claim-newserhist-SF__8Trev', '/claim/newserhist/chip_history/', 'CLAIM', 'CHIP_NEWSERHIST_REVENUE', FALSE, TRUE, '', 'CLAIM.CHIP_NEWSERHIST_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2025-12-09 15:09:00.000 -0400', CURRENT_TIMESTAMP(), 'NationsBenefits_FitnessKit_Utilization_UPMC', '/claim/nationsbenefits/fitness_kit_utilization/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2026-01-09 15:10:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-provider-kyruus__KYRUUS_UPMC_URLS', '/provider/kyruus/online_scheduling_url/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE),
+(TRUE, '2025-12-09 15:09:00.000 -0400', CURRENT_TIMESTAMP(), '000001_000001_0001_pricing_UPMC-SF_OutpatientFeeSchedule', '/pricing/hospitaloutpatientfeeschedule/', 'PRICING', 'OUTPATIENT_FEE_SCHEDULE', TRUE, TRUE, '', 'PRICING.BUSINESS_COMMA_DELIM_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-01-16 15:10:00.000 -0400', CURRENT_TIMESTAMP(), 'UPMC.155662.PROD.Subscriber', '/member/inspira/subscriber/', 'MEMBER', 'INSPIRA_SUBSCRIBER_FSA', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, CURRENT_TIMESTAMP() AS LAST_UPDATED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, SUBSTRING($1, 0, 3) AS RECORD_TYPE, TO_DATE(LEFT(RIGHT(METADATA$FILENAME, 19), 8), \'YYYYMMDD\') AS FILE_DATE, TO_TIME(LEFT(RIGHT(METADATA$FILENAME, 10), 6), \'HH24MISS\') AS FILE_TIME, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'MEMBER.INSPIRA_SUBSCRIBER_FSA_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-01-27 15:10:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-trr__P', '/cms/medicare_enrollment/trr/', 'CMS', 'TRANSACTION_REPLY', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-02 15:10:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-lepd__P', '/cms/medicare_enrollment/lepd/', 'CMS', 'LATE_ENROLLMENT_PENALTY', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.LATE_ENROLLMENT_PENALTY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-04 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-mpwrd__P', '/cms/medicare_enrollment/mpwrd/', 'CMS', 'MONTHLY_PREMIUM_WITHHOLDING_REPORT', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MONTHLY_PREMIUM_WITHHOLDING_REPORT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-09 13:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-bcss__P.R', '/cms/bcss/', 'CMS', 'BATCH_COMPLETION_STATUS_SUMMARY', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.BATCH_COMPLETION_STATUS_SUMMARY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-lishist__P', '/cms/medicare_enrollment/lishist/', 'CMS', 'LIS_HISTORY', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-fefd__P', '/cms/medicare_enrollment/fefd/', 'CMS', 'FULL_ENROLLMENT', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-norx__P', '/cms/medicare_enrollment/norx/', 'CMS', 'MONTHLY_NORX', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-lisprmd__P', '/cms/medicare_enrollment/lisprmd/', 'CMS', 'LIS_PART_D_PREMIUM', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-adua__P', '/cms/medicare_enrollment/adua/', 'CMS', 'MA_FULL_DUAL_AUTO_ASSIGNMENT_NOTIFICATION', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-mcmd__P', '/cms/medicare_enrollment/mcmd/', 'CMS', 'MEDICARE_ADVANTAGE_MEDICAID_STATUS', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-mspcobma__P', '/cms/medicare_enrollment/mspcobma/', 'CMS', 'MONTHLY_MEDICARE_SECONDARY_PAYER_PART_C', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-claimdat__P', '/cms/medicare_enrollment/claimdat/', 'CMS', 'PART_B_CLAIMS', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-marxcobs__P', '/cms/medicare_enrollment/marxcobs/', 'CMS', 'COB_OHI_ANNUAL_SUMMARY', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-comprpt__P', '/cms/medicare_enrollment/comprpt/', 'CMS', 'AGENT_BROKER_COMPENSATION_REPORT', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-eoylosd__P', '/cms/medicare_enrollment/eoylosd/', 'CMS', 'LOSS_OF_SUBSIDY', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-spclpex__P', '/cms/medicare_enrollment/spclpex/', 'CMS', 'NO_PREMIUM_DUE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-02-13 14:13:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-marxcoba__P', '/cms/medicare_enrollment/marxcoba/', 'CMS', 'ANNUAL_COB_OHI_FULL_REPLACEMENT', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.MEDICARE_ENROLLMENT_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-03-13 14:18:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-dhs-dhs__pend_enroll', '/dhs/pend_enroll/', 'DHS', 'MEDICAID_PEND_ENROLL', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'DHS.MEDICAID_PEND_ENROLL_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-03-30 09:04:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-drexirx__DREXI_SL', '/claim/drexirx/stoploss/', 'CLAIM', 'DREXI_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.DREXI_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-04-09 09:04:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-authorization-agadia__ALL_EOC_INFO_REPORT_UPMC', '/authorization/agadia/rxpriorauthorization/', 'AUTHORIZATION', 'RX_PRIOR_AUTHORIZATION', FALSE, TRUE, '', 'AUTHORIZATION.RX_PRIOR_AUTHORIZATION_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-05-01 20:22:00.000 -0400', CURRENT_TIMESTAMP(), 'NationsBenefits_Wellness_Kit_Utilization_OTC_Items', '/claim/nationsbenefits/produce_meals_item/', 'CLAIM', 'NATIONS_BENEFITS_PRODUCE_MEALS_ITEM', FALSE, TRUE, '', 'CLAIM.NATIONS_BENEFITS_PRODUCE_MEALS_ITEM_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2026-05-01 20:22:00.000 -0400', CURRENT_TIMESTAMP(), 'NationsBenefits_Wellness_Kit_Utilization_OTC_Orders', '/claim/nationsbenefits/produce_meals_order/', 'CLAIM', 'NATIONS_BENEFITS_PRODUCE_MEALS_ORDER', FALSE, TRUE, '', 'CLAIM.NATIONS_BENEFITS_PRODUCE_MEALS_ORDER_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2026-05-01 20:22:00.000 -0400', CURRENT_TIMESTAMP(), 'NationsBenefits_Wellness_Kit_Utilization_Meals', '/claim/nationsbenefits/shelf_stable_meals_file/', 'CLAIM', 'NATIONS_BENEFITS_SHELF_STABLE_MEALS_FILE', FALSE, TRUE, '', 'CLAIM.NATIONS_BENEFITS_SHELF_STABLE_MEALS_FILE_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2026-04-29 07:27:29.901 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-greenbackhealth__GBH_TO_UPMCHP_CLAIMS', '/claim/greenbackhealth/price_my_meds/', 'CLAIM', 'GREENBACK_RX_CLAIM_FILE', TRUE, TRUE, '', 'CLAIM.GREENBACK_RX_CLAIM_FILE_FORMAT', 'N', 'PL_GBH_F14_TO_ORACLE', FALSE),
+(TRUE, '2026-05-22 09:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_*_PatientDem', '/member/hha_exchange/patient_demographics/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2026-05-22 09:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_*_PatientNotes', '/member/hha_exchange/patient_notes/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2026-05-22 09:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_*_DW_Visits', '/member/hha_exchange/patient_visits/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2026-05-22 09:09:00.000 -0400', CURRENT_TIMESTAMP(), 'PROOUT_*_DW_Auth', '/authorization/hha_exchange/patient_auth/', '', '', FALSE, FALSE, '', '', 'N', 'NONE', FALSE ),
+(TRUE, '2026-06-04 09:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_ERROR_SUMMARY', '/cms/drug_event/error_summary/', 'CMS', 'DRUG_EVENT_ERROR_SUMMARY_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD, CASE WHEN CASE WHEN LEFT($1, 5) = ''HDRSH'' THEN ''HDRSH'' WHEN LEFT($1, 3) IN (''BHD'',''BTR'',''TLR'') THEN LEFT($1, 3) ELSE ''DTL'' END IN (''HDRSH'',''BHD'',''BTR'',''TLR'') THEN $1 ELSE RPAD($1, 512, '' '') || COALESCE(LAST_VALUE(CASE WHEN LEFT($1, 3) = ''BHD'' THEN $1 END) IGNORE NULLS OVER (PARTITION BY METADATA$FILENAME ORDER BY METADATA$FILE_ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), '''') END AS HEADER_APPENDED_RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-06-25 16:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_P2P_PDE_ACC_COV', '/cms/drug_event/40_cov/', 'CMS', 'DRUG_EVENT_40COV_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-06-25 16:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_P2P_PDE_ACC_OTC', '/cms/drug_event/40_otc/', 'CMS', 'DRUG_EVENT_40OTC_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-06-16 09:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_P2P_RECEIVABLE', '/cms/drug_event/41_cov/', 'CMS', 'DRUG_EVENT_41COV_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-06-18 09:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_P2P_PARTD_RECON', '/cms/drug_event/42_cov/', 'CMS', 'DRUG_EVENT_42COV_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER,$1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-06-19 09:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_P2P_PAYABLE', '/cms/drug_event/43_cov/', 'CMS', 'DRUG_EVENT_43COV_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER,$1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-06-10 15:36:43.073 -0400', CURRENT_TIMESTAMP(), 'Evolve_MemberWindowDetail_', '/evolve_crm/evolve/memberwindowdetail/', 'EVOLVE_CRM', 'MEMBER_WINDOW_DETAIL', TRUE, TRUE, '', 'EVOLVE_CRM.MEMBER_WINDOW_DETAIL_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2026-06-12 15:38:43.073 -0400', CURRENT_TIMESTAMP(), 'AEP_Lead_Nurturing_File_', '/evolve_crm/evolve/aepleadnurturing/', 'EVOLVE_CRM', 'AEP_LEAD_NURTURING', TRUE, TRUE, '', 'EVOLVE_CRM.AEP_LEAD_NURTURING_FILE_FORMAT', 'N', 'NONE', FALSE ),
+(TRUE, '2026-06-30 09:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-cvs__FILE.BNT871.CMUUPMC.DT', '/claim/cvs/stoploss/cmu/', 'CLAIM', 'CMU_CVS_STOPLOSS_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS LOADED_FILE_ROW_NUMBER, LEFT($1, 2) AS RECORD_TYPE, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CLAIM.CMU_CVS_STOPLOSS_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-07 09:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_CUM_BENE_ACT_COV', '/cms/drug_event/ddps_cov/', 'CMS', 'DRUG_EVENT_DDPS_COV_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER,$1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-07 10:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_CUM_BENE_ACT_OTC', '/cms/drug_event/ddps_otc/', 'CMS', 'DRUG_EVENT_DDPS_OTC_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER,$1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-07 11:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_TRANS_VALIDATION', '/cms/drug_event/ddps_return/', 'CMS', 'DRUG_EVENT_DDPS_RETURN_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD, CASE WHEN CASE WHEN LEFT($1, 5) = ''HDRSH'' THEN ''HDRSH'' WHEN LEFT($1, 3) IN (''BHD'',''BTR'',''TLR'') THEN LEFT($1, 3) ELSE ''DTL'' END IN (''HDRSH'',''BHD'',''BTR'',''TLR'') THEN $1 ELSE RPAD($1, 1000, '' '') || COALESCE(LAST_VALUE(CASE WHEN LEFT($1, 3) = ''BHD'' THEN $1 END) IGNORE NULLS OVER (PARTITION BY METADATA$FILENAME ORDER BY METADATA$FILE_ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), '''') END AS HEADER_APPENDED_RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-07 12:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__UPMC_PMDA_DDPS_', '/cms/drug_event/ddps_return/', 'CMS', 'DRUG_EVENT_DDPS_RETURN_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD, CASE WHEN CASE WHEN LEFT($1, 5) = ''HDRSH'' THEN ''HDRSH'' WHEN LEFT($1, 3) IN (''BHD'',''BTR'',''TLR'') THEN LEFT($1, 3) ELSE ''DTL'' END IN (''HDRSH'',''BHD'',''BTR'',''TLR'') THEN $1 ELSE RPAD($1, 1000, '' '') || COALESCE(LAST_VALUE(CASE WHEN LEFT($1, 3) = ''BHD'' THEN $1 END) IGNORE NULLS OVER (PARTITION BY METADATA$FILENAME ORDER BY METADATA$FILE_ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), '''') END AS HEADER_APPENDED_RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-17 15:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-esi__RxBenefits_SomersetTrust_', '/claim/esi/somerset_stoploss/', 'CLAIM', 'RX_CARVE_OUT_SOMERSET_CURRENT', FALSE, TRUE, '', 'CLAIM.RX_CARVE_OUT_SOMERSET_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-07-17 16:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-proact__UPMC_ProActRx_Stop_Loss_', '/claim/proact/stoploss/', 'CLAIM', 'PROACT_STOPLOSS_CLAIMS_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CLAIM.PROACT_STOPLOSS_CLAIMS_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-06 09:03:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-cvs__FILE.BNT871.DUQUPMC', '/claim/cvs/stoploss/duquesne/', 'CLAIM', 'CVS_STOPLOSS_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS LOADED_FILE_ROW_NUMBER, LEFT($1, 2) AS RECORD_TYPE, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CLAIM.CVS_STOPLOSS_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-07-20 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__HERITAGEVALLEYHEALTHSYSTEMHIGHMARK', '/claim/truescripts/rx_stoploss/heritagevalleyhealthsystemhighmark/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-07-22 13:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-aetna__CarnegieMellon_', '/claim/aetna/cmu_stoploss/', 'CLAIM', 'CMU_AETNA_STOPLOSS_CURRENT', FALSE, TRUE, '', 'CLAIM.CMU_AETNA_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-07-23 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__JVMANUFACTURING', '/claim/truescripts/rx_stoploss/jvmanufacturing/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-07-27 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__HNB_SCHNEIDERDOWNS', '/claim/truescripts/rx_stoploss/hnb_schneiderdowns/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-03 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__GLASSMEREFUELS', '/claim/truescripts/rx_stoploss/glassmerefuels/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-03 09:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__PROPELCHARTERSCHOOLSHIGHMARK', '/claim/truescripts/rx_stoploss/propelcharterschoolshighmark/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-03 09:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__PROPELCHARTERSCHOOLSUPMC', '/claim/truescripts/rx_stoploss/propelcharterschoolsupmc/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-03 09:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__HERITAGEVALLEYHEALTHSYSTEMUPMC', '/claim/truescripts/rx_stoploss/heritagevalleyhealthsystemupmc/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-04-07 13:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-lab-epic__UPMCEpicBridgesIPLabs', '/lab/epic_mars/', 'LAB', 'EPIC_MARS', TRUE, TRUE, '', 'LAB.EPIC_MARS_CSV_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-04 17:30:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-partd__RPT.DDPS_PRS_EXCLUSION', '/cms/partd_exclusion/', 'CMS', 'PARTD_EXCLUSION_WARNING_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-08-05 09:45:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_CUM_BENE_ACT_ENH', '/cms/drug_event/ddps_enh/', 'CMS', '', FALSE, FALSE, '', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-08-05 10:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-cms-drugevent__RPT.DDPS_P2P_PDE_ACC_ENH', '/cms/drug_event/40_enh/', 'CMS', '', FALSE, FALSE, '', 'CMS.TRANSACTION_REPLY_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-08-10 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__HNB_FHLBANK', '/claim/truescripts/rx_stoploss/hnb_fhlbank/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-10 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__NON_HERITAGEVALLEYHEALTHSYSTEMHIGHMARK', '/claim/truescripts/rx_stoploss/non_heritagevalleyhealthsystemhighmark/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-10 07:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-claim-truescripts__NON_HERITAGEVALLEYHEALTHSYSTEMUPMC', '/claim/truescripts/rx_stoploss/non_heritagevalleyhealthsystemupmc/', 'CLAIM', 'TRUESCRIPTS_RX_STOPLOSS', FALSE, TRUE, '', 'CLAIM.TRUESCRIPTS_RX_STOPLOSS_FILE_FORMAT', 'N', 'NONE', FALSE),
+(TRUE, '2026-08-10 16:00:00.000 -0400', CURRENT_TIMESTAMP(), '_iev503m01.txt', '/dhs/oim/member_eligibility/', 'DHS', 'OIM_HEADER_AND_DETAIL_STAGE', FALSE, TRUE, 'SELECT METADATA$FILENAME AS FILENAME, METADATA$FILE_LAST_MODIFIED AS FILE_LAST_MODIFIED_DATETIME, METADATA$FILE_ROW_NUMBER AS ROW_NUMBER, $1 AS RECORD FROM @UTIL.HPDSDATALAKE_IDAPLAKE', 'DHS.OIM_HEADER_AND_DETAIL_FILE_FORMAT', 'Y', 'NONE', FALSE),
+(TRUE, '2026-08-10 11:00:00.000 -0400', CURRENT_TIMESTAMP(), '0000010000010001-authorization-agadia__UPMC_Authorizations', '/authorization/agadia/prior_authorization/', 'AUTHORIZATION', 'PA_HUB_PRIOR_AUTHORIZATIONS_CURRENT', FALSE, TRUE, '', 'AUTHORIZATION.PA_HUB_PRIOR_AUTH_FILE_FORMAT', 'N', 'NONE', FALSE)
+;
+
+-- 3: Update the File Copy Control Key for all records
+UPDATE UTIL.TMP_ADF_HPDSDATALAKE_FILE_COPY_CONTROL
+SET ADF_FILE_COPY_CONTROL_KEY = UTIL.FXN_ARRAY_HASH([SOURCE_FILENAME_PATTERN,TARGET_DATA_LAKE_PATH])
+;
+
+-- 4: Check for Duplicates
+--Check for bad data in the temp table before merging
+EXECUTE IMMEDIATE $$
+DECLARE
+  dup_primary_key_exception EXCEPTION (-20001, 'DUPLICATE Primary Keys Detected.');
+  dup_unique_key_exception EXCEPTION (-20002, 'DUPLICATE Unique Keys Detected.');
+  dup_count INTEGER;
+BEGIN
+    SELECT COUNT(1) INTO :dup_count 
+        FROM(SELECT ADF_FILE_COPY_CONTROL_KEY, COUNT(1) FROM UTIL.TMP_ADF_HPDSDATALAKE_FILE_COPY_CONTROL GROUP BY ADF_FILE_COPY_CONTROL_KEY HAVING COUNT(1) > 1);
+    IF (dup_count > 0) THEN
+    RAISE dup_primary_key_exception;
+	END IF;
+
+    SELECT COUNT(1) INTO :dup_count 
+        FROM(SELECT SOURCE_FILENAME_PATTERN,TARGET_DATA_LAKE_PATH, COUNT(1) FROM UTIL.TMP_ADF_HPDSDATALAKE_FILE_COPY_CONTROL GROUP BY SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH HAVING COUNT(1) > 1);
+    IF (dup_count > 0) THEN
+    RAISE dup_unique_key_exception;
+	END IF;
+END;
+$$;
+
+-- 5: merge new and updated records
+MERGE INTO UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL AS TGT
+USING (SELECT ADF_FILE_COPY_CONTROL_KEY, IS_ACTIVE, INSERT_DATETIME, SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH, TARGET_SCHEMA_NAME, TARGET_TABLE_NAME, TRUNCATE_TABLE_FLAG, IS_COPY_INTO_FLAG, COPY_INTO_QUERY, QUERY_FILE_FORMAT, FIXED_WIDTH, CHILD_PIPELINE, ALLOW_DUPLICATE_FILENAME_FLAG
+    FROM UTIL.TMP_ADF_HPDSDATALAKE_FILE_COPY_CONTROL
+	MINUS 
+	SELECT ADF_FILE_COPY_CONTROL_KEY, IS_ACTIVE, INSERT_DATETIME, SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH, TARGET_SCHEMA_NAME, TARGET_TABLE_NAME, TRUNCATE_TABLE_FLAG, IS_COPY_INTO_FLAG, COPY_INTO_QUERY, QUERY_FILE_FORMAT, FIXED_WIDTH, CHILD_PIPELINE, ALLOW_DUPLICATE_FILENAME_FLAG
+    FROM UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL
+	) AS SRC
+
+ON (TGT.SOURCE_FILENAME_PATTERN = SRC.SOURCE_FILENAME_PATTERN
+AND TGT.TARGET_DATA_LAKE_PATH = SRC.TARGET_DATA_LAKE_PATH)
+
+WHEN MATCHED 
+THEN UPDATE
+	SET TGT.ADF_FILE_COPY_CONTROL_KEY = SRC.ADF_FILE_COPY_CONTROL_KEY,
+    TGT.IS_ACTIVE = SRC.IS_ACTIVE,
+    TGT.INSERT_DATETIME = SRC.INSERT_DATETIME,
+    TGT.UPDATE_DATETIME = CURRENT_TIMESTAMP(),
+    TGT.SOURCE_FILENAME_PATTERN = SRC.SOURCE_FILENAME_PATTERN,
+    TGT.TARGET_DATA_LAKE_PATH = SRC.TARGET_DATA_LAKE_PATH,
+    TGT.TARGET_SCHEMA_NAME = SRC.TARGET_SCHEMA_NAME,
+    TGT.TARGET_TABLE_NAME = SRC.TARGET_TABLE_NAME,
+    TGT.TRUNCATE_TABLE_FLAG = SRC.TRUNCATE_TABLE_FLAG,
+    TGT.IS_COPY_INTO_FLAG = SRC.IS_COPY_INTO_FLAG,
+    TGT.COPY_INTO_QUERY = SRC.COPY_INTO_QUERY, 
+    TGT.QUERY_FILE_FORMAT = SRC.QUERY_FILE_FORMAT,
+    TGT.FIXED_WIDTH = SRC.FIXED_WIDTH,
+    TGT.CHILD_PIPELINE = SRC.CHILD_PIPELINE,
+    TGT.ALLOW_DUPLICATE_FILENAME_FLAG = SRC.ALLOW_DUPLICATE_FILENAME_FLAG
+
+WHEN NOT MATCHED 
+THEN INSERT
+	(ADF_FILE_COPY_CONTROL_KEY, IS_ACTIVE, INSERT_DATETIME, UPDATE_DATETIME, SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH, TARGET_SCHEMA_NAME, TARGET_TABLE_NAME, TRUNCATE_TABLE_FLAG, IS_COPY_INTO_FLAG, COPY_INTO_QUERY, QUERY_FILE_FORMAT, FIXED_WIDTH, CHILD_PIPELINE, ALLOW_DUPLICATE_FILENAME_FLAG)
+VALUES
+	(SRC.ADF_FILE_COPY_CONTROL_KEY, SRC.IS_ACTIVE, SRC.INSERT_DATETIME, CURRENT_TIMESTAMP(), SRC.SOURCE_FILENAME_PATTERN, SRC.TARGET_DATA_LAKE_PATH, SRC.TARGET_SCHEMA_NAME, SRC.TARGET_TABLE_NAME, SRC.TRUNCATE_TABLE_FLAG, SRC.IS_COPY_INTO_FLAG, SRC.COPY_INTO_QUERY, SRC.QUERY_FILE_FORMAT, SRC.FIXED_WIDTH, SRC.CHILD_PIPELINE, ALLOW_DUPLICATE_FILENAME_FLAG)
+;
+-- 6: Delete obsolete records
+DELETE FROM UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL TGT
+USING
+(SELECT SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH
+	FROM UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL
+	MINUS 
+	SELECT SOURCE_FILENAME_PATTERN, TARGET_DATA_LAKE_PATH
+	FROM UTIL.tmp_ADF_HPDSDATALAKE_FILE_COPY_CONTROL
+	) SRC
+WHERE TGT.SOURCE_FILENAME_PATTERN = SRC.SOURCE_FILENAME_PATTERN
+AND TGT.TARGET_DATA_LAKE_PATH = SRC.TARGET_DATA_LAKE_PATH
+;
+
+SELECT 'Finished updating static data table UTIL.ADF_HPDSDATALAKE_FILE_COPY_CONTROL';

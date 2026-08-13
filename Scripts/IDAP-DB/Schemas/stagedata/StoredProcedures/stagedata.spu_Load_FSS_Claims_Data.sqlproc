@@ -1,0 +1,140 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_FSS_CLAIMS_DATA("START_DATE" DATE DEFAULT CURRENT_DATE(), "END_DATE" DATE DEFAULT CURRENT_DATE())
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS '
+/* get procedure start time and set variables */
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `STAGEDATA.FSS_CLAIMS_DATA`;
+
+/* Create INSERT OVERWRITE statement to be executed */
+var sqlInsertCommand =
+`
+INSERT OVERWRITE INTO STAGEDATA.FSS_CLAIMS_DATA
+    (FSS_CLAIMS_DATA_KEY,
+	FACT_CLAIM_LINE_KEY,
+	FACT_CLAIM_LINE_LAST_UPDATED_DATETIME,
+    DIM_CLAIM_HEADER_KEY,
+    DIM_CLAIM_HEADER_LAST_UPDATED_DATETIME,
+    DIM_CLAIM_DETAIL_KEY,
+    DIM_CLAIM_DETAIL_LAST_UPDATED_DATETIME,
+    CLAIM_NBR,
+	CLAIM_LINE_NBR,
+	CLAIM_SEQUENCE_NBR,
+	PROCEDURE_ADJ_CODE,
+	LOB_CODE,
+	CPT4_CODE,
+	REVENUE_CODE,
+	ICD_DX_CODE,
+	ICD_DX_VERSION,
+	ICD_DX_GROUP,
+	ICD_PROC_CODE,
+	ICD_PROC_VERSION,
+	BENEFIT_CATEGORY_CODE,
+	LOCATION_CODE,
+	SERVICE_TYPE,
+	PLACE_OF_SERVICE_CODE,
+	PROVIDER_TYPE_DESC,
+	PROVIDER_TYPE,
+	PROVIDER_SPECIALTY,
+	HIAA_POS
+    )
+SELECT
+    (SELECT IFNULL(MAX(FSS_CLAIMS_DATA_KEY), 1000) FROM STAGEDATA.FSS_CLAIMS_DATA) + ROW_NUMBER() OVER (ORDER BY 1) AS FSS_CLAIMS_DATA_KEY,
+	FACT_CLAIM_LINE_KEY,
+	FACT_CLAIM_LINE_LAST_UPDATED_DATETIME,
+    DIM_CLAIM_HEADER_KEY,
+    DIM_CLAIM_HEADER_LAST_UPDATED_DATETIME,
+    DIM_CLAIM_DETAIL_KEY,
+    DIM_CLAIM_DETAIL_LAST_UPDATED_DATETIME,
+    CLAIM_NBR,
+	CLAIM_LINE_NBR,
+	CLAIM_SEQUENCE_NBR,
+	PROCEDURE_ADJ_CODE,
+	LOB_CODE,
+	CPT4_CODE,
+	REVENUE_CODE,
+	ICD_DX_CODE,
+	ICD_DX_VERSION,
+	ICD_DX_GROUP,
+	ICD_PROC_CODE,
+	ICD_PROC_VERSION,
+	BENEFIT_CATEGORY_CODE,
+	LOCATION_CODE,
+	SERVICE_TYPE,
+	PLACE_OF_SERVICE_CODE,
+	PROVIDER_TYPE_DESC,
+	PROVIDER_TYPE,
+	PROVIDER_SPECIALTY,
+	HIAA_POS
+FROM STAGEDATA.FSS_CLAIMS_DATA_SELECT_VW
+WHERE GREATEST(FACT_CLAIM_LINE_LAST_UPDATED_DATETIME, DIM_CLAIM_HEADER_LAST_UPDATED_DATETIME, DIM_CLAIM_DETAIL_LAST_UPDATED_DATETIME) >= TO_TIMESTAMP(SUBSTR(''${START_DATE}'', 5, 11), ''MON DD YYYY'')
+AND GREATEST(FACT_CLAIM_LINE_LAST_UPDATED_DATETIME, DIM_CLAIM_HEADER_LAST_UPDATED_DATETIME, DIM_CLAIM_DETAIL_LAST_UPDATED_DATETIME) < TO_TIMESTAMP(DATEADD(''DAY'',1,TRY_TO_DATE(SUBSTR(''${END_DATE}'', 5, 11), ''MON DD YYYY'')))
+;`;
+
+try 
+{
+    /*Execute INSERT OVERRIDE Command */
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCommand});
+    var resultSet = sfStatement.execute();
+    var endTime = new Date().toISOString();
+    
+    /*Get first row of result set for logging */
+    resultSet.next();
+
+    var result = "Succeeded";
+
+    /*Log results to table*/
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,resultSet.getColumnValueAsString("number of rows inserted")
+            ,result
+            ,sfStatement.getSqlText()
+            ,sfStatement.getQueryId()
+        ]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds:
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,result
+            ,sfStatement.getSqlText()
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ,sfStatement.getQueryId()
+        ]
+        }
+    );        
+    throw result;
+}
+return result;
+';

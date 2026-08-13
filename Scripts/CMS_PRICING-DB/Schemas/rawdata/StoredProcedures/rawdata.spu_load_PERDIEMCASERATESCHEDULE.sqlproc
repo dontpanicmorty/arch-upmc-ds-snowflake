@@ -1,0 +1,89 @@
+/**
+Truncates and loads the RAWDATA.DWOAO_PERDIEMCASERATESCHEDULE table from MC400 Database. 
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_CMS_RAWDATA_DWOAO_PERDIEMCASERATESCHEDULE()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+
+
+try {
+  sqlText = `INSERT OVERWRITE INTO RAWDATA.DWOAO_PERDIEMCASERATESCHEDULE(PERDIEMCASERATESCHEDULE,CASETYPE,LEVELNUMBER,EFFECTIVEDATE,TERMINATIONDATE,PRICERULECODE,DESCRIPTION,SINGLEADMISSIONFLAG,MAXIMUMBILLEDCHARGES,
+MAXIMUMPAIDSTOPLOSSS,MAXIMUMDAYSRANGE,MAXIMUMDAYSLAPSE,MAXIMUMVISITSDAYS,CASERATEAMOUNT,PERCENTAGEAMOUNT,ASCSCHEDULE,MAXALLOWEDPERDAY,MAXIMUMQUANTITY,
+APPLYPAYMENTTOPREVLINES,MAXIMUMPERCENTAGETHRESHOLD,MINIMUMPERCENTAGETHRESHOLD,PERCENTAGEOFBILLED,MAXPAIDSTOPLOSSFLAG,MAXQTYSTOPLOSSFLAG,
+RESETCASEHISTEACHCLAIM,TPACLIENT,TPAIDOFCLIENT,TPADIVISION,CHGUSER,CHGORIG,CHGLAST)
+
+SELECT PERDIEMCASERATESCHEDULE,CASETYPE,LEVELNUMBER,EFFECTIVEDATE,TERMINATIONDATE,PRICERULECODE,TRIM(DESCRIPTION),NULLIF(SINGLEADMISSIONFLAG, ''),MAXIMUMBILLEDCHARGES,
+MAXIMUMPAIDSTOPLOSSS,MAXIMUMDAYSRANGE,MAXIMUMDAYSLAPSE,MAXIMUMVISITSDAYS,CASERATEAMOUNT,PERCENTAGEAMOUNT,NULLIF(ASCSCHEDULE, ''),MAXALLOWEDPERDAY,MAXIMUMQUANTITY,
+NULLIF(APPLYPAYMENTTOPREVLINES, ''),MAXIMUMPERCENTAGETHRESHOLD,MINIMUMPERCENTAGETHRESHOLD,PERCENTAGEOFBILLED,NULLIF(MAXPAIDSTOPLOSSFLAG, ''),NULLIF(MAXQTYSTOPLOSSFLAG, ''),
+NULLIF(RESETCASEHISTEACHCLAIM, ''),TPACLIENT,TPAIDOFCLIENT,TPADIVISION,CHGUSER,CHGORIG,CHGLAST 
+FROM  &{MC400}.DWOAO.PERDIEMCASERATESCHEDULE`;
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;
+
+!set variable_substitution=false;

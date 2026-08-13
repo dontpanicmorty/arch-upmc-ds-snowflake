@@ -1,0 +1,157 @@
+# Snowflake pipeline
+name: Snowflake Pending Build $(Build.BuildID)
+appendCommitMessageToRunName: false
+resources:
+  repositories:
+    - repository: DS-YAML_TEMPLATES
+      type: git
+      ref: refs/heads/master
+      name: DS-YAML_TEMPLATES
+trigger:
+  branches:
+    include: 
+     - master
+     - dev
+     - tst
+  paths:
+    include:
+     - Scripts/*-DB/*
+    exclude:
+     - Scripts/ZZ_*/*
+pool:
+  name: DS-WindowsAgents
+parameters:
+  - name: DBtoBuild
+    displayName: 'Database to Build'
+    default: 'Select_Database'
+    values:
+      - IDAP
+      - IDAP_LAKE
+      - IDW
+      - IDW_LAKE
+      - CLI
+      - CLI_LAKE
+      - CCBH
+      - CCBH_LAKE
+      - CMS_PRICING
+      - CMS_PRICING_2
+      - DWSKYGEN
+      - EMMA
+      - FDB
+      - HEALTHPLANET_APP
+      - HEALTHPLANET_RS
+      - IDAP_AUXILIARY
+      - MC400
+      - TPA_SHARED
+      - UPMCHP_DATAHUB
+      - USAGE_DATA
+      - MARKETPLACE_INF
+      - MESSAGECENTER
+      - VIRTUAL_HEALTH
+      - ENCOUNTER_DATA_MANAGEMENT_CORE
+      - ENCOUNTER_DATA_MANAGEMENT_REPORT
+      - ENCOUNTER_DATA_MANAGEMENT_STAGING
+      - EDI_EDGE
+      - DBEXTRACT
+      - GENESYS_RS
+      - FDB
+      - UPMCHP_DATA_QUALITY
+      - EPIC_CABOODLE
+      - EPIC_CLARITY
+      - Select_Database
+  - name: PostDeployOnlyFlag
+    displayName: 'Only Execute Post-Deployment Scripts'
+    type: boolean
+    default: false
+variables:
+- name: dbsDefined
+  value: IDAP,IDAP_LAKE,IDW,IDW_LAKE,CLI,CLI_LAKE,CCBH,CCBH_LAKE,CMS_PRICING,CMS_PRICING_2,DWSKYGEN,EMMA,HEALTHPLANET_APP,HEALTHPLANET_RS,IDAP_AUXILIARY,MC400,TPA_SHARED,UPMCHP_DATAHUB,USAGE_DATA,MARKETPLACE_INF,MESSAGECENTER,VIRTUAL_HEALTH,ENCOUNTER_DATA_MANAGEMENT_CORE,ENCOUNTER_DATA_MANAGEMENT_REPORT,ENCOUNTER_DATA_MANAGEMENT_STAGING,EDI_EDGE,DBEXTRACT,GENESYS_RS,FDB,UPMCHP_DATA_QUALITY,EPIC_CABOODLE,EPIC_CLARITY
+- name: pipeline_dbtoBuild
+  value: ${{ parameters.dbtoBuild }}
+- name: pipeline_scripts_path
+  value: $(Build.SourcesDirectory)/DS-YAML_TEMPLATES/pipeline_scripts/snowflake
+- name: pipeline_compare_tool_path
+  value:  $(Build.SourcesDirectory)/DS-YAML_TEMPLATES/utilities/SnowflakeCompare/deploy
+- template: variables/variables.snowflake.shared.common.yml@DS-YAML_TEMPLATES
+- template: variables/variables.snowflake.data_services.common.yml@DS-YAML_TEMPLATES
+- group: DS-Snowflake-Secrets
+- ${{ if eq(variables['BUILD.SOURCEBRANCHNAME'], 'dev') }}:
+  - template: variables/variables.snowflake.data_services.tokens.dev.yml@DS-YAML_TEMPLATES
+  - template: variables/variables.snowflake.data_services.dev.yml@DS-YAML_TEMPLATES
+- ${{ if eq(variables['BUILD.SOURCEBRANCHNAME'], 'tst') }}:
+  - template: variables/variables.snowflake.data_services.tokens.tst.yml@DS-YAML_TEMPLATES
+  - template: variables/variables.snowflake.data_services.tst.yml@DS-YAML_TEMPLATES
+- ${{ if eq(variables['BUILD.SOURCEBRANCHNAME'], 'master') }}:
+  - template: variables/variables.snowflake.data_services.tokens.prd.yml@DS-YAML_TEMPLATES
+  - template: variables/variables.snowflake.data_services.prd.yml@DS-YAML_TEMPLATES
+
+stages:
+- stage: Build
+  displayName: Pre-Build
+  jobs:
+  - job: Build1
+    displayName: Pre-Build Job
+    workspace: 
+      clean: all
+    steps:
+      - checkout: self
+        clean: true
+        persistCredentials: true
+      - checkout: DS-YAML_TEMPLATES
+        clean: true
+        persistCredentials: true
+      - template: tasks/task.snowflake.find_db_changes.yml@DS-YAML_TEMPLATES
+- ${{ each var1 in split(variables.dbsDefined, ',') }}:
+  - stage: ${{ var1 }}_Stage
+    displayName: ${{ var1 }}
+    dependsOn: Build
+    variables: 
+      pipeline_dbfoundtobuild: $[ Dependencies.Build.outputs['Build1.FindDBChanges.dbfoundtobuild'] ]
+      pipeline_dbtoBuildNow: ${{ var1 }}
+    condition: and(contains(variables['pipeline_dbfoundtobuild'], '${{ var1 }}-DB'),succeeded())
+    jobs:
+        - job: BuildJob_${{ var1 }}
+          displayName: Build ${{ var1 }}
+          workspace: 
+            clean: all
+          steps:
+            - checkout: self
+              clean: true
+              persistCredentials: true
+            - checkout: DS-YAML_TEMPLATES
+              clean: true
+              persistCredentials: true
+
+            - template: tasks/task.common.view_env_variables.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.ds.snowflake.check_running_pipelines.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.snowflake.download_secure_file.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.replace_tokens.yml@DS-YAML_TEMPLATES
+            - ${{ if eq(parameters.PostDeployOnlyFlag, false)}}:
+              - template: tasks/task.snowflake.build_shell_db.yml@DS-YAML_TEMPLATES
+              - template: tasks/task.snowflake.compare_db.yml@DS-YAML_TEMPLATES
+              - template: tasks/task.snowflake.drop_shell_db.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.snowflake.copy_artifacts.yml@DS-YAML_TEMPLATES
+
+        - job: DeployJob_${{ var1 }}
+          displayName: Deploy ${{ var1 }}
+          dependsOn: BuildJob_${{ var1 }}
+          condition: succeeded()
+          workspace: 
+            clean: all
+          steps:
+            - checkout: self
+              clean: true
+              persistCredentials: true
+            - checkout: DS-YAML_TEMPLATES
+              clean: true
+              persistCredentials: true
+            - download: current
+              artifact: $(Build.BuildID)_$(pipeline_dbtoBuildNow)_Drop
+
+            - template: tasks/task.common.view_env_variables.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.ds.snowflake.check_running_pipelines.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.snowflake.download_secure_file.yml@DS-YAML_TEMPLATES
+            - ${{ if eq(parameters.PostDeployOnlyFlag, false)}}:
+              - template: tasks/task.snowflake.view_publish_file.yml@DS-YAML_TEMPLATES
+              - template: tasks/task.snowflake.execute_publish.yml@DS-YAML_TEMPLATES
+            - template: tasks/task.snowflake.execute_postDeployment.yml@DS-YAML_TEMPLATES

@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "member",
+  "dataSourceName": "UPMC-HP",
+  "targetTableName": "RAWDATA.HP_ANALYTICS_PRODUCT_LOOKUP",
+  "sourceCloneTableName": "IDW_LAKE.HPANALYTICS.PRODUCT_LOOKUP",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": null
+}

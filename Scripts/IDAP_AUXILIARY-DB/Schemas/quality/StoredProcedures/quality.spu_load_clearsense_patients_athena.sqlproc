@@ -1,0 +1,495 @@
+
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_LOAD_CLEARSENSE_PATIENTS_ATHENA("RUN_ID" VARCHAR(16777216), "DATA_FLOW_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load QUALITY.CCD_PATIENTS_ATHENA from XML_SECTION'
+EXECUTE AS OWNER
+AS '
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_LOAD_CLEARSENSE_PATIENTS_ATHENA";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = ''Y'' AND DATA_FLOW_NAME = :1 AND STEP_PROCEDURE_NAME = :2
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,null
+    ,''Starting''
+    )
+`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Succeeded''
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Error''
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.PATIENTS_ATHENA - START
+//-----------------------------------------
+
+
+    var sqlLogCommand = `
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+
+
+    var sqlDeletePatientsAthenaCommand = ` 
+DELETE FROM QUALITY.CCD_PATIENTS_ATHENA WHERE MRN IN ( SELECT DISTINCT MRN FROM QUALITY.SECTION_XML ); 
+`;
+
+
+    var sqlInsertCcdPatientsAthenaCommand = `
+INSERT INTO QUALITY.CCD_PATIENTS_ATHENA(
+     FILENAME,
+     MRN,
+     SECTION_TITLE,
+     HEADER_XMLNS,
+     HEADER_XMLNS_SDTC,
+     HEADER_XMLNS_VOC,
+     HEADER_XMLNS_XSI,
+     HEADER_REALM_CODE,
+     HEADER_TYPE_ID_EXTENSION,
+     HEADER_TYPE_ID_ROOT,
+     TEMPLATE_ID_EXTENSION_1,
+     TEMPLATE_ID_ROOT_1,
+     TEMPLATE_ID_ROOT_2,
+     TEMPLATE_ID_EXTENSION_3,
+     TEMPLATE_ID_ROOT_3,
+     TEMPLATE_ID_ROOT_4,
+     ID_EXTENSION,
+     ID_ROOT,
+     HEADER_CODE,
+     HEADER_CODE_SYSTEM,
+     HEADER_CODE_SYSTEM_NAME,
+     HEADER_DISPLAY_NAME,
+     EFFECTIVE_TIME,
+     CONFIDENTIALITY_CODE,
+     CONFIDENTIALITY_CODE_SYSTEM,
+     CONFIDENTIALITY_CODE_SYSTEM_NAME,
+     CONFIDENTIALITY_CODE_DISPLAY_NAME,
+     LANGUAGE_CODE,
+     HL7_GMA_ID_EXT,
+     HL7_GMA_ID_OID,
+     PAT_ROLE_PATIENT_ID,
+     PAT_ROLE_PATIENT_ID_OID,
+     PAT_ROLE_PATIENT_MRN,
+     PAT_ROLE_PATIENT_MRN_OID,
+     ADDRESS_USE,
+     STREET_ADDRESS_LINE_1,
+     STREET_ADDRESS_LINE_2,
+     CITY,
+     STATE,
+     ZIP_CODE,
+     TELECOM_USE_1,
+     TELEPHONE_NUMBER,
+     TELECOM_USE_2,
+     TELECOM_VALUE_2,
+     TELECOM_USE_3,
+     TELECOM_VALUE_3,
+     PATIENT_USE_1,
+     PATIENT_QUALIFIER_1,
+     PATIENT_NAME_1,
+     PATIENT_USE_2,
+     PATIENT_QUALIFIER_2,
+     PATIENT_NAME_2,
+     ADMIN_GENDER_CODE,
+     ADMIN_GENDER_CODE_SYSTEM,
+     ADMIN_GENDER_CODE_SYSTEM_NAME,
+     ADMIN_GENDER_DISPLAY_NAME,
+     PATIENT_BIRTH_DATE,
+     DECEASED_INDICATOR,
+     MARITAL_STATUS_CODE,
+     MARITAL_STATUS_CODE_SYSTEM,
+     MARITAL_STATUS_CODE_SYSTEM_NAME,
+     MARITAL_STATUS_DISPLAY_NAME,
+     RACE_CODE_NULL,
+     RACE_CODE,
+     RACE_CODE_SYSTEM,
+     RACE_CODE_SYSTEM_NAME,
+     RACE_CODE_DISPLAY_NAME,
+     ETHNIC_GROUP_NULL,
+     ETHNIC_GROUP_CODE,
+     ETHNIC_GROUP_CODE_SYSTEM,
+     ETHNIC_GROUP_CODE_SYSTEM_NAME,
+     ETHNIC_GROUP_DISPLAY_NAME,
+     ETHNIC_LANGUAGE_CODE,
+     LANGUAGE_PREFERRED_IND,
+     CUSTODIAN_TYPE_CODE,
+     ASSIGNED_CLASS_CODE,
+     REP_ORG_CLASS_CODE,
+     CUST_API_RESOURCE_ID,
+     CUST_API_RESOURCE_ID_OID,
+     CUST_NPI,
+     CUST_NPI_OID,
+     CUST_FEDERAL_TAX_ID,
+     CUST_FEDERAL_TAX_ID_OID,
+     REP_CUST_ORG_NAME,
+     REP_CUST_ORG_TELECOM_USE,
+     REP_CUST_ORG_TELEPHONE_NUMBER,
+     REP_CUST_ORG_STREET_ADDRESS_1,
+     REP_CUST_ORG_STREET_ADDRESS_2,
+     REP_CUST_ORG_CTIY,
+     REP_CUST_ORG_STATE,
+     REP_CUST_ORG_POSTAL_CODE,
+     INFO_RECIP_DOCTOR_FACILITY,
+     INFO_RECIP_DOCTOR_FACILITY_OID,
+     INFO_RECIP_NPI,
+     INFO_RECIP_NPI_OID,
+     INFO_RECIPIENT_NAME,
+     PARTICIPANT_TYPE_CODE,
+     PARTICIPANT_CLASS_CODE,
+     PARTICIPANT_NULLVAL,
+     PARTICIPANT_ADDR_NULLVAL,
+     PARTICIPANT_TELECOM_NULLVAL,
+     PARTICIPANT_PERSON_NULLVAL,
+     PARTICIPANT_NAME_NULLVAL,
+     SERVICE_EVENT_CLASS_CODE,
+     SERVICE_EVENT_TIME_TYPE,
+     SERVICE_EVENT_TIME_LOW,
+     SERVICE_EVENT_TIME_HIGH,
+     PATIENT_ATHENA_HKEY,
+     XML_DATA_ROW_NUM,
+     XML_DATA_TS_LAST_MODIFY,
+     SCAN_TIME
+)
+SELECT
+     FILENAME,
+     MRN,
+     SECTION_TITLE,
+     HEADER_XMLNS,
+     HEADER_XMLNS_SDTC,
+     HEADER_XMLNS_VOC,
+     HEADER_XMLNS_XSI,
+     HEADER_REALM_CODE,
+     HEADER_TYPE_ID_EXTENSION,
+     HEADER_TYPE_ID_ROOT,
+     TEMPLATE_ID_EXTENSION_1,
+     TEMPLATE_ID_ROOT_1,
+     TEMPLATE_ID_ROOT_2,
+     TEMPLATE_ID_EXTENSION_3,
+     TEMPLATE_ID_ROOT_3,
+     TEMPLATE_ID_ROOT_4,
+     ID_EXTENSION,
+     ID_ROOT,
+     HEADER_CODE,
+     HEADER_CODE_SYSTEM,
+     HEADER_CODE_SYSTEM_NAME,
+     HEADER_DISPLAY_NAME,
+     EFFECTIVE_TIME,
+     CONFIDENTIALITY_CODE,
+     CONFIDENTIALITY_CODE_SYSTEM,
+     CONFIDENTIALITY_CODE_SYSTEM_NAME,
+     CONFIDENTIALITY_CODE_DISPLAY_NAME,
+     LANGUAGE_CODE,
+     HL7_GMA_ID_EXT,
+     HL7_GMA_ID_OID,
+     PAT_ROLE_PATIENT_ID,
+     PAT_ROLE_PATIENT_ID_OID,
+     PAT_ROLE_PATIENT_MRN,
+     PAT_ROLE_PATIENT_MRN_OID,
+     ADDRESS_USE,
+     STREET_ADDRESS_LINE_1,
+     STREET_ADDRESS_LINE_2,
+     CITY,
+     STATE,
+     ZIP_CODE,
+     TELECOM_USE_1,
+     TELEPHONE_NUMBER,
+     TELECOM_USE_2,
+     TELECOM_VALUE_2,
+     TELECOM_USE_3,
+     TELECOM_VALUE_3,
+     PATIENT_USE_1,
+     PATIENT_QUALIFIER_1,
+     PATIENT_NAME_1,
+     PATIENT_USE_2,
+     PATIENT_QUALIFIER_2,
+     PATIENT_NAME_2,
+     ADMIN_GENDER_CODE,
+     ADMIN_GENDER_CODE_SYSTEM,
+     ADMIN_GENDER_CODE_SYSTEM_NAME,
+     ADMIN_GENDER_DISPLAY_NAME,
+     PATIENT_BIRTH_DATE,
+     DECEASED_INDICATOR,
+     MARITAL_STATUS_CODE,
+     MARITAL_STATUS_CODE_SYSTEM,
+     MARITAL_STATUS_CODE_SYSTEM_NAME,
+     MARITAL_STATUS_DISPLAY_NAME,
+     RACE_CODE_NULL,
+     RACE_CODE,
+     RACE_CODE_SYSTEM,
+     RACE_CODE_SYSTEM_NAME,
+     RACE_CODE_DISPLAY_NAME,
+     ETHNIC_GROUP_NULL,
+     ETHNIC_GROUP_CODE,
+     ETHNIC_GROUP_CODE_SYSTEM,
+     ETHNIC_GROUP_CODE_SYSTEM_NAME,
+     ETHNIC_GROUP_DISPLAY_NAME,
+     ETHNIC_LANGUAGE_CODE,
+     LANGUAGE_PREFERRED_IND,
+     CUSTODIAN_TYPE_CODE,
+     ASSIGNED_CLASS_CODE,
+     REP_ORG_CLASS_CODE,
+     CUST_API_RESOURCE_ID,
+     CUST_API_RESOURCE_ID_OID,
+     CUST_NPI,
+     CUST_NPI_OID,
+     CUST_FEDERAL_TAX_ID,
+     CUST_FEDERAL_TAX_ID_OID,
+     REP_CUST_ORG_NAME,
+     REP_CUST_ORG_TELECOM_USE,
+     REP_CUST_ORG_TELEPHONE_NUMBER,
+     REP_CUST_ORG_STREET_ADDRESS_1,
+     REP_CUST_ORG_STREET_ADDRESS_2,
+     REP_CUST_ORG_CTIY,
+     REP_CUST_ORG_STATE,
+     REP_CUST_ORG_POSTAL_CODE,
+     INFO_RECIP_DOCTOR_FACILITY,
+     INFO_RECIP_DOCTOR_FACILITY_OID,
+     INFO_RECIP_NPI,
+     INFO_RECIP_NPI_OID,
+     INFO_RECIPIENT_NAME,
+     PARTICIPANT_TYPE_CODE,
+     PARTICIPANT_CLASS_CODE,
+     PARTICIPANT_NULLVAL,
+     PARTICIPANT_ADDR_NULLVAL,
+     PARTICIPANT_TELECOM_NULLVAL,
+     PARTICIPANT_PERSON_NULLVAL,
+     PARTICIPANT_NAME_NULLVAL,
+     SERVICE_EVENT_CLASS_CODE,
+     SERVICE_EVENT_TIME_TYPE,
+     SERVICE_EVENT_TIME_LOW,
+     SERVICE_EVENT_TIME_HIGH,
+     PATIENT_ATHENA_HKEY,
+     ROW_NUM,
+     TS_LAST_MODIFY,
+     SCAN_TIME
+FROM QUALITY.CCD_PATIENTS_ATHENA_VW;
+`;
+
+//-----------------------------------------
+//-- SQL to load QUALITY.PATIENTS_ATHENA - END
+//-----------------------------------------
+
+
+
+
+    try
+    {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME,stepProcedureName]
+        });        
+
+        // check and handle for empty response
+        if(!lookupSet.next())
+        {     
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString(''DATA_DOMAIN_NAME'');    
+        stepOrderNumber = lookupSet.getColumnValue(''STEP_ORDER_NUMBER'');
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+
+
+
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//---------------------------------------
+  
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeletePatientsAthenaCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log record deletion stats to LOGDATA.TABLE_LOAD_HISTORY
+    var sqlLogCommandDel = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT,RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);
+`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommandDel,
+        binds: [RUN_ID, "QUALITY.CCD_PATIENTS_ATHENA", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(), 
+                sfStatement.getNumRowsDeleted(), 
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+
+
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCcdPatientsAthenaCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log Insert results to LOGDATA.TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [RUN_ID, "QUALITY.CCD_PATIENTS_ATHENA", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(),				
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+
+
+        
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+
+
+
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+        return "Success";
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }        
+';

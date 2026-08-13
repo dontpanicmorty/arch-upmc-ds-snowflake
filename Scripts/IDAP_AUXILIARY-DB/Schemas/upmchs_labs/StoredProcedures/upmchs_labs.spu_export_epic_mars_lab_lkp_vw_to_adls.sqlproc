@@ -1,0 +1,40 @@
+CREATE OR REPLACE PROCEDURE UPMCHS_LABS.SPU_EXPORT_EPIC_MARS_LAB_LKP_VW_TO_ADLS()
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+    function formatDate(d) {
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let dd = String(d.getDate()).padStart(2, '0');
+        return yyyy + mm + dd;
+    }
+
+    var runDate = formatDate(new Date());
+    var fileName = "epic_Mars_lab_LKP_" + runDate + ".txt";
+
+    var copySql = `
+        COPY INTO @util.snowflakedata_ae2_outgoing/upmchs_labs/${fileName}
+        FROM (
+            SELECT 
+                FULL_NAME,
+                TO_VARCHAR(DOB, 'MM/DD/YYYY') AS DOB,
+                MRN,
+                GROUP_NUMBER,
+                MEMBER_NBR,
+                ACCT_NBR,
+                SSN
+            FROM UPMCHS_LABS.EPIC_MARS_LAB_LKP_VW
+            ORDER BY FULL_NAME
+        )
+        FILE_FORMAT = UPMCHS_LABS.EPIC_MARS_LAB_LKP_VW_ADLS_FILE_FORMAT
+        SINGLE = TRUE
+        MAX_FILE_SIZE = 5368709120
+        OVERWRITE = TRUE
+    `;
+
+    snowflake.execute({ sqlText: copySql });
+
+    return "Export completed: " + fileName;
+$$;

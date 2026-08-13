@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE FDBDATA.RTMNGN0_TM_GNN (
+	HICL_SEQNO NUMERIC(6, 0) NOT NULL,
+	TM_GNN_TYPE_ID NUMERIC(5, 0) NOT NULL,
+	TM_SOURCE_ID NUMERIC(5, 0) NOT NULL,
+	TM_IND NUMERIC(1, 0) NOT NULL,
+	TM_ALT_GNN_DESC VARCHAR(60) NOT NULL,
+	CONSTRAINT PK_RTMNGN0_TM_GNN PRIMARY KEY (HICL_SEQNO, TM_GNN_TYPE_ID)
+)
+COMMENT = 'When appropriate, provides Tall Man lettering of an Ingredient List’s GNN as well as the sources of the recommendations for inclusion. '
+;

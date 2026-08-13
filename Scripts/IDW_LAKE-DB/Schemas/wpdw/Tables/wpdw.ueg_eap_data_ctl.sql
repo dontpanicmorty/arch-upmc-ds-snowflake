@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE WPDW.UEG_EAP_DATA_CTL
+(
+UTIL_TYPE                 VARCHAR,
+LOB_BUCKET                VARCHAR,
+UTIL_DATE           TIMESTAMP_NTZ,
+MEMBER_NBR                VARCHAR,
+LAST_NAME                 VARCHAR,
+BIRTH_DATE                VARCHAR,
+REFERRAL_SOURCE           VARCHAR,
+REFERRAL_TO_HC            VARCHAR,
+REFERRAL_FML              VARCHAR
+)
+COMMENT='Created for WPDW Migration'
+;

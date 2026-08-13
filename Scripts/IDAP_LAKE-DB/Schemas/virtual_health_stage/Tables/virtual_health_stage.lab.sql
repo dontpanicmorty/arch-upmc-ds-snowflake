@@ -1,0 +1,38 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.LAB
+(
+ID                                   INT,
+OWNER_ID                             INT,
+CLIENT_ID                            INT,
+LAB_FACILITY_ID                      INT,
+TEST_NAME                        VARCHAR,
+LOINC_NUM                        VARCHAR,
+ORDERED_DATE               TIMESTAMP_NTZ,
+OBSERVATION_DATETIME       TIMESTAMP_NTZ,
+TEST_TYPE                        VARCHAR,
+ANALYTE                          VARCHAR,
+UNIT                             VARCHAR,
+KIND_OF_QUANTITY                 VARCHAR,
+TIME_ASPECT                      VARCHAR,
+SPECIMEN_TYPE                    VARCHAR,
+SCALE_TYPE                       VARCHAR,
+METHOD_TYPE                      VARCHAR,
+TEST_ANALYSIS_DATETIME     TIMESTAMP_NTZ,
+TEST_RESULT                      VARCHAR,
+NORMAL_RANGE                     VARCHAR,
+COND_DISP_OF_SPECIMEN            VARCHAR,
+STATUS                           VARCHAR,
+STATUS_DATE_CHANGED        TIMESTAMP_NTZ,
+CREATED_DATE               TIMESTAMP_NTZ,
+UPDATED_DATE               TIMESTAMP_NTZ,
+LOINC_LONG_NAME                  VARCHAR,
+ENCOUNTER_ID                         INT,
+CLIENT_SERVICE_ID                    INT,
+ABNORMAL_FLAG                        INT,
+IS_TEMPORARY                         INT,
+UNIT_ID                              INT,
+MERGE_ID                         VARCHAR,
+ORDERING_PROVIDER                VARCHAR,
+UUID                             VARCHAR
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

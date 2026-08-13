@@ -1,0 +1,198 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_MEMBER_MOBILE_DIMENSIONS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS 
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var sqlCommand="";
+var yesterDate = new Date();
+yesterDate.setDate(yesterDate.getDate()-1);
+var newStartTime = yesterDate.toISOString();
+var YEAR_IN = newStartTime.substring(0,4);
+var MONTH_IN = newStartTime.substring(5,7);
+var DAY_IN  = newStartTime.substring(8,10);
+ 
+
+try 
+{
+
+    
+     //set query_tag for session logging
+    sqlCommand = `CALL UTIL.SPU_SET_QUERY_TAG();`;
+  snowflake.execute({sqlText: sqlCommand});
+
+    
+   //generate a JOB_ID for tracing validations and failures
+    sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID('${procedureName}')`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+    resultSet.next();
+    var jobId = resultSet.getColumnValue(1);
+
+    //*****************************************************************************
+    //Call Merge Stored Procedures To Load data from STAGEDATA to DIMDATA
+    //*****************************************************************************
+
+    //<raw table name>  (Repeat these calls for all the tables you want to load)
+    //sqlCommand = 'CALL <schema_name>.<procedure name>();';
+    //var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    // A control table might be used as this grows.
+    // The order in which these stored procedures are processed is important!!!
+
+    //*****************************************************************************
+    // APPLICATION TABLE 
+    //*****************************************************************************
+
+    //CALL APPLICATION_EVENTS.SPU_LOAD_APIMLOGS_FROM_BLOB
+     sqlCommand =  `CALL &{IDAP_LAKE}.APPLICATION_EVENTS.SPU_LOAD_APIMLOGS_FROM_BLOB('${YEAR_IN}', '${MONTH_IN}', '${DAY_IN}');`
+     snowflake.execute({sqlText: sqlCommand}); 
+
+    //*****************************************************************************
+    // DIMDATA TABLES
+    //*****************************************************************************
+
+    //CALL DIMDATA.DIM_APP_DEVICE PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_APP_DEVICE();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_APP_DEVICE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_APP_DEVICE');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+  
+
+    //CALL DIMDATA.DIM_APP_EVENT PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_APP_EVENT();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_APP_EVENT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_APP_EVENT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+
+    //CALL DIMDATA.DIM_APP_EVENT_PARAMETER PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_DIM_APP_EVENT_PARAMETER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.DIM_APP_EVENT_PARAMETER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.DIM_APP_EVENT_PARAMETER');`;
+    snowflake.execute({sqlText: sqlCommand});  
+      
+      
+
+    //CALL THE BRIDGE_APP_EVENT_PARAMETER PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_BRIDGE_APP_EVENT_PARAMETER();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.BRIDGE_APP_EVENT_PARAMETER');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.BRIDGE_APP_EVENT_PARAMETER');`;
+    snowflake.execute({sqlText: sqlCommand});
+  
+  
+    //CALL DIMDATA.FACT_APP_MOBILE_EVENT PROCEDURE
+    sqlCommand = `CALL DIMDATA.SPU_LOAD_FACT_APP_MOBILE_EVENT();`;
+    snowflake.execute({sqlText: sqlCommand});
+
+  
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'DIMDATA.FACT_APP_MOBILE_EVENT');`;
+    snowflake.execute({sqlText: sqlCommand});
+    
+    
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(${jobId}, 'DIMDATA.FACT_APP_MOBILE_EVENT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+    sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_FOREIGN_KEY_CHECK(${jobId}, 'DIMDATA.FACT_APP_MOBILE_EVENT');`;
+    snowflake.execute({sqlText: sqlCommand});  
+
+
+    sqlCommand = `CALL LOGDATA.SPU_UNKNOWN_FOREIGN_KEY_CHECK (${jobId}, 'DIMDATA.FACT_APP_MOBILE_EVENT');`;
+    snowflake.execute({sqlText: sqlCommand});
+
+
+    //*****************************************************************************
+    // End calls to merge procedures
+    //*****************************************************************************
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );
+
+    sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID_ENDTIME(${jobId});`;
+    snowflake.execute({sqlText: sqlCommand});    
+
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;
+
+!set variable_substitution=false;

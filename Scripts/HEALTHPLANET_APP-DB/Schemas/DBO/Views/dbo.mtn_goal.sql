@@ -1,0 +1,10 @@
+!set variable_substitution=true; 
+CREATE OR REPLACE VIEW DBO.MTN_GOAL
+ AS SELECT 
+C_CODE_KEY
+,C_CODE
+,C_DESC
+,C_ARCHIVED
+,C_SYSTEM_ROW
+ FROM &{IDAP_LAKE}.HEALTHPLANET_APP_STAGE.DBO__MTN_GOAL; 
+!set variable_substitution=false;

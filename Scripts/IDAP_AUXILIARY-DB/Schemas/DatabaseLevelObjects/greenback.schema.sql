@@ -1,0 +1,2 @@
+CREATE SCHEMA IF NOT EXISTS GREENBACK
+    COMMENT = 'Greenback related files';

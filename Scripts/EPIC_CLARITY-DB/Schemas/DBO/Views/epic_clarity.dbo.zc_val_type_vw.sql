@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.ZC_VAL_TYPE
+AS
+SELECT
+ VAL_TYPE_C
+, NAME
+, TITLE
+, ABBR
+, INTERNAL_ID
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__ZC_VAL_TYPE;
+!set variable_substitution=false;

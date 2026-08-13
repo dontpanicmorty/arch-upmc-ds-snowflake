@@ -1,0 +1,19 @@
+!set variable_substitution=true;
+create or replace view OPTUM_SCORECARD.CUSTOM_SPEC_RX_N_VW(
+	SPEC_RX_N,
+	SPEC_RX_N_DESC,
+	SPEC_RX_N_LV2,
+	SPEC_RX_N_LV2_DESC,
+	SPEC_RX_N_LV1,
+	SPEC_RX_N_LV1_DESC,
+	MAP_SRCE_N
+) as SELECT
+	SPEC_RX_N,
+	SPEC_RX_N_DESC,
+	SPEC_RX_N_LV2,
+	SPEC_RX_N_LV2_DESC,
+	SPEC_RX_N_LV1,
+	SPEC_RX_N_LV1_DESC,
+	MAP_SRCE_N
+FROM DEPT_DOHE.&{OPTUM_SCHEMA}.CUSTOM_SPEC_RX_N;
+!set variable_substitution=false;

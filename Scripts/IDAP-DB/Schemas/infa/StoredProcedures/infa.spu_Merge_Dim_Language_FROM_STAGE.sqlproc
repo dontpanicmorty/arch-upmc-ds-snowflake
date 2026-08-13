@@ -1,0 +1,39 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_DIM_LANGUAGE_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command = "";
+sql_command += "MERGE INTO DIMDATA.DIM_LANGUAGE AS T";
+sql_command += " USING INFA.DIM_LANGUAGE AS S";
+sql_command += " ON (T.DIM_LANGUAGE_KEY=S.DIM_LANGUAGE_KEY)";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'D' THEN DELETE";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'U' THEN UPDATE";
+sql_command += " SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT, T.INSERT_DATETIME=S.INSERT_DATETIME, T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME, T.IS_LOGICAL_DELETE_FLAG = S.IS_LOGICAL_DELETE_FLAG, T.LANGUAGE_NAME = S.LANGUAGE_NAME";
+sql_command += " WHEN NOT MATCHED THEN INSERT";
+sql_command += " (T.DIM_LANGUAGE_KEY, T.MD5_VALUE_TEXT, T.INSERT_DATETIME, T.LAST_UPDATED_DATETIME, T.IS_LOGICAL_DELETE_FLAG, T.LANGUAGE_NAME)";
+sql_command += " VALUES";
+sql_command += " (S.DIM_LANGUAGE_KEY, S.MD5_VALUE_TEXT, S.INSERT_DATETIME, S.LAST_UPDATED_DATETIME, S.IS_LOGICAL_DELETE_FLAG, S.LANGUAGE_NAME)";
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;

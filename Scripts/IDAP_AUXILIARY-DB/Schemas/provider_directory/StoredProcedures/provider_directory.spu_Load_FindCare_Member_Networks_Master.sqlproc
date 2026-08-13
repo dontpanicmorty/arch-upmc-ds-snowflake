@@ -1,0 +1,134 @@
+CREATE OR REPLACE PROCEDURE PROVIDER_DIRECTORY.SPU_LOAD_FINDCARE_MEMBER_NETWORKS_MASTER()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var sqlCommand="";
+
+try 
+{
+    //set query_tag for session logging
+    sqlCommand = `CALL UTIL.SPU_SET_QUERY_TAG();`;
+    var resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    //generate a JOB_ID for tracing validations and failures
+    sqlText = `CALL LOGDATA.SPU_SET_JOB_ID('${procedureName}')`;
+    resultSet = snowflake.execute({sqlText});
+    resultSet.next();
+    var jobId = resultSet.getColumnValue(1);
+
+    //*****************************************************************************
+    //Begin calls to build the necessary JSON files to be uploaded to CosmosDB FindCAre
+    //the order of execution is important
+    //*****************************************************************************
+
+    //Refresh the _PREV tables so we have a record of what was loaded last time for deletes later
+    sqlCommand = `CALL PROVIDER_DIRECTORY.SPU_INSERT_OVERWRITE_MEMBER_NETWORKS_JSON_PREV();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});
+
+    //Build the new data for this run
+    sqlCommand = `CALL PROVIDER_DIRECTORY.SPU_INSERT_OVERWRITE_MEMBER_NETWORKS_JSON();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});   
+
+    //*****************************************************************************
+    //End calls to build the necessary JSON files to be uploaded to CosmosDB FindCAre
+    //*****************************************************************************
+    
+    
+    //*****************************************************************************
+    //Begin calls to validation procedures
+    //*****************************************************************************
+    sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'PROVIDER_DIRECTORY.MEMBER_NETWORKS_JSON_PREV');`;
+    resultSet = snowflake.execute({sqlText});
+
+    sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK(${jobId}, 'PROVIDER_DIRECTORY.MEMBER_NETWORKS_JSON');`;
+    resultSet = snowflake.execute({sqlText});
+    //*****************************************************************************
+    //End calls to validation procedures
+    //*****************************************************************************
+
+
+    //*****************************************************************************
+    // Begin calls to extraction procedures
+    //Purge the target folder then unload to it as individual steps to start and keep things simple
+    //Could pretty easily consolidate later if we want to speed this up to loop through a list like healthsparq file extracts
+    //*****************************************************************************
+    
+    //clear out memberNetworks folder
+    sqlCommand = `CALL PROVIDER_DIRECTORY.SPU_REMOVE_TARGET_FILES(@PROVIDER_DIRECTORY.DIRECTORY_OUTBOUNDDATA/membernetworks/);`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});   
+
+    //unload current data to memberNetworks folder
+    sqlCommand = `CALL PROVIDER_DIRECTORY.SPU_EXTRACT_MEMBER_NETWORKS();`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});   
+
+    //unload deletes to memberNetworks folder
+    sqlCommand = `CALL PROVIDER_DIRECTORY.SPU_EXTRACT_DELETES('PROVIDERS_JSON_DELETES_SELECT_VW','MEMBER_NETWORKS_JSON_TXT','members');`;
+    resultSet = snowflake.execute({sqlText: sqlCommand});   
+
+
+
+    //*****************************************************************************
+    // End calls to extraction procedures
+    //*****************************************************************************
+
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,procedureName
+            ]
+        }
+    );        
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result = "Failed";
+    
+    //log results to table
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+    
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: 
+            [
+            procedureName
+            ,"Procedure"
+            ,startTime
+            ,endTime
+            ,result
+            ,sqlCommand
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+            ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

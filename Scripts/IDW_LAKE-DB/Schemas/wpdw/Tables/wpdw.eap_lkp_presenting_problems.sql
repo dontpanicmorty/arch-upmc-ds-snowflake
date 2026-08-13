@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE WPDW.EAP_LKP_PRESENTING_PROBLEMS
+(
+PRESENTING_PROBLEM_DTL_DESCR           VARCHAR,
+MAPPING_SET_DESCR                      VARCHAR,
+MAPPING_VALUE                          VARCHAR,
+INSERT_DATE                      TIMESTAMP_NTZ,
+UPDATE_DATE                      TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

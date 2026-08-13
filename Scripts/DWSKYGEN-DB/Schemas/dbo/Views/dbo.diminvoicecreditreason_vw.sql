@@ -1,0 +1,12 @@
+CREATE OR REPLACE VIEW DBO.DimInvoiceCreditReason_VW
+AS 
+SELECT 	$1:InvoiceCreditReasonKey::NUMBER(38, 0) AS InvoiceCreditReasonKey, 
+		$1:INVOICE_CREDIT_REASON::NUMBER(38, 0) AS INVOICE_CREDIT_REASON, 
+		$1:InvoiceCreditReasonDescription::VARCHAR AS InvoiceCreditReasonDescription, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimInvoiceCreditReason/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

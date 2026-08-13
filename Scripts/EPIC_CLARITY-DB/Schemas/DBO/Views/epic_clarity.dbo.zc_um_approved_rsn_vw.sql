@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.ZC_UM_APPROVED_RSN
+AS
+SELECT
+ UM_APPROVED_RSN_C
+, NAME
+, TITLE
+, ABBR
+, INTERNAL_ID
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__ZC_UM_APPROVED_RSN;
+!set variable_substitution=false;

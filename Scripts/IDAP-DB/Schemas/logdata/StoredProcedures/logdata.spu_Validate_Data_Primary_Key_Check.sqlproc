@@ -1,0 +1,96 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(JOB_ID VARCHAR, TABLE_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+/*
+Intended to be a general purpose dupe check with multiple use-cases.
+JOB_ID must be generated first by the top level caller so we can tie together the outputs.
+TABLE_NAME is actually SCHEMA.TABLE_NAME due to how dimdata sprocs were created. 
+    - splitting apart to specify schema as a new parameter may be a good idea at some point
+*/
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var columnList = 'not set';
+var loadDatetime = null;
+
+//Lookup Job
+var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+var rsJobLog = sfStatement.execute();
+while (rsJobLog.next())
+{
+    loadDatetime = rsJobLog.getColumnValue("START_TIME");
+}
+
+if (!loadDatetime)
+    {
+        var result = "Job Id:"+JOB_ID+" Not Found!";
+        throw result;
+    }
+
+//get the list of PK columns to check as a comma separated list
+sqlCommand = `SELECT LISTAGG(PK_COLUMN,',') AS PK_COLUMNS FROM TABLE(LOGDATA.FXN_GET_PK_COLUMNS(GET_DDL('TABLE', '${TABLE_NAME}'))) WHERE PK_COLUMN <> ''`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+resultSet.next();
+columnList = resultSet.getColumnValue('PK_COLUMNS');
+
+//build the query to check for dupes
+sqlCommand = `SELECT COUNT(*) AS RESULT_COUNT FROM (
+SELECT ${columnList} FROM ${TABLE_NAME} GROUP BY ${columnList} HAVING COUNT(*) > 1)`;
+
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+resultSet.next(); 
+var resultCount = resultSet.getColumnValue('RESULT_COUNT');
+    
+//insert the results to the logdata table for future reference
+if(resultCount === 0)
+{
+    var result = "Succeeded";
+    var validationDescription = `Primary Key Validation Succeeded`;
+    var sqlLogCommand =
+    `INSERT INTO LOGDATA.DATA_VALIDATION_RESULT 
+        (JOB_ID, TABLE_NAME, VALIDATION_PROCEDURE_NAME, RESULT_TEXT, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR, VALIDATION_DESC, SQL_STATEMENT) 
+    VALUES 
+        (:1, :2, :3, :4, :5, :6, :7, :8)
+    ;`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, TABLE_NAME, procedureName, result, resultCount, 0, validationDescription, sfStatement.getSqlText()]
+        }
+    );
+}
+else
+{
+    var result = "Failed";
+    var validationDescription = "Validation failed because of "+resultCount+" duplicates in "+TABLE_NAME;
+    var throwMessage = validationDescription + " SELECT * FROM LOGDATA.DATA_VALIDATION_RESULT WHERE JOB_ID = '"+JOB_ID+"' AND RESULT_TEXT = 'Failed';";    
+    var sqlLogCommand =
+    `INSERT INTO LOGDATA.DATA_VALIDATION_RESULT 
+        (JOB_ID, TABLE_NAME, VALIDATION_PROCEDURE_NAME, RESULT_TEXT, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR, VALIDATION_DESC, SQL_STATEMENT) 
+    VALUES 
+        (:1, :2, :3, :4, :5, :6, :7, :8)
+    ;`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, TABLE_NAME, procedureName, result, resultCount, 0, validationDescription, sfStatement.getSqlText()]
+        }
+    );    
+    throw throwMessage;
+};
+
+return result;
+$$
+;

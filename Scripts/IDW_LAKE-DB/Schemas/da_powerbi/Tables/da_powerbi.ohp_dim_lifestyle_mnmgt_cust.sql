@@ -1,0 +1,20 @@
+CREATE OR REPLACE TABLE DA_POWERBI.OHP_DIM_LIFESTYLE_MNMGT_CUST
+(
+MEMBER_MONTH_KEY           VARCHAR,
+MEMBER_NBR                 VARCHAR,
+CASE_ID                    VARCHAR,
+STAFF_NAME                 VARCHAR,
+ACTIVITY_TITLE             VARCHAR,
+SESSION_CATEGORY           VARCHAR,
+SESSION_TOPIC              VARCHAR,
+SESSION_DATE         TIMESTAMP_NTZ,
+SESSION_NBR                 NUMBER(33,5),
+SESSION_CNT                 NUMBER(33,5),
+ENROLLMENT_CNT              NUMBER(33,5),
+GRADUATION_CNT              NUMBER(33,5),
+ACTIVITY_DESC              VARCHAR,
+STAFF_TYPE                 VARCHAR,
+CY                         VARCHAR
+)
+COMMENT='Created for DA_POWERBI Migration'
+;

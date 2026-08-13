@@ -1,0 +1,30 @@
+CREATE OR REPLACE VIEW DBO.DimLab_VW
+AS 
+SELECT 	$1:LabKey::NUMBER(38, 0) AS LabKey, 
+		$1:LAB_ID::NUMBER(38, 0) AS LAB_ID, 
+		$1:LabName::VARCHAR AS LabName, 
+		$1:SupplierID::NUMBER(38, 0) AS SupplierID, 
+		$1:LabNumber::VARCHAR AS LabNumber, 
+		$1:Address1::VARCHAR AS Address1, 
+		$1:Address2::VARCHAR AS Address2, 
+		$1:City::VARCHAR AS City, 
+		$1:State::VARCHAR AS State, 
+		$1:Zip::VARCHAR AS Zip, 
+		$1:Zip4::VARCHAR AS Zip4, 
+		$1:ContactName::VARCHAR AS ContactName, 
+		$1:VoicePhone::VARCHAR AS VoicePhone, 
+		$1:FaxPhone::VARCHAR AS FaxPhone, 
+		$1:Email::VARCHAR AS Email, 
+		$1:ShippingAddress1::VARCHAR AS ShippingAddress1, 
+		$1:ShippingAddress2::VARCHAR AS ShippingAddress2, 
+		$1:ShippingCity::VARCHAR AS ShippingCity, 
+		$1:ShippingState::VARCHAR AS ShippingState, 
+		$1:ShippingZip::VARCHAR AS ShippingZip, 
+		$1:ShippingZip4::VARCHAR AS ShippingZip4, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimLab/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

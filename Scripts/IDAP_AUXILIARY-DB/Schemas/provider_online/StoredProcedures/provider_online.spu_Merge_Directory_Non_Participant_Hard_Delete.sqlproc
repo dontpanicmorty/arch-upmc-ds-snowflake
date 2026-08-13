@@ -1,0 +1,127 @@
+CREATE OR REPLACE PROCEDURE PROVIDER_ONLINE.SPU_MERGE_DIRECTORY_NON_PARTICIPANT_HARD_DELETE()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = "PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT_HARD_DELETES";
+const sqlCommandArray = [];
+var sqlLogCommand = "", result = "";
+
+//DELETE from hard delete table if exists in Directory Nonpar
+sqlCommand = `
+DELETE FROM PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT_HARD_DELETES HD 
+USING PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT DNP
+WHERE
+    HD.ID = DNP.ID
+    AND HD.NETWORK_ID = DNP.CLIENT_ID || DNP.TPA_ID || DNP.TPA_DIV_ID || DNP.NETWORK_ID
+    AND HD.PROVIDER_KEY = DNP.PROVIDER_KEY;`;
+sqlCommandArray.push(sqlCommand);
+
+//UPSERT TO HARD DELETE TABLE
+sqlCommand = `
+MERGE INTO
+    PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT_HARD_DELETES HD 
+    USING (
+        SELECT
+            ID,
+            NETWORK_ID,
+            PROVIDER_KEY
+        FROM
+            PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT_PREVIOUS
+        WHERE
+            DIRECTORY_NON_PARTICIPANT_PREVIOUS.LAST_AUDIT_ACTION = 'DELETE'
+    ) PREV ON HD.ID = PREV.ID
+    AND HD.NETWORK_ID = PREV.NETWORK_ID
+    AND HD.PROVIDER_KEY = PREV.PROVIDER_KEY
+WHEN MATCHED
+THEN UPDATE SET
+    LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHEN NOT MATCHED THEN INSERT
+    (PROVIDER_KEY, NETWORK_ID, ID, INSERT_DATETIME, LAST_UPDATED_DATETIME)
+VALUES
+    (PREV.PROVIDER_KEY, PREV.NETWORK_ID, PREV.ID, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());`;
+sqlCommandArray.push(sqlCommand);
+
+//DELETE from prev table after moved to hard delete table
+sqlCommand = `
+DELETE FROM PROVIDER_ONLINE.DIRECTORY_NON_PARTICIPANT_PREVIOUS
+WHERE
+    DIRECTORY_NON_PARTICIPANT_PREVIOUS.LAST_AUDIT_ACTION = 'DELETE';`;
+sqlCommandArray.push(sqlCommand);
+
+
+//DELETE Exceed Max Length Records that no longer Apply
+sqlCommand = `
+DELETE FROM PROVIDER_ONLINE.RECORD_MAX_LENGTH_EXCEEDED
+USING (
+    SELECT DISTINCT
+        ID,
+        NETWORK_ID,
+        PROVIDER_KEY,
+        LAST_AUDIT_ACTION
+    FROM
+        DIRECTORY_NON_PARTICIPANT_PREVIOUS
+    ) SUBQUERY
+WHERE
+    RECORD_MAX_LENGTH_EXCEEDED.ID = SUBQUERY.ID
+    AND RECORD_MAX_LENGTH_EXCEEDED.NETWORK_ID = SUBQUERY.NETWORK_ID
+    AND RECORD_MAX_LENGTH_EXCEEDED.PROVIDER_KEY = SUBQUERY.PROVIDER_KEY
+    AND SUBQUERY.LAST_AUDIT_ACTION != 'MAX_LENGTH_EXCEEDED';`;
+sqlCommandArray.push(sqlCommand);
+
+
+try
+{
+    //Execute SQL Command
+    for (let i = 0; i < sqlCommandArray.length; i++) {
+      //Run SQL
+      statement = snowflake.createStatement({ sqlText: sqlCommandArray[i] });
+      let sqlResult = statement.execute();
+      sqlResult.next();
+      let affectedNum = sqlResult.getNumRowsAffected();
+      result += targetTableName + " succeeded and affected " + affectedNum + " rows " + "\n";
+      let endTime = new Date().toISOString();
+
+      //Log results to table
+      sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+          (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+          VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [targetTableName, "TABLE", startTime, endTime, statement.getNumRowsInserted(), statement.getNumRowsUpdated(), statement.getNumRowsDeleted(), result, statement.getSqlText()]
+          }
+      );
+    }
+
+}
+catch (err)
+{
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed'
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message, stack]
+        }
+    );
+    throw message;
+}
+return result;
+$$
+;

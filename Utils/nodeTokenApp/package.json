@@ -1,0 +1,14 @@
+{
+  "name": "nodetokenapp",
+  "version": "0.0.1",
+  "description": "Utility to get an OAuth token for Snowflake API development",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Data Services | c/o Andrew Horwitz",
+  "license": "Internal use only",
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}

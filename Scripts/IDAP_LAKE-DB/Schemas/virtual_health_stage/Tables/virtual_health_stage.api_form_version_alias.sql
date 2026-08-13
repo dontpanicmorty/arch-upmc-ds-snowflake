@@ -1,0 +1,12 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.API_FORM_VERSION_ALIAS
+(
+ID                             INT,
+TYPE                       VARCHAR,
+FORM_ID                        INT,
+MD5                        VARCHAR,
+ENDPOINT_VERSION           VARCHAR,
+VERSION_ID                     INT,
+CREATED_DATE         TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

@@ -1,0 +1,13 @@
+CREATE OR REPLACE VIEW DBO.DimVendorPaymentType_VW
+AS 
+SELECT 	$1:VendorPaymentTypeKey::NUMBER(38, 0) AS VendorPaymentTypeKey, 
+		$1:VENDOR::NUMBER(38, 0) AS VENDOR, 
+		$1:PAYMENT_TYPE::VARCHAR AS PAYMENT_TYPE, 
+		$1:VendorPaymentTypeDescription::VARCHAR AS VendorPaymentTypeDescription, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimVendorPaymentType/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

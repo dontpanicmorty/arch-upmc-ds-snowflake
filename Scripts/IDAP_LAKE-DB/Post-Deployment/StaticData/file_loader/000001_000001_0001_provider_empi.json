@@ -1,0 +1,111 @@
+{
+  "outputSchema": "PROVIDER",
+  "outputTable": "HEALTHPLAN_ID_XWALK",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "HEALTHPLAN_ID_XWALK_FILE_FORMAT_HEADER",
+  "fileFormat": "HEALTHPLAN_ID_XWALK_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "EID",
+          "outputField": "EID"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "LAST_NAME",
+          "outputField": "LAST_NAME"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "FIRST_NAME",
+          "outputField": "FIRST_NAME"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "MIDDLE",
+          "outputField": "MIDDLE"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "EPIC",
+          "outputField": "EPIC"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "MPAC",
+          "outputField": "MPAC"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "WPIC",
+          "outputField": "WPIC"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "HP",
+          "outputField": "HP"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "NPI",
+          "outputField": "NPI"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "H1",
+          "outputField": "H1"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "H3",
+          "outputField": "H3"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "EPCD",
+          "outputField": "EPCD"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "EPIC_USR",
+          "outputField": "EPIC_USR"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "HHC",
+          "outputField": "HHC"
+        },
+        {
+          "columnOrder": 15,
+          "inputField": "HHCSAH",
+          "outputField": "HHCSAH"
+        },
+        {
+          "columnOrder": 16,
+          "inputField": "HMX",
+          "outputField": "HMX"
+        },
+        {
+          "columnOrder": 17,
+          "inputField": "COLE",
+          "outputField": "COLE"
+        },
+        {
+          "columnOrder": 18,
+          "inputField": "WMHS_MTECH",
+          "outputField": "WMHS_MTECH"
+        },
+        {
+          "columnOrder": 19,
+          "inputField": "EPIC_EAST",
+          "outputField": "EPIC_EAST"
+        }
+      ]
+    }
+  }
+}

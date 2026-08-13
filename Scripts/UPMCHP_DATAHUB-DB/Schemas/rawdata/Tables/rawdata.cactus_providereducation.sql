@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_PROVIDEREDUCATION
+LIKE &{CACTUS}.VISUALCACTUS.PROVIDEREDUCATION
+;
+
+!set variable_substitution=false;

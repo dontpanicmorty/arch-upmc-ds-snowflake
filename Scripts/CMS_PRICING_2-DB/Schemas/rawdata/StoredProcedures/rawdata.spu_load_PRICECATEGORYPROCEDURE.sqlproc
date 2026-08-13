@@ -1,0 +1,90 @@
+/**
+Truncates and loads the RAWDATA.DWOAO_PRICECATEGORYPROCEDURE table from MC400 Database. 
+*/
+!set variable_substitution=true;
+
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_CMS_RAWDATA_DWOAO_PRICECATEGORYPROCEDURE()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+let procName = Object.keys(this).find(a => a.startsWith('SPU'));
+let startTime = new Date();
+let sqlText, resultSet;
+
+
+
+try {
+  sqlText = `INSERT OVERWRITE INTO RAWDATA.DWOAO_PRICECATEGORYPROCEDURE(EFFECTIVEDATE,MODIFIER,PRICECATEGORY,PROCEDURECODE,
+ADJUSTMENTREASON,ALLOWEDBILLEDAMTFLAG,DAYSINCLUDED,PERCENTAGE,PRICE,PRICETYPE,PROCCODECATEGORY1,PROCCODECATEGORY2,PROCCODECATEGORY3,PROCCODECATEGORY4,
+PROCCODECATEGORY5,PROCESSINGCODES,TERMDATE,WITHHOLDPERCENTAGE,PROCCODECATEGORY10,PROCCODECATEGORY11,PROCCODECATEGORY12,PROCCODECATEGORY13,PROCCODECATEGORY14,
+PROCCODECATEGORY15,PROCCODECATEGORY6,PROCCODECATEGORY7,PROCCODECATEGORY8,PROCCODECATEGORY9,CHGLAST,CHGORIG,CHGUSER,TPACLIENT,TPADIVISION,TPAIDOFCLIENT)
+
+    SELECT EFFECTIVEDATE, NULLIF(MODIFIER, ''),PRICECATEGORY,PROCEDURECODE,NULLIF(ADJUSTMENTREASON, ''),NULLIF(ALLOWEDBILLEDAMTFLAG, ''),DAYSINCLUDED,PERCENTAGE,PRICE,PRICETYPE,NULLIF(PROCCODECATEGORY1, ''),NULLIF(PROCCODECATEGORY2, ''),
+NULLIF(PROCCODECATEGORY3, ''), NULLIF(PROCCODECATEGORY4, ''),NULLIF(PROCCODECATEGORY5, ''), NULLIF(PROCESSINGCODES, ''),TERMDATE,WITHHOLDPERCENTAGE, NULLIF(PROCCODECATEGORY10, ''), NULLIF(PROCCODECATEGORY11, ''), 
+NULLIF(PROCCODECATEGORY12, ''),NULLIF(PROCCODECATEGORY13, ''),NULLIF(PROCCODECATEGORY14, ''),NULLIF(PROCCODECATEGORY15, ''),NULLIF(PROCCODECATEGORY6, ''),NULLIF(PROCCODECATEGORY7, ''),NULLIF(PROCCODECATEGORY8, ''),
+NULLIF(PROCCODECATEGORY9, ''),CHGLAST,CHGORIG,NULLIF(CHGUSER,''),TPACLIENT,TPADIVISION,TPAIDOFCLIENT
+FROM &{MC400}.DWOAO.PRICECATEGORYPROCEDURE
+WHERE EffectiveDate <= TO_NUMBER(TO_CHAR(CURRENT_DATE(), 'yyyyMMdd'), '99999999') And (TermDate = '0' Or (TermDate  > TO_NUMBER(TO_CHAR(CURRENT_DATE(), 'yyyyMMdd'), '99999999')))`;
+
+  resultSet = snowflake.execute({sqlText});
+  var result = "Succeeded";
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    'Complete',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  var result = "Failure";
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${procName}',
+    'PROCEDURE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  return result;
+}
+return result;
+$$;
+
+!set variable_substitution=false;

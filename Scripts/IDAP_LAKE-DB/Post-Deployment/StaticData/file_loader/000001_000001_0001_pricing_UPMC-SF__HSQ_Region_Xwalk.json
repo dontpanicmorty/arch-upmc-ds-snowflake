@@ -1,0 +1,31 @@
+{
+    "outputSchema": "PRICING",
+    "outputTable": "HEALTHSPARQ_ISSUER_REGIONS",
+    "hasHeader": true,
+    "hasTrailer": false,
+    "fileType": "delimited",
+    "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+    "fileFormat": "BUSINESS_FILE_FORMAT",
+    "truncReload": true,
+    "mappingTypes": {
+        "all": {
+        "mappingContents": [
+            {
+            "columnOrder": 1,
+            "inputField": "INSURER_CODE",
+            "outputField": "INSURER_CODE"
+            },
+            {
+            "columnOrder": 2,
+            "inputField": "CLIENT_REGION_KEY",
+            "outputField": "CLIENT_REGION_KEY"
+            },
+            {
+            "columnOrder": 3,
+            "inputField": "ZIPCODE",
+            "outputField": "ZIPCODE"
+            }
+        ]
+        }
+    }
+}

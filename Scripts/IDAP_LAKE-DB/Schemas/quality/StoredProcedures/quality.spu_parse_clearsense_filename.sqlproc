@@ -1,0 +1,92 @@
+
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_PARSE_CLEARSENSE_FILENAME(CCD_FILE_NAME VARCHAR)
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+AS
+$$
+  var filename = CCD_FILE_NAME;
+
+  var numbers = filename.replace(/\D/g, '');
+  
+  if (numbers)
+  {
+    if (numbers.length < 8)
+    {
+        throw "Filename does not match expected pattern.  Not enough numbers found to build a date.";
+    } else
+    {
+        var date8 = numbers.slice(-8);
+        var date_year = date8.substring(0,4);
+        var date_month = date8.substring(4,6);
+        var date_day = date8.substring(6,8);
+
+        var result_json = {
+            "filename":filename,
+            "date_extract":date8,
+            "file_year":date_year,
+            "file_month":date_month,
+            "file_day":date_day
+        };
+        
+        return result_json;        
+    }    
+  } else
+  {
+    throw "Filename does not match expected pattern.  No numbers found.";
+  }
+$$
+;
+
+
+/*   Unit Tests
+[
+    {
+        "TestCase":1
+        "TestPurpose":"Happy Path with standard filename"
+        "Call": "CALL SPU_PARSE_CLEARSENSE_FILENAME('CCD_FILE_ID_18010_LAWRENCECOUNTY20240425A.zip');"
+        "Status":"Success"
+        "Response": {
+          "date_extract": "20240425",
+          "file_day": "25",
+          "file_month": "04",
+          "file_year": "2024",
+          "filename": "CCD_FILE_ID_18010_LAWRENCECOUNTY20240425A.zip"
+        }
+        "Error":""
+    }
+    ,{
+        "TestCase":2
+        "TestPurpose":"Happy Path with extra trailing letters"
+        "Call": "CALL SPU_PARSE_CLEARSENSE_FILENAME('CCD_FILE_ID_18010_LAWRENCECOUNTY20240425BCDEF.zip');"
+        "Status":"Success"
+        "Response": {
+          "date_extract": "20240425",
+          "file_day": "25",
+          "file_month": "04",
+          "file_year": "2024",
+          "filename": "CCD_FILE_ID_18010_LAWRENCECOUNTY20240425BCDEF.zip"
+        }
+        "Error":""
+    }
+    ,{
+        "TestCase":3
+        "TestPurpose":"Failure with no date in filename"
+        "Call": "CALL SPU_PARSE_CLEARSENSE_FILENAME('CCD_FILE_ID_18010_MISSING.zip');"
+        "Status":"Failure"
+        "Response": ""
+        "Error": "Filename does not match expected pattern.  Not enough numbers found to build a date."
+    }
+    ,{
+        "TestCase":4
+        "TestPurpose":"Failure with invalid filename"
+        "Call": "CALL SPU_PARSE_CLEARSENSE_FILENAME('OOPS');"
+        "Status":"Failure"
+        "Response": ""
+        "Error": "Filename does not match expected pattern.  No numbers found."
+    }
+]
+*/
+
+
+
+

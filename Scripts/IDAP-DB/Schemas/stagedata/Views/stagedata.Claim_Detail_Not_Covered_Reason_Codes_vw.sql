@@ -1,0 +1,52 @@
+CREATE OR REPLACE VIEW STAGEDATA.CLAIM_DETAIL_NOT_COVERED_REASON_CODES_VW
+AS
+WITH NCRS AS (
+SELECT
+CLAIM_DETAIL.CLAIM_DETAIL_KEY
+,CLAIM_DETAIL.URI
+,NOT_COVERED_CODES.VALUE:claimNotCoveredReason:notCoveredReasonCode::string AS CODE_VALUE
+,NOT_COVERED_CODES.VALUE:claimNotCoveredReason:notCoveredReasonCodePosition::string AS CODE_POSITION
+,NOT_COVERED_CODES.VALUE:claimNotCoveredReason:notCoveredReasonDescKey::string AS DESC_KEY
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:universalClaimId::string AS UNIVERSAL_CLAIM_ID
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:claimNbr::string AS CLAIM_NBR
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:claimLineNbr::string AS CLAIM_LINE_NBR
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:claimSequenceNbr::string AS CLAIM_SEQUENCE_NBR
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:procedureAdj::string AS PROCEDURE_ADJ
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:dataSourceName::string AS DATA_SOURCE_NAME
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:tpaClientId::string AS TPA_CLIENT_ID
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:tpaDivId::string AS TPA_DIV_ID
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:tpaId::string AS TPA_ID
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:tpaKey::string AS TPA_KEY
+,CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:notCoveredReasonCodes AS NOT_COVERED_REASON_CODES
+,CLAIM_HEADER.JSON_DATA:envelope:instance:claimHeader:lineOfBusinessCode::string AS LINE_OF_BUSINESS_CODE
+FROM STAGEDATA.CLAIM_DETAIL
+    JOIN STAGEDATA.CLAIM_HEADER
+        ON (CLAIM_HEADER.JSON_DATA:envelope:instance:claimHeader:universalClaimId = CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:universalClaimId)
+      ,TABLE(FLATTEN(CLAIM_DETAIL.JSON_DATA:envelope:instance:claimDetail:notCoveredReasonCodes)) NOT_COVERED_CODES
+
+)
+
+SELECT NCRS.CLAIM_DETAIL_KEY
+,NCRS.URI
+,CASE
+      WHEN NCRS.CODE_VALUE <> 'needs mapped' THEN NCRS.CODE_VALUE      
+      ELSE NVL(REFERENCE_DATA_SINGULAR_CURRENT_VW.SOURCE_VALUE, 'needs mapped')
+END AS CODE_VALUE
+,NCRS.CODE_POSITION
+,NCRS.DESC_KEY
+,NCRS.UNIVERSAL_CLAIM_ID
+,NCRS.CLAIM_NBR
+,NCRS.CLAIM_LINE_NBR
+,NCRS.CLAIM_SEQUENCE_NBR
+,NCRS.PROCEDURE_ADJ
+,NCRS.DATA_SOURCE_NAME
+,NCRS.TPA_CLIENT_ID
+,NCRS.TPA_DIV_ID
+,NCRS.TPA_ID
+,NCRS.TPA_KEY
+,NCRS.NOT_COVERED_REASON_CODES
+,NCRS.LINE_OF_BUSINESS_CODE
+FROM NCRS
+      LEFT OUTER JOIN STAGEDATA.REFERENCE_DATA_SINGULAR_CURRENT_VW
+            ON (NCRS.DESC_KEY = REFERENCE_DATA_SINGULAR_CURRENT_VW.REFERENCE_KEY)
+;

@@ -1,0 +1,186 @@
+CREATE OR REPLACE PROCEDURE CMS.SPU_LOAD_NPI()
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+    var targetTable = 'CMS.NPI';
+    var stagingTable = 'CMS.NPI_STAGING';
+    var stagePath = '@UTIL.HPDSDATALAKE_IDAPLAKE/cms/npi/';
+    var fileFormat = 'UTIL.NPI_CSV_FORMAT';
+    var dataFilePattern = '.*npidata_pfile.*\\\\.csv';
+    var startTime = new Date().toISOString();
+    var procedureName = 'CMS.SPU_LOAD_NPI';
+    var result = '';
+    var mergeCmd = '';
+
+    try {
+        // LIST all NPI files in the stage to determine the newest dated subfolder
+        var listCmd = 'LIST ' + stagePath + ' PATTERN = \'' + dataFilePattern + '\'';
+        var listStmt = snowflake.createStatement({ sqlText: listCmd });
+        var listResult = listStmt.execute();
+
+        var newestDatePath = '';
+        var newestModified = '';
+        while (listResult.next()) {
+            var filePath = listResult.getColumnValue(1);
+            var lastModified = listResult.getColumnValue(2);
+
+            // Extract yyyy/mm/dd/ from the file path
+            var parts = filePath.split('/');
+            var dp = '';
+            for (var p = 0; p < parts.length - 1; p++) {
+                if (parts[p].match(/^\d{4}$/) && parts[p+1] && parts[p+1].match(/^\d{2}$/) && parts[p+2] && parts[p+2].match(/^\d{2}$/)) {
+                    dp = parts[p] + '/' + parts[p+1] + '/' + parts[p+2] + '/';
+                    break;
+                }
+            }
+
+            if (dp > newestDatePath) {
+                newestDatePath = dp;
+                newestModified = lastModified;
+            }
+        }
+
+        if (!newestDatePath) {
+            return 'No NPI data files found in stage.';
+        }
+
+        // Check if the newest folder is newer than or same day as the most recent LAST_UPDATED_DATETIME
+        // Compare by date only (not timestamp) so re-runs on the same day are allowed
+        var lastUpdateQuery = "SELECT COALESCE(MAX(LAST_UPDATED_DATETIME), '1900-01-01'::TIMESTAMP_NTZ)::DATE FROM " + targetTable;
+        var lastUpdateStmt = snowflake.createStatement({ sqlText: lastUpdateQuery });
+        var lastUpdateResult = lastUpdateStmt.execute();
+        lastUpdateResult.next();
+        var lastUpdatedDate = new Date(lastUpdateResult.getColumnValue(1));
+
+        // Parse the folder date from newestDatePath (yyyy/mm/dd/)
+        var dpParts = newestDatePath.split('/');
+        var folderDate = new Date(parseInt(dpParts[0]), parseInt(dpParts[1]) - 1, parseInt(dpParts[2]));
+
+        if (folderDate < lastUpdatedDate) {
+            result = 'No new NPI file to process. Newest folder: ' + newestDatePath + ' | Last update date: ' + lastUpdatedDate.toISOString().substring(0, 10);
+            var endTime = new Date().toISOString();
+
+            var sqlLogCommand = "INSERT INTO LOGDATA.TABLE_LOAD_HISTORY \
+                (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT) \
+                VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9)";
+
+            snowflake.execute({
+                sqlText: sqlLogCommand,
+                binds: [targetTable, 'TABLE', startTime, endTime, 0, 0, 0, result, 'SKIPPED - no newer file']
+            });
+
+            return result;
+        }
+
+        // Get table columns in ordinal order, excluding INSERT_DATETIME and LAST_UPDATED_DATETIME
+        var colQuery = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS \
+                        WHERE TABLE_SCHEMA = 'CMS' AND TABLE_NAME = 'NPI' \
+                          AND COLUMN_NAME NOT IN ('INSERT_DATETIME', 'LAST_UPDATED_DATETIME') \
+                        ORDER BY ORDINAL_POSITION";
+        var colResult = snowflake.createStatement({ sqlText: colQuery }).execute();
+        var tableColumns = [];
+        while (colResult.next()) {
+            tableColumns.push(colResult.getColumnValue(1));
+        }
+
+        var colCount = tableColumns.length;
+        var dollarRefs = [];
+        for (var c = 1; c <= colCount; c++) { dollarRefs.push('$' + c); }
+        var columnList = tableColumns.join(', ');
+        var dollarColList = dollarRefs.join(', ');
+
+        // Create transient staging table and load all files from the newest dated subfolder only
+        var createStaging = 'CREATE OR REPLACE TRANSIENT TABLE ' + stagingTable + ' LIKE ' + targetTable;
+        snowflake.createStatement({ sqlText: createStaging }).execute();
+
+        var copyCmd = 'COPY INTO ' + stagingTable + ' (' + columnList + ', INSERT_DATETIME, LAST_UPDATED_DATETIME) \
+                FROM ( \
+                    SELECT ' + dollarColList + ', CURRENT_TIMESTAMP()::TIMESTAMP_NTZ, CURRENT_TIMESTAMP()::TIMESTAMP_NTZ \
+                    FROM ' + stagePath + newestDatePath + ' \
+                ) \
+                FILE_FORMAT = (FORMAT_NAME = \'' + fileFormat + '\') \
+                PATTERN = \'' + dataFilePattern + '\' \
+                ON_ERROR = \'CONTINUE\' \
+                FORCE = TRUE';
+
+        var copyStmt = snowflake.createStatement({ sqlText: copyCmd });
+        copyStmt.execute();
+        var rowsLoaded = copyStmt.getNumRowsInserted();
+
+        // Build MERGE: upsert into target on NPI key
+        var nonKeyColumns = [];
+        for (var i = 0; i < tableColumns.length; i++) {
+            if (tableColumns[i] !== 'NPI') {
+                nonKeyColumns.push(tableColumns[i]);
+            }
+        }
+
+        var setClauses = [];
+        for (var i = 0; i < nonKeyColumns.length; i++) {
+            setClauses.push('tgt.' + nonKeyColumns[i] + ' = src.' + nonKeyColumns[i]);
+        }
+        setClauses.push('tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()');
+
+        var insertCols = tableColumns.concat(['INSERT_DATETIME', 'LAST_UPDATED_DATETIME']);
+        var insertVals = [];
+        for (var i = 0; i < tableColumns.length; i++) {
+            insertVals.push('src.' + tableColumns[i]);
+        }
+        insertVals.push('CURRENT_TIMESTAMP()');
+        insertVals.push('CURRENT_TIMESTAMP()');
+
+        mergeCmd = 'MERGE INTO ' + targetTable + ' tgt \
+            USING ' + stagingTable + ' src \
+            ON tgt.NPI = src.NPI \
+            WHEN MATCHED THEN UPDATE SET ' + setClauses.join(', ') + ' \
+            WHEN NOT MATCHED THEN INSERT (' + insertCols.join(', ') + ') VALUES (' + insertVals.join(', ') + ')';
+
+        var mergeStmt = snowflake.createStatement({ sqlText: mergeCmd });
+        var mergeResult = mergeStmt.execute();
+        mergeResult.next();
+        var rowsInserted = mergeResult.getColumnValue(1);
+        var rowsUpdated = mergeResult.getColumnValue(2);
+
+        // Drop staging table
+        snowflake.createStatement({ sqlText: 'DROP TABLE IF EXISTS ' + stagingTable }).execute();
+
+        result = 'NPI MERGE complete. File partition: ' + newestDatePath + ' | Staged: ' + rowsLoaded + ' | Inserted: ' + rowsInserted + ' | Updated: ' + rowsUpdated;
+        var endTime = new Date().toISOString();
+
+        // Log success
+        var sqlLogCommand = "INSERT INTO LOGDATA.TABLE_LOAD_HISTORY \
+            (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT) \
+            VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9)";
+
+        snowflake.execute({
+            sqlText: sqlLogCommand,
+            binds: [targetTable, 'TABLE', startTime, endTime, rowsInserted, rowsUpdated, 0, result, 'MERGE INTO ' + targetTable + ' (partition: ' + newestDatePath + ')']
+        });
+
+        return result;
+
+    } catch (err) {
+        var code = err.code || err.name;
+        var state = err.state || '(JavaScript error, not provided)';
+        var message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''");
+        var stack = (err.stackTraceTxt || err.stack || '(not available)').replace(/'/g, "''");
+        var endTime = new Date().toISOString();
+        result = procedureName + ' Failed';
+
+        var sqlLogCommand = "INSERT INTO LOGDATA.TABLE_LOAD_HISTORY \
+            (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT) \
+            VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)";
+
+        snowflake.execute({
+            sqlText: sqlLogCommand,
+            binds: [procedureName, 'STORED_PROCEDURE', startTime, endTime, result, mergeCmd || '(not reached)', code, state, message, stack]
+        });
+
+        // Clean up staging on failure
+        snowflake.createStatement({ sqlText: 'DROP TABLE IF EXISTS ' + stagingTable }).execute();
+
+        throw message;
+    }
+$$;

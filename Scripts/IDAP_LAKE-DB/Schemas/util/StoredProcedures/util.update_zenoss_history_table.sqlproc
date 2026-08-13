@@ -1,0 +1,15 @@
+CREATE OR REPLACE PROCEDURE UTIL.UPDATE_ZENOSS_HISTORY_TABLE(TABLE_LOAD_HISTORY_KEY VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+AS
+$$
+try {
+    var sql_command = "INSERT INTO LOGDATA.ZENOSS_MEMBER_MOBILE_CLAIMS_HISTORY VALUES(?, CURRENT_TIMESTAMP())";
+    var statement = snowflake.createStatement({sqlText: sql_command, binds: [TABLE_LOAD_HISTORY_KEY]});
+    statement.execute()
+    return "Row Inserted Successfully"
+}
+catch (err) {
+    return "Error occured: " + err;
+}
+$$;

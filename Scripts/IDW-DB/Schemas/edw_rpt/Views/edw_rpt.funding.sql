@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.FUNDING
+AS
+SELECT
+FUNDING_KEY,
+FUNDING_CODE,
+LOAD_DATE,
+FUNDING_DESC,
+UPDATE_DATE
+FROM &{IDW_LAKE}.EDW_RPT.FUNDING;
+!set variable_substitution=false;

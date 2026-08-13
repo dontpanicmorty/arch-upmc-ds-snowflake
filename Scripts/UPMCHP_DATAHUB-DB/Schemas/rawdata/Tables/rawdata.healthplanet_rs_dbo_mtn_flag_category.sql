@@ -1,0 +1,6 @@
+!set variable_substitution=true;
+CREATE OR REPLACE TABLE RAWDATA.HEALTHPLANET_RS_DBO_MTN_FLAG_CATEGORY
+LIKE &{IDAP_LAKE}.HEALTHPLANET_RS_STAGE.DBO__MTN_FLAG_CATEGORY
+;
+
+!set variable_substitution=false;

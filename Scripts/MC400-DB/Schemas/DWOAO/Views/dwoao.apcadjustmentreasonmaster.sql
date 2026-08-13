@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWOAO.APCAdjustmentReasonMaster
+AS
+SELECT * FROM CDC_Merge.dbo.APCAdjustmentReasonMaster WHERE TPADIVISION !='0002'
+;

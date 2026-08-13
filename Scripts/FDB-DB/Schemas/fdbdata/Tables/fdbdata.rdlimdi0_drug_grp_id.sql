@@ -1,0 +1,7 @@
+CREATE OR REPLACE TABLE FDBDATA.RDLIMDI0_DRUG_GRP_ID (
+	DLIM_DRUG_GRP_ID NUMERIC(5, 0) NOT NULL,
+	DLIM_DRUG_GRP_ID_DESC VARCHAR(100) NULL,
+	CONSTRAINT PK_RDLIMDI0_DRUG_GRP_ID PRIMARY KEY (DLIM_DRUG_GRP_ID)
+)
+COMMENT = 'Represents a collection of drug concepts that are associated to common drug-lab interference records.'
+;

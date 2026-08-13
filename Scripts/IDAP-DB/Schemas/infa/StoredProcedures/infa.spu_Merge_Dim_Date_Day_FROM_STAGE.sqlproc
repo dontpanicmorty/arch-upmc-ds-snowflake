@@ -1,0 +1,39 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_DIM_DATE_DAY_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command = "";
+sql_command += "MERGE INTO DIMDATA.DIM_DATE_DAY AS T";
+sql_command += " USING INFA.DIM_DATE_DAY AS S";
+sql_command += " ON (T.DIM_DATE_DAY_KEY=S.DIM_DATE_DAY_KEY)";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'D' THEN DELETE";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'U' THEN UPDATE";
+sql_command += " SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT, T.INSERT_DATETIME=S.INSERT_DATETIME, T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME, T.FULL_DATE = S.FULL_DATE, T.DAY_OF_MONTH_NBR = S.DAY_OF_MONTH_NBR, T.DAY_NAME = S.DAY_NAME, T.DAY_SHORT_NAME = S.DAY_SHORT_NAME, T.WEEK_DAY_IND =S.WEEK_DAY_IND, T.WEEK_BEGIN_DATE = S.WEEK_BEGIN_DATE, T.MONTH_OF_YEAR_NBR = S.MONTH_OF_YEAR_NBR, T.MONTH_NAME = S.MONTH_NAME, T.MONTH_SHORT_NAME = S.MONTH_SHORT_NAME, T.QUARTER_OF_YEAR_NBR = S.QUARTER_OF_YEAR_NBR, T.YEAR_NBR = S.YEAR_NBR, T.LAST_DAY_OF_MONTH_IND = S.LAST_DAY_OF_MONTH_IND, T.SAME_DAY_YEAR_AGO_DATE = S.SAME_DAY_YEAR_AGO_DATE, T.DAY_OF_WEEK_NBR = S.DAY_OF_WEEK_NBR, T.WEEK_OF_YEAR_NBR = S.WEEK_OF_YEAR_NBR, T.YEAR_MONTH_NBR = S.YEAR_MONTH_NBR";
+sql_command += " WHEN NOT MATCHED THEN INSERT";
+sql_command += " (T.DIM_DATE_DAY_KEY, T.MD5_VALUE_TEXT, T.INSERT_DATETIME, T.LAST_UPDATED_DATETIME, T.FULL_DATE, T.DAY_OF_MONTH_NBR, T.DAY_NAME, T.DAY_SHORT_NAME, T.WEEK_DAY_IND, T.WEEK_BEGIN_DATE, T.MONTH_OF_YEAR_NBR, T.MONTH_NAME, T.MONTH_SHORT_NAME, T.QUARTER_OF_YEAR_NBR, T.YEAR_NBR, T.LAST_DAY_OF_MONTH_IND, T.SAME_DAY_YEAR_AGO_DATE, T.DAY_OF_WEEK_NBR, T.WEEK_OF_YEAR_NBR, T.YEAR_MONTH_NBR)";
+sql_command += " VALUES";
+sql_command += " (S.DIM_DATE_DAY_KEY, S.MD5_VALUE_TEXT, S.INSERT_DATETIME, S.LAST_UPDATED_DATETIME, S.FULL_DATE, S.DAY_OF_MONTH_NBR, S.DAY_NAME, S.DAY_SHORT_NAME, S.WEEK_DAY_IND, S.WEEK_BEGIN_DATE, S.MONTH_OF_YEAR_NBR, S.MONTH_NAME, S.MONTH_SHORT_NAME, S.QUARTER_OF_YEAR_NBR, S.YEAR_NBR, S.LAST_DAY_OF_MONTH_IND, S.SAME_DAY_YEAR_AGO_DATE, S.DAY_OF_WEEK_NBR, S.WEEK_OF_YEAR_NBR, S.YEAR_MONTH_NBR);";
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;

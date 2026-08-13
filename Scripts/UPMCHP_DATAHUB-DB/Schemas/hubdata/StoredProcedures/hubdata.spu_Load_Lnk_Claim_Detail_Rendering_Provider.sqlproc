@@ -1,0 +1,266 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_LNK_CLAIM_DETAIL_RENDERING_PROVIDER(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER`;
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER TGT
+USING (
+    SELECT 
+        LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY,
+        HUB_CLAIM_DETAIL_HKEY,
+        HUB_PROVIDER_HKEY,
+        CD_TPA_CLIENT_ID,
+        CD_TPA_ID,
+        CD_TPA_DIV_ID,
+        CD_DATA_SOURCE_NAME,
+        CD_CLAIM_NBR,
+        CD_CLAIM_LINE_NBR,
+        CD_CLAIM_LINE_SEQ_NBR,
+        CD_CLAIM_LINE_PROCEDURE_ADJ_CODE,
+        P_TPA_CLIENT_ID,
+        P_TPA_ID,
+        P_TPA_DIV_ID,
+        P_DATA_SOURCE_NAME,
+        P_PROVIDER_ID
+    FROM STAGEDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP
+) SRC
+ON (TGT.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY = SRC.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY
+AND TGT.IS_CURRENT_ROW_FLAG = TRUE)  
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        HUB_CLAIM_DETAIL_HKEY,
+        HUB_PROVIDER_HKEY,
+        CD_TPA_CLIENT_ID,
+        CD_TPA_ID,
+        CD_TPA_DIV_ID,
+        CD_DATA_SOURCE_NAME,
+        CD_CLAIM_NBR,
+        CD_CLAIM_LINE_NBR,
+        CD_CLAIM_LINE_SEQ_NBR,
+        CD_CLAIM_LINE_PROCEDURE_ADJ_CODE,
+        P_TPA_CLIENT_ID,
+        P_TPA_ID,
+        P_TPA_DIV_ID,
+        P_DATA_SOURCE_NAME,
+        P_PROVIDER_ID
+    )
+ VALUES 
+    (
+        LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),        
+        HUB_CLAIM_DETAIL_HKEY,
+        HUB_PROVIDER_HKEY,
+        CD_TPA_CLIENT_ID,
+        CD_TPA_ID,
+        CD_TPA_DIV_ID,
+        CD_DATA_SOURCE_NAME,
+        CD_CLAIM_NBR,
+        CD_CLAIM_LINE_NBR,
+        CD_CLAIM_LINE_SEQ_NBR,
+        CD_CLAIM_LINE_PROCEDURE_ADJ_CODE,
+        P_TPA_CLIENT_ID,
+        P_TPA_ID,
+        P_TPA_DIV_ID,
+        P_DATA_SOURCE_NAME,
+        P_PROVIDER_ID    )
+;`;
+
+// Create update statement to be executed.
+var sqlUpdateCommand=
+`
+UPDATE HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER TGT SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+    , IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_CLAIM_DETAIL_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+    SELECT HUB_CLAIM_DETAIL_HKEY, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            LNK_CLAIM_DETAIL_RENDERING_PROVIDER.HUB_CLAIM_DETAIL_HKEY,
+            LNK_CLAIM_DETAIL_RENDERING_PROVIDER.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY LNK_CLAIM_DETAIL_RENDERING_PROVIDER.HUB_CLAIM_DETAIL_HKEY ORDER BY LNK_CLAIM_DETAIL_RENDERING_PROVIDER.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER
+            JOIN STAGEDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP
+                ON (LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP.HUB_CLAIM_DETAIL_HKEY = LNK_CLAIM_DETAIL_RENDERING_PROVIDER.HUB_CLAIM_DETAIL_HKEY)
+        WHERE LNK_CLAIM_DETAIL_RENDERING_PROVIDER.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+)
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    LNK_CLAIM_DETAIL_RENDERING_PROVIDER.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY,
+    LNK_CLAIM_DETAIL_RENDERING_PROVIDER.ROW_EFFECTIVE_DATETIME
+    FROM HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER
+        LEFT OUTER JOIN STAGEDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP
+            ON (LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY = LNK_CLAIM_DETAIL_RENDERING_PROVIDER.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY)
+    WHERE LNK_CLAIM_DETAIL_RENDERING_PROVIDER.IS_CURRENT_ROW_FLAG = TRUE
+    AND LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_HKEY IS NULL
+    AND LNK_CLAIM_DETAIL_RENDERING_PROVIDER.CD_DATA_SOURCE_NAME IN (SELECT DISTINCT CD_DATA_SOURCE_NAME FROM STAGEDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP)
+)
+;`;
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    targetTableName = `STAGEDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER_TMP`;
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );    
+
+    //Execute Merge Command
+    targetTableName = `HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Update Command
+    targetTableName = `HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Delete Command
+    targetTableName = `HUBDATA.LNK_CLAIM_DETAIL_RENDERING_PROVIDER`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

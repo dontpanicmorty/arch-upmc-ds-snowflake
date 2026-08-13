@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.HEALTH_STATUS_LKP
+AS
+SELECT
+HS_CODE,
+DESCRIPTION
+FROM &{IDW_LAKE}.STAGING.HEALTH_STATUS_LKP;
+!set variable_substitution=false;

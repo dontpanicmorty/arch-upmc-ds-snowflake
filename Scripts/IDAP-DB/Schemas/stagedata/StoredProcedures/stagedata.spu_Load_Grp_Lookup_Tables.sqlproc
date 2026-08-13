@@ -1,0 +1,306 @@
+CREATE OR REPLACE PROCEDURE STAGEDATA.SPU_LOAD_GRP_LOOKUP_TABLES(JOB_ID VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+/* get procedure start time and set variables */
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+var sqlGrpAdjustmentReasonLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_ADJUSTMENT_REASON_LOOKUP
+(HUB_CLAIM_DETAIL_HKEY, GRP_ADJUSTMENT_REASON_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY
+,GRP_ADJUSTMENT_REASON.GRP_ADJUSTMENT_REASON_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_DETAIL_BASE
+    JOIN STAGEDATA.CLAIM_DETAIL_ADJUSTMENT_REASON_CODE_GRP
+        ON (CLAIM_DETAIL_ADJUSTMENT_REASON_CODE_GRP.CLAIM_DETAIL_ADJUSTMENT_REASON_CODE_KEY = DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY)
+    JOIN STAGEDATA.GRP_ADJUSTMENT_REASON
+        ON (GRP_ADJUSTMENT_REASON.CODE_VALUE = CLAIM_DETAIL_ADJUSTMENT_REASON_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpClaimRiderLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_CLAIM_RIDER_LOOKUP
+(HUB_CLAIM_HKEY, GRP_CLAIM_RIDER_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_HEADER_BASE.HUB_CLAIM_HKEY
+,GRP_CLAIM_RIDER.GRP_CLAIM_RIDER_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_HEADER_BASE
+    JOIN STAGEDATA.CLAIM_HEADER_RIDER_CODE_GRP
+        ON (CLAIM_HEADER_RIDER_CODE_GRP.CLAIM_HEADER_RIDER_CODE_KEY = DATAHUB_CLAIM_HEADER_BASE.HUB_CLAIM_HKEY)
+    JOIN STAGEDATA.GRP_CLAIM_RIDER
+        ON (GRP_CLAIM_RIDER.CODE_VALUE = CLAIM_HEADER_RIDER_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpICDDiagnosisLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_ICD_DIAGNOSIS_LOOKUP
+(HUB_CLAIM_HKEY, GRP_ICD_DIAGNOSIS_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_HEADER_BASE.HUB_CLAIM_HKEY
+,GRP_ICD_DIAGNOSIS.GRP_ICD_DIAGNOSIS_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_HEADER_BASE
+    JOIN STAGEDATA.CLAIM_HEADER_ICD_DIAGNOSIS_CODE_GRP
+        ON (CLAIM_HEADER_ICD_DIAGNOSIS_CODE_GRP.CLAIM_HEADER_ICD_DIAGNOSIS_CODE_KEY = DATAHUB_CLAIM_HEADER_BASE.HUB_CLAIM_HKEY)
+    JOIN STAGEDATA.GRP_ICD_DIAGNOSIS
+        ON (GRP_ICD_DIAGNOSIS.CODE_VALUE = CLAIM_HEADER_ICD_DIAGNOSIS_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpICDProcedureLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_ICD_PROCEDURE_LOOKUP
+(HUB_CLAIM_HKEY, GRP_ICD_PROCEDURE_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_HEADER_BASE.HUB_CLAIM_HKEY
+,GRP_ICD_PROCEDURE.GRP_ICD_PROCEDURE_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_HEADER_BASE
+    JOIN STAGEDATA.CLAIM_HEADER_ICD_PROCEDURE_CODE_GRP
+        ON (CLAIM_HEADER_ICD_PROCEDURE_CODE_GRP.CLAIM_HEADER_ICD_PROCEDURE_CODE_KEY = DATAHUB_CLAIM_HEADER_BASE.HUB_CLAIM_HKEY)
+    JOIN STAGEDATA.GRP_ICD_PROCEDURE
+        ON (GRP_ICD_PROCEDURE.CODE_VALUE = CLAIM_HEADER_ICD_PROCEDURE_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpNotCoveredReasonLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_NOT_COVERED_REASON_LOOKUP
+(HUB_CLAIM_DETAIL_HKEY, GRP_NOT_COVERED_REASON_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY
+,GRP_NOT_COVERED_REASON.GRP_NOT_COVERED_REASON_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_DETAIL_BASE
+    JOIN STAGEDATA.CLAIM_DETAIL_NOT_COVERED_REASON_CODE_GRP
+        ON (CLAIM_DETAIL_NOT_COVERED_REASON_CODE_GRP.CLAIM_DETAIL_NOT_COVERED_REASON_CODE_KEY = DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY)
+    JOIN STAGEDATA.GRP_NOT_COVERED_REASON
+        ON (GRP_NOT_COVERED_REASON.CODE_VALUE = CLAIM_DETAIL_NOT_COVERED_REASON_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpProcedureCategoryLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_PROCEDURE_CATEGORY_LOOKUP
+(HUB_CLAIM_DETAIL_HKEY, GRP_PROCEDURE_CATEGORY_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY
+,GRP_PROCEDURE_CATEGORY.GRP_PROCEDURE_CATEGORY_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_DETAIL_BASE
+    JOIN STAGEDATA.CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE_GRP
+        ON (CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE_GRP.CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE_KEY = DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY)
+    JOIN STAGEDATA.GRP_PROCEDURE_CATEGORY
+        ON (GRP_PROCEDURE_CATEGORY.CODE_VALUE = CLAIM_DETAIL_PROCEDURE_CATEGORY_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpProcedureModifierLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_PROCEDURE_MODIFIER_LOOKUP
+(HUB_CLAIM_DETAIL_HKEY, GRP_PROCEDURE_MODIFIER_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY
+,GRP_PROCEDURE_MODIFIER.GRP_PROCEDURE_MODIFIER_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_DETAIL_BASE
+    JOIN STAGEDATA.CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE_GRP
+        ON (CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE_GRP.CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE_KEY = DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY)
+    JOIN STAGEDATA.GRP_PROCEDURE_MODIFIER
+        ON (GRP_PROCEDURE_MODIFIER.CODE_VALUE = CLAIM_DETAIL_PROCEDURE_MODIFIER_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlGrpServiceReasonLookup =
+`INSERT OVERWRITE INTO STAGEDATA.GRP_SERVICE_REASON_LOOKUP
+(HUB_CLAIM_DETAIL_HKEY, GRP_SERVICE_REASON_KEY, LOAD_DATETIME)
+SELECT
+DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY
+,GRP_SERVICE_REASON.GRP_SERVICE_REASON_KEY
+,CURRENT_TIMESTAMP() AS LOAD_DATETIME
+FROM RAWDATA.DATAHUB_CLAIM_DETAIL_BASE
+    JOIN STAGEDATA.CLAIM_DETAIL_SERVICE_REASON_CODE_GRP
+        ON (CLAIM_DETAIL_SERVICE_REASON_CODE_GRP.CLAIM_DETAIL_SERVICE_REASON_CODE_KEY = DATAHUB_CLAIM_DETAIL_BASE.HUB_CLAIM_DETAIL_HKEY)
+    JOIN STAGEDATA.GRP_SERVICE_REASON
+        ON (GRP_SERVICE_REASON.CODE_VALUE = CLAIM_DETAIL_SERVICE_REASON_CODE_GRP.CODE_VALUE)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //STAGEDATA.GRP_ADJUSTMENT_REASON_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_ADJUSTMENT_REASON_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpAdjustmentReasonLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+
+    //STAGEDATA.GRP_CLAIM_RIDER_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_CLAIM_RIDER_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpClaimRiderLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+
+    //STAGEDATA.GRP_ICD_DIAGNOSIS_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_ICD_DIAGNOSIS_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpICDDiagnosisLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+    
+    //STAGEDATA.GRP_ICD_PROCEDURE_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_ICD_PROCEDURE_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpICDProcedureLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+    
+    //STAGEDATA.GRP_NOT_COVERED_REASON_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_NOT_COVERED_REASON_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpNotCoveredReasonLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+ 
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+    
+    //STAGEDATA.GRP_PROCEDURE_CATEGORY_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_PROCEDURE_CATEGORY_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpProcedureCategoryLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+    
+    //STAGEDATA.GRP_PROCEDURE_MODIFIER_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_PROCEDURE_MODIFIER_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpProcedureModifierLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+
+    //STAGEDATA.GRP_SERVICE_REASON_LOOKUP
+    var targetTableName = `STAGEDATA.GRP_SERVICE_REASON_LOOKUP`;
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlGrpServiceReasonLookup});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Duplicate Check
+    var sqlCommand = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK(:1, :2);`;
+    snowflake.execute({sqlText: sqlCommand, binds:[JOB_ID, targetTableName]});
+    
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

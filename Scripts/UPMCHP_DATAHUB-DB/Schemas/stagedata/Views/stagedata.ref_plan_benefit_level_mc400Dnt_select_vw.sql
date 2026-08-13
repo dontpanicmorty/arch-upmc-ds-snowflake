@@ -1,0 +1,26 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGEDATA.REF_PLAN_BENEFIT_LEVEL_MC400DNT_SELECT_VW
+AS
+SELECT
+'000001' AS TPA_CLIENT_ID
+,'000001' AS TPA_ID
+,'0001' AS TPA_DIV_ID
+,'MC400Dnt' AS DATA_SOURCE_NAME
+,CodeValue AS CODE
+,Description AS CODE_DESC
+,NULL AS CODE_DESC_LONG
+,NULL AS CODE_SPANISH_DESC
+,UTIL.FXN_ARRAY_HASH([TPA_CLIENT_ID, TPA_ID, TPA_DIV_ID, DATA_SOURCE_NAME, CODE]) AS PLAN_BENEFIT_LEVEL_HKEY
+FROM &{MC400}.DWDNV.GENERICCODES
+WHERE UPPER(CodeField) = 'BENLVL'
+AND DeletedFlag = '1900-01-01 00:00:00.000'
+AND CodeValue IN
+    (SELECT BenefitLevel 
+    FROM &{MC400}.DWDNV.ClaimsDetail
+        JOIN &{MC400}.DWDNV.CLAIMS
+            ON (CLAIMS.ClaimNbr = ClaimsDetail.ClaimNbr
+            AND CLAIMS.MemberNbr <> '99999999901') --Exclude Generic Default Member Claims
+    )
+;
+
+!set variable_substitution=false;

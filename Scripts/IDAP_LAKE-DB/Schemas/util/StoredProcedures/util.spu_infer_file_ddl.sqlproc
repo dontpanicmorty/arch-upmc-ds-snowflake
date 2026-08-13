@@ -1,0 +1,401 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_INFER_FILE_DDL(
+    SRC_FILE_PATTERN    VARCHAR,
+    SRC_FILE_TYPE       VARCHAR,
+    COL_DELIMITER       VARCHAR,  
+    TGT_SCHEMA_NAME     VARCHAR,
+    TGT_TABLE_NAME      VARCHAR,
+    TGT_CONTAINER_NAME  VARCHAR,
+    TGT_DATALAKE_PATH   VARCHAR,
+    INPUT_FILENAME      VARCHAR,
+    TGT_OBJECT_TYPE     VARCHAR,
+    TGT_LOAD_TYPE       VARCHAR
+    )
+RETURNS VARCHAR 
+LANGUAGE JAVASCRIPT
+COMMENT='Procedure to Infer the Table/View DDL From Input File.'
+EXECUTE AS OWNER
+AS 
+$$
+
+    // INPUTS
+    let sourceFileNamePattern = SRC_FILE_PATTERN;
+    let sourceFileType        = SRC_FILE_TYPE;  
+    let columnDelimiter       = COL_DELIMITER;                  
+    let tgtSchemaName         = TGT_SCHEMA_NAME;
+    let tgtTableName          = TGT_TABLE_NAME;
+    let tgtContainerName      = TGT_CONTAINER_NAME;
+    let tgtDataLakePath       = TGT_DATALAKE_PATH;
+    let inputFileName         = INPUT_FILENAME; 
+    let tgtObjectType         = TGT_OBJECT_TYPE;
+    let tgtLoadType           = TGT_LOAD_TYPE;
+
+    let inputArray = [SRC_FILE_PATTERN, SRC_FILE_TYPE, COL_DELIMITER, TGT_SCHEMA_NAME, TGT_TABLE_NAME, TGT_CONTAINER_NAME, TGT_DATALAKE_PATH, INPUT_FILENAME, TGT_OBJECT_TYPE, TGT_LOAD_TYPE ];
+
+    // Vars for Logging
+    let logTable   = 'LOGDATA.INFER_FILE_DDL_HISTORY';
+    let procName   = Object.keys(this).find(a => a.startsWith('SPU'));
+    let startTime  = new Date();
+
+    
+    //set stage for view ddl
+    let stageName = '';
+    switch (tgtContainerName) {
+        case "IDAPLAKE":
+            stageName = '@UTIL.HPDSDATALAKE_IDAPLAKE';
+            break;
+        case "CCBHLAKE":
+            stageName = '@UTIL.CCBHDATALAKE_CCBHLAKE';
+            break;
+        case "CLILAKE":
+            stageName = '@UTIL.CLIDATALAKE_CLILAKE';
+            break;
+        }
+    
+    let ddlAutomationStage  = '@UTIL.HPDSDATALAKE_DDLAUTOMATION';
+
+    let inferPathToFile     = ddlAutomationStage + tgtDataLakePath + inputFileName;
+    let pathToFile          = stageName + tgtDataLakePath + inputFileName;
+    let ddlTblFileName      = tgtSchemaName +'.'+ tgtTableName;
+    let ddlVwFileName       = tgtSchemaName +'.'+ tgtTableName +'_VW';
+    let fileFormat          = ddlTblFileName + "_FILE_FORMAT";
+    let sqlText, ddlResults, tempFfDdl;
+    
+    //For data_type xform
+    let replacementDts = '\'TEXT\', \'VARCHAR\'';
+
+    //alter fileType to pass into FF creation
+    switch (sourceFileType) {
+        case "DELIMITED":
+            sourceFileType = 'CSV';
+            break;
+        }
+    
+    // set columnDelimiter from text input
+    switch (columnDelimiter) {
+        case "PIPE":
+            columnDelimiter = '|';
+            break;
+        case "COMMA":
+            columnDelimiter = ',';
+            break;
+        case "TILDA":
+            columnDelimiter = '~';
+            break;
+        case "TAB":
+            columnDelimiter = '\t';
+            break;
+        case "ASTERISK":
+            columnDelimiter = '*';
+            break;
+        }
+
+try
+{   
+    //-------- 
+    // Step 1: Create File Format
+    
+    let fileFormatProc  = 'UTIL.SPU_CREATE_FILE_FORMAT';
+    // temp ff created in following location, as actual ff needed for infer schema; cleaned up at end of each run.
+    let tgtFfDbName     = 'DEPT_DATA_SERVICES'; 
+    let tgtFfSchemaName = 'UTIL';
+    let tgtFfName       = 'TEMP_FILE_FORMAT';
+    let tempFfName      = tgtFfDbName +'.'+ tgtFfSchemaName +'.'+ tgtFfName;
+    
+    // SRC_FILE_TYPE, SRC_COLUMN_DELIMITER, SRC_ROW_DELIMITER, SRC_QUOTE_CHAR, SRC_NULLIF_VALUE, TGT_TABLE_NAME
+    let fileFormatSql = `CALL ${fileFormatProc}( '${sourceFileType}', '${columnDelimiter}', '', '\"', '', '${tgtFfDbName}', '${tgtFfSchemaName}', '${tgtFfName}' );`
+   
+    resultSet = snowflake.execute({sqlText: fileFormatSql}); 
+    resultSet.next()
+    
+    tempFfDdl = resultSet.getColumnValue(1).replace( tempFfName, ddlTblFileName + "_FILE_FORMAT");
+    tempFfDdl = tempFfDdl.replace(/\n\t PARSE_HEADER = TRUE/m, "");
+    ddlResults = '\n\n' + 'FILE FORMAT DDL: ' + '\n' + ddlTblFileName.toLowerCase() + "_file_format.sql" + '\n' + tempFfDdl;
+    
+
+    //-------- 
+    // Step 2: Infer Table structure from input file and replace data_types
+    
+    let inferSchemaSql = `
+        SELECT * REPLACE(
+                    REPLACE(expression, ${replacementDts} ) AS expression,
+                    REPLACE(type, ${replacementDts} ) AS type
+                    )
+        FROM TABLE(
+            INFER_SCHEMA(
+            LOCATION=> '${inferPathToFile}'
+          , FILE_FORMAT=> '${tempFfName}'
+          , IGNORE_CASE => TRUE )
+            )
+        `
+        
+    resultSet = snowflake.execute({sqlText: inferSchemaSql});
+    let inferQueryId = resultSet.getQueryId();     
+
+
+    //-------- 
+    // Step 3: Add Generic Keys and Contraints to ddl
+    
+    let metaDataColumnsSql = `
+        select  *
+        from    table(result_scan('${inferQueryId}')) 
+            union
+        select  '${tgtTableName}_KEY' as column_name, 
+                'NUMBER(38,0) AUTOINCREMENT ORDER START 1 INCREMENT 1 NOT NULL UNIQUE' as type,
+                'FALSE' as nullable,
+                'META' as expression,
+                filenames as filenames,
+                min(order_id) - 1 as "order"
+        from    table(result_scan('${inferQueryId}'))
+        group by filenames
+            union
+        select  'FILENAME' as column_name, 
+                'VARCHAR' as type,
+                'FALSE' as nullable,
+                'METADATA$FILENAME' as expression,
+                filenames as filenames,
+                max(order_id) + 1 as "order"
+        from    table(result_scan('${inferQueryId}'))
+        group by filenames
+            union
+        select  'INSERT_DATETIME' as column_name, 
+                'TIMESTAMP_NTZ' as type,
+                'FALSE' as NULLABLE,
+                'METADATA$FILE_LAST_MODIFIED' as EXPRESSION,
+                 filenames as filenames,
+                 max(order_id) + 2 as "order"
+        from    table(result_scan('${inferQueryId}'))
+        group by filenames
+            union
+        select  'CONSTRAINT PK_${tgtTableName} PRIMARY KEY (${tgtTableName}_KEY)' as column_name, 
+                '' as type,
+                'FALSE' as nullable,
+                'META' as expression,
+                 filenames as filenames,
+                 max(order_id) + 3 as "order"
+        from    table(result_scan('${inferQueryId}'))
+        group by filenames
+            union
+        select  'CONSTRAINT UK_${tgtTableName} UNIQUE (${tgtTableName}_KEY, FILENAME, INSERT_DATETIME)' as column_name, 
+                '' as type,
+                'FALSE' as nullable,
+                'META' as expression,
+                 filenames as filenames,
+                 max(order_id) + 4 as "order"
+        from    table(result_scan('${inferQueryId}'))
+        group by filenames
+        order by order_id
+        `
+    
+    resultSet = snowflake.execute({sqlText: metaDataColumnsSql});
+    let metaQueryId = resultSet.getQueryId();
+
+
+    //-------- 
+    // Step 4: Build View ddl
+    
+    let stageViewSql = `
+        SELECT  'VIEW DDL FOR FILE IN STAGE:' AS ddl_type,
+                '${ddlVwFileName.toLowerCase()}' ||'.sql' as file_name,
+                'CREATE OR REPLACE VIEW '|| '${ddlVwFileName}' ||'\n'||
+                ' COMMENT = \\\'\\\''||'\n'||
+                'AS \n'||
+                'SELECT \t' || 
+                listagg(expression || ' AS '|| column_name, ', \n\t\t') || '\n' ||
+                'FROM \t'|| '${pathToFile}' || '\n\t\t' ||
+                '( FILE_FORMAT => '|| '${fileFormat}' ||');' AS ddl
+        FROM    table(result_scan('${metaQueryId}'))
+        WHERE   expression != 'META'
+        `
+        
+    resultSet = snowflake.execute({sqlText: stageViewSql});
+    let stageViewQueryId = resultSet.getQueryId();
+    
+    resultSet.next()
+    ddlResults += '\n\n' + resultSet.getColumnValue(1) + '\n' + resultSet.getColumnValue(2) + '\n' + resultSet.getColumnValue(3);
+
+
+    //-------- 
+    // Step 5: Build Table ddl
+    
+    let tableSql = `
+        SELECT  'TABLE DDL:' AS ddl_type,
+                '${ddlTblFileName.toLowerCase()}' ||'.sql' AS file_name,
+                'CREATE OR REPLACE TABLE '|| '${ddlTblFileName}' ||'\n'||
+                '(\n\t'|| 
+                listagg(column_name ||'\t'|| type, ', \n\t') WITHIN GROUP (ORDER BY order_id) || '\n' ||
+                ') \n COMMENT=\\\'\\\';' AS ddl
+        FROM    table(result_scan('${metaQueryId}'))
+    `
+
+    resultSet = snowflake.execute({sqlText: tableSql});
+    let tableQueryId = resultSet.getQueryId();
+        
+    resultSet.next()
+    ddlResults += '\n\n' + resultSet.getColumnValue(1) + '\n' + resultSet.getColumnValue(2) + '\n' + resultSet.getColumnValue(3);
+    
+
+    //-------- 
+    // Step 6: Buid Cntrl Table entry
+
+    let truncateBool = '';
+    
+    switch (tgtLoadType) {
+        case "APPEND":
+            truncateBool = 'FALSE';
+            break;
+        case "TRUNCATE":
+            truncateBool = 'TRUE';
+            break;
+        }
+
+    let isCopyIntoBool = '';
+    
+    switch (tgtObjectType) {
+        case "VIEW":
+            isCopyIntoBool = 'FALSE';
+            break;
+        case "TABLE":
+            isCopyIntoBool = 'TRUE';
+            break;
+        }
+
+    let cntrlFileEntryView = `
+                            '###', 
+                            'TRUE',
+                            ''''||CURRENT_TIMESTAMP()||'''', 
+                            'CURRENT_TIMESTAMP()', 
+                            ''''||'${sourceFileNamePattern}'||'''', 
+                            ''''||'${tgtDataLakePath}'||'''', 
+                            ''''||''||'''', 
+                            ''''||''||'''', 
+                            ''||'FALSE'||'', 
+                            ''||'FALSE'||'', 
+                            ''''||''||'''', 
+                            ''''||''||'''', 
+                            ''''||'N'||'''', 
+                            ''''||'NONE'||'''' `
+
+    let cntrlFileEntryTable = `
+                            '###', 
+                            'TRUE',
+                            ''''||CURRENT_TIMESTAMP()||'''', 
+                            'CURRENT_TIMESTAMP()', 
+                            ''''||'${sourceFileNamePattern}'||'''', 
+                            ''''||'${tgtDataLakePath}'||'''', 
+                            ''''||'${tgtSchemaName}'||'''', 
+                            ''''||'${tgtTableName}'||'''', 
+                            ''||'${truncateBool}'||'', 
+                            ''||'${isCopyIntoBool}'||'', 
+                            ''''||''||'''', 
+                            ''''||'${ddlTblFileName + "_FILE_FORMAT"}'||'''', 
+                            ''''||'N'||'''', 
+                            ''''||'NONE'||'''' `
+    
+    let cntrlTableSql = `
+        SELECT  'VIEW CONTROL TABLE ENTRY:' AS ddl_type,
+                'util.adf_hpdsdatalake_file_copy_control.staticdata.sql' AS file_name,
+                TO_VARCHAR('('|| CONCAT_WS( ', ', ${cntrlFileEntryView} ) ||')') as ddl
+        FROM    DUAL
+        UNION
+        SELECT  'TABLE CONTROL TABLE ENTRY:' AS ddl_type,
+                'util.adf_hpdsdatalake_file_copy_control.staticdata.sql' AS file_name,
+                TO_VARCHAR('('|| CONCAT_WS( ', ', ${cntrlFileEntryTable} ) ||')') as ddl
+        FROM    DUAL
+    `
+
+    resultSet = snowflake.execute({sqlText: cntrlTableSql});
+    let cntrlTabQueryId = resultSet.getQueryId();
+    
+    while ( resultSet.next() ) {
+        ddlResults += '\n\n' + resultSet.getColumnValue(1) + '\n' + resultSet.getColumnValue(2) + '\n' + resultSet.getColumnValue(3);
+    }; 
+
+    //-------
+    // CLEANUP FF
+    //-------
+
+    let ffCleanupSql = `DROP FILE FORMAT ${tempFfName};`
+
+    resultSet = snowflake.execute({sqlText: ffCleanupSql});
+    resultSet.next();
+    
+    //-------- 
+    
+
+
+    //-------- 
+    // Log success
+    result = 'SUCCESS';
+	let endTime = new Date();
+    
+	let logSuccess = `
+		INSERT INTO ${logTable} (
+		   NAME
+		  ,TYPE
+		  ,START_TIME
+		  ,END_TIME
+          ,INPUT_FILE_NAME
+		  ,RESULT_TEXT
+          ,DDL_CREATED
+          ,SQL_STATEMENT
+		) VALUES (
+			'${procName}',
+			'PROCEDURE',
+			'${startTime.toISOString()}',
+			'${endTime.toISOString()}',
+            '${inputFileName}',
+			'${result}',
+            '${ddlResults.replace(/'/g, "''")}',
+            '${inputArray}'
+			)`;
+	
+    snowflake.execute({sqlText: logSuccess});    
+}
+catch (err)
+{
+    sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+	
+    result = 'Failed';
+	
+	let endTime = new Date();
+    
+	//Log on Error 
+	let logError = `
+		INSERT INTO ${logTable} (
+			 NAME
+			,TYPE
+			,START_TIME
+			,END_TIME
+            ,INPUT_FILE_NAME
+			,RESULT_TEXT
+			,SQL_STATEMENT
+			,ERROR_CODE
+			,ERROR_STATE
+			,ERROR_MESSAGE
+			,ERROR_STACK_TRACE_TEXT
+		) VALUES (
+			  '${procName}',
+			  'PROCEDURE',
+			  '${startTime.toISOString()}',
+			  '${endTime.toISOString()}',
+              '${inputFileName}',
+			  '${result}',
+			  '${sqlText}',
+			  '${code}',
+			  '${state}',
+			  '${message}',
+			  '${stack}'
+			)`;	
+            
+	snowflake.execute({sqlText: logError});
+	throw err;
+} 
+
+return ddlResults;
+
+$$
+;

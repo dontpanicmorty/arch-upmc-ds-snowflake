@@ -1,0 +1,18 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.CCCD_FILEMAP
+(
+ID                         INT,
+FILETYPE               VARCHAR,
+CNUMBER                    INT,
+FIELD_NAME             VARCHAR,
+DATA_TYPE              VARCHAR,
+DATA_LENGTH                INT,
+POS_FROM                   INT,
+POS_TO                     INT,
+DESCRIPTION            VARCHAR,
+PK                     VARCHAR,
+MEDICARE               VARCHAR,
+CREATED_DATE     TIMESTAMP_NTZ,
+UPDATED_DATE     TIMESTAMP_NTZ
+)
+COMMENT='CREATED FOR UPMCVH_PROD MIGRATION'
+;

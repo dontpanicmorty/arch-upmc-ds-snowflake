@@ -1,0 +1,26 @@
+CREATE OR REPLACE TABLE ADL_PROD.INFO_SBA_ONCOLOGY_MEMBER_ELIGIBILITY
+(
+MASTER_MEMBER_ID                 VARCHAR,
+MEMBER_NBR                       VARCHAR,
+LOB                              VARCHAR,
+MIN_CANCER_CODE_ANY        TIMESTAMP_NTZ,
+MIN_CANCER_CODE_PRIM       TIMESTAMP_NTZ,
+MIN_CANCER_CODE_SEC        TIMESTAMP_NTZ,
+DECEASED_DATE              TIMESTAMP_NTZ,
+RELATIONSHIP_DESC                VARCHAR,
+BIRTH_YEAR                       VARCHAR,
+GENDER_CODE                      VARCHAR,
+ADDRESS_ZIP_CODE_BASE            VARCHAR,
+MEMBERSHIP_DATE_YEAR             VARCHAR,
+MEMBERSHIP_DATE_YYYYMM           VARCHAR,
+BUSINESS_INSURED_TYPE            VARCHAR,
+PLAN_CATEGORY                    VARCHAR,
+DIVISION_DESC                    VARCHAR,
+MONTHS                            NUMBER,
+DUAL_ELIGIBILITY                  NUMBER,
+RX_COVERAGE                       NUMBER,
+PRIMARY_INS                       NUMBER,
+LOAD_DATE                  TIMESTAMP_NTZ
+)
+COMMENT='Created for ADL_PROD Migration'
+;

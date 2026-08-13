@@ -1,0 +1,61 @@
+{
+  "outputSchema": "PRICING",
+  "outputTable": "INPATIENT_FEE_SCHEDULE",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+  "fileFormat": "BUSINESS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "SCHEDULE_TYPE",
+          "outputField": "SCHEDULE_TYPE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "SEGMENT",
+          "outputField": "SEGMENT"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "VENDOR",
+          "outputField": "VENDOR"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "BILLING_CODE",
+          "outputField": "BILLING_CODE"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "MS-DRG_TITLE",
+          "outputField": "MS_DRG_TITLE"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "RATE",
+          "outputField": "RATE"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "NEGOTIATION_TYPE",
+          "outputField": "NEGOTIATION_TYPE"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "FILE_DATE",
+          "outputField": "FILE_DATE"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "ADDITIONAL_INFORMATION",
+          "outputField": "ADDITIONAL_INFORMATION"
+        }
+      ]
+    }
+  }
+}

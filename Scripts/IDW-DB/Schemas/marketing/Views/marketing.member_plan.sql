@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW MARKETING.MEMBER_PLAN
+AS
+SELECT
+MEMBER_KEY,
+PLAN_KEY,
+LOAD_DATE
+FROM &{IDW_LAKE}.MARKETING.MEMBER_PLAN;
+!set variable_substitution=false;

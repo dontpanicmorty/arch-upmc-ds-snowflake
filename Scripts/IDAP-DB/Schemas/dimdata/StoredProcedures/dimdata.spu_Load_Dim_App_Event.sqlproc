@@ -1,0 +1,97 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_APP_EVENT()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_APP_EVENT`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_APP_EVENT AS tgt
+USING (
+        SELECT DISTINCT
+        APP_PRODUCT_NAME
+        ,EVENT_NAME
+        ,EVENT_VALUES
+        FROM STAGEDATA.DIM_APP_EVENT_SELECT_VW
+    MINUS
+        SELECT
+        APP_PRODUCT_NAME
+        ,EVENT_NAME
+        ,EVENT_VALUES
+        FROM DIMDATA.DIM_APP_EVENT
+    ) AS src
+ON (tgt.APP_PRODUCT_NAME = src.APP_PRODUCT_NAME
+AND tgt.EVENT_NAME = src.EVENT_NAME
+AND tgt.EVENT_VALUES = src.EVENT_VALUES)
+
+WHEN NOT MATCHED
+
+THEN INSERT
+    (
+        DIM_APP_EVENT_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,APP_PRODUCT_NAME
+        ,EVENT_NAME
+        ,EVENT_VALUES
+    )
+VALUES
+    (
+        (SELECT IFNULL(MAX(DIM_APP_EVENT_KEY), 1000) FROM DIMDATA.DIM_APP_EVENT) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,src.APP_PRODUCT_NAME
+        ,src.EVENT_NAME
+        ,src.EVENT_VALUES
+    )
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

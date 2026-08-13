@@ -1,0 +1,123 @@
+CREATE OR REPLACE PROCEDURE PIWIK.SPU_LOAD_DAILY_EVENTS_SESSIONS( FILENAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+var inputFileName = FILENAME;
+var processStep = "PIWIK.LOAD_DAILY_EVENTS_SESSIONS";
+
+//Find table name based on the input file
+var tableName = '' ;
+if (FILENAME.includes('events')) {
+tableName = 'DAILY_EVENTS'
+}
+else if (FILENAME.includes('sessions')) {
+tableName = 'DAILY_SESSIONS'
+} 
+else {
+    throw "No mathcing table name for file: " + FILENAME ;
+}
+
+//Set up SQL
+var sql_copyInto = `COPY INTO PIWIK.${tableName}
+FROM
+@UTIL.HPDSDATALAKE_IDAPLAKE`;
+    
+//must create the path dynamically as a string. var binding doesn't work here
+sql_copyInto = sql_copyInto + inputFileName + ` FILE_FORMAT = (FORMAT_NAME = 'PIWIK.DAILY_EVENTS_SESSIONS_FILE_FORMAT')  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE ;`
+;
+
+var logQuery = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY(
+	NAME,
+	TYPE,
+	START_TIME,
+	END_TIME ,
+	INSERT_COUNT ,
+	UPDATE_COUNT ,
+	DELETE_COUNT ,
+	RESULT_TEXT ,
+	SQL_STATEMENT,
+	ERROR_CODE,
+	ERROR_STATE,
+	ERROR_MESSAGE,
+	ERROR_STACK_TRACE_TEXT
+)
+VALUES(
+:1
+,:2
+,:3::timestamp_ltz
+,:4::timestamp_ltz
+,:5
+,:6
+,:7
+,:8
+,:9
+,:10
+,:11
+,:12
+,:13
+);
+`;
+
+var nextSQL = "";
+
+var startTime = new Date().toISOString();
+var endTime = new Date().toISOString();
+
+try
+{	
+	nextSQL = sql_copyInto;
+		var stmt = snowflake.createStatement({
+        sqlText: sql_copyInto,
+        binds:[inputFileName]
+    });
+	
+	var result = stmt.execute();
+var rows_loaded = 0;
+
+if (result.getColumnCount() > 1) {
+    if (result.next()) {
+rows_loaded = result.getColumnValue(4);
+    }
+    }
+    else {
+    //No files processed
+    rows_loaded = 0;
+    }
+	
+//Update SQL to set FILENAME and INSERT_DATETIME
+
+var sql_updateTable = `UPDATE PIWIK.${tableName} SET FILENAME = '${inputFileName}', INSERT_DATETIME = CURRENT_TIMESTAMP() WHERE FILENAME IS NULL;`;
+ 
+snowflake.execute({
+		sqlText: sql_updateTable,
+		binds:[]
+	})
+		
+	endTime = new Date().toISOString();
+
+	snowflake.execute({
+		sqlText: logQuery,
+		binds:[processStep, "TABLE", startTime, endTime, rows_loaded,0,0, "SUCCEEDED", nextSQL, "", "", "", ""]
+	});
+
+	nextSQL = logQuery;
+	
+return "SUCCEEDED";
+ }
+catch(err)
+{
+	endTime = new Date().toISOString();
+	
+	snowflake.execute ({
+		sqlText: logQuery,
+		binds:[processStep, "TABLE", startTime, endTime, -1, 0,0,"FAILED", nextSQL, err.code, err.state, err.message, err.stackTraceTxt]
+	});
+
+    throw err;
+
+    return "FAILED";
+}
+
+$$;

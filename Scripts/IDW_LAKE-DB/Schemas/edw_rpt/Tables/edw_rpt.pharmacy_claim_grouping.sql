@@ -1,0 +1,25 @@
+CREATE OR REPLACE TABLE EDW_RPT.PHARMACY_CLAIM_GROUPING
+(
+PHARMACY_CLAIM_GROUPING_KEY            NUMBER,
+REFILL_CODE                           VARCHAR,
+PHARMACY_NETWORK_CODE                 VARCHAR,
+PHARMACY_NETWORK_DESC                 VARCHAR,
+PRICE_SOURCE_DESC                     VARCHAR,
+DISPENSE_CODE                         VARCHAR,
+DISPENSE_DESC                         VARCHAR,
+LOAD_DATE                       TIMESTAMP_NTZ,
+UPDATE_DATE                     TIMESTAMP_NTZ,
+CLAIM_GENERIC_SOURCE_CODE             VARCHAR,
+CLAIM_GENERIC_SOURCE_DESC             VARCHAR,
+CLAIM_HIC3_CODE                       VARCHAR,
+CLAIM_HIC3_DESC                       VARCHAR,
+CLAIM_GENERIC_PRICE_CODE              VARCHAR,
+CLAIM_GENERIC_PRICE_DESC              VARCHAR,
+PRICE_SOURCE_CODE                     VARCHAR,
+COMPOUND_CODE                         VARCHAR,
+COMPOUND_DESC                         VARCHAR,
+ESI_FUNDED_FLAG                       VARCHAR,
+ESI_FUNDED_FLAG_DESC                  VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

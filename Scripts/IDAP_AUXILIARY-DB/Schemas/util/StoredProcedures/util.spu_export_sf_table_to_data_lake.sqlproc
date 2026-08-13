@@ -1,0 +1,156 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_EXPORT_SF_TABLE_TO_DATA_LAKE(ADF_COPY_CONTROL_KEY VARCHAR, RUN_ID VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS 
+$$
+
+//-------
+// INPUTS
+//------
+var adf_control_key = parseInt(ADF_COPY_CONTROL_KEY);
+var run_id = RUN_ID;
+
+//-------
+// Variables Replaceable by need 
+//-----
+var tgt_stage = '@UTIL.HPDSDATALAKE_OUTGOING';
+
+//------
+//Variables for logging
+//------
+var startTime = new Date().toISOString();
+//Variables for date part file drop location
+var year  = startTime.substr(0, 4);  //yyyy
+var month = startTime.substr(5, 2);  //mm
+var day   = startTime.substr(8, 2);  //dd
+
+//-----
+// Execute control_table_query
+//----
+//Control table query 
+var control_table_query = "\
+    SELECT  IS_ACTIVE, \
+            SOURCE_SCHEMA_NAME, \
+            SOURCE_VIEW_NAME, \
+            TARGET_DATA_LAKE_PATH, \
+            TARGET_XDRIVE_PATH, \
+            FILE_FORMAT, \
+            CUSTOMER_EMAIL_ADDRESS \
+    FROM    UTIL.ADF_EXPORT_COPY_CONTROL \
+    WHERE   ADF_COPY_CONTROL_KEY = " + adf_control_key + ";";
+    
+// Getting results from control file table for specified control file key
+var control_table_data = snowflake.createStatement({sqlText: control_table_query});
+var res_control_table_data = control_table_data.execute();
+    res_control_table_data.next();
+
+//COLLECTING VARIABLES FROM CONTROL TABLE    
+var is_active             = res_control_table_data.getColumnValue(1);
+var source_schema_name    = res_control_table_data.getColumnValue(2);
+var source_view_name      = res_control_table_data.getColumnValue(3);
+var target_data_lake_path = res_control_table_data.getColumnValue(4);
+var target_xdrive_path    = res_control_table_data.getColumnValue(5);
+var file_format           = res_control_table_data.getColumnValue(6);
+var customer_email_addr   = res_control_table_data.getColumnValue(7);
+
+var source_table_parsed = source_schema_name + '.' + source_view_name;
+
+//-----
+//Execute obj_type_query
+//-----
+//Object type query 
+var obj_type_query = "\
+    SELECT  TABLE_TYPE \
+    FROM    INFORMATION_SCHEMA.TABLES \
+    WHERE   TABLE_SCHEMA = '" + source_schema_name + "' \
+    AND     TABLE_NAME   = '" + source_view_name + "';";
+    
+var obj_type_data_snowflake = snowflake.createStatement({sqlText: obj_type_query});
+var res_obj_type_data = obj_type_data_snowflake.execute();
+    res_obj_type_data.next();
+  
+var obj_type = res_obj_type_data.getColumnValue(1);
+
+
+
+//IF EXPORT IS INACTIVE LET USER KNOW
+if(is_active === false){
+    return "THIS EXPORT IS INACTIVE";
+    }
+//-----
+// BUILD EXPORT QUERY
+//-----
+var final_copy_query = "\
+    COPY INTO " + tgt_stage + target_data_lake_path + year + "/" + month + "/" + day + "/" + source_table_parsed + ".csv \
+    FROM ( \
+        SELECT * \
+        FROM " + source_table_parsed + " ) \
+    HEADER = TRUE \
+    SINGLE = TRUE \
+    FILE_FORMAT = ( FORMAT_NAME = " + file_format + " ); "
+    
+
+try{
+//EXECUTING COPY INTO AND RETURNING RESULTS OF QUERY
+var sql_statement = snowflake.createStatement({
+    sqlText: final_copy_query
+});
+var sql_results = sql_statement.execute();
+
+//GET RECORD COUNT FOR COPY INTO
+var result_array = [];
+while (sql_results.next()) {
+    result_array.push(sql_results.getColumnValue(1));
+}
+
+var unloaded_recs = result_array.toString();
+
+///////////////////////////////////////For logging
+var endTime = new Date().toISOString();
+var result = 'SUCCESS';
+
+var sqlLogCommand ="INSERT INTO LOGDATA.ADF_TABLE_EXPORT_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT, RUN_ID) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);";      
+
+
+snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [adf_control_key, source_table_parsed, obj_type, startTime, endTime, unloaded_recs, result, final_copy_query,run_id]
+        }
+    );
+
+////////////////////////////////////FOR LOGGING^
+
+
+//the return that provides the result set
+return unloaded_recs;
+
+
+}
+catch(err)
+{
+//////////////////////////////////FOR LOGGING
+var endTime = new Date().toISOString();
+var sqlLogCommand = "INSERT INTO LOGDATA.ADF_TABLE_EXPORT_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, RUN_ID, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);";
+
+snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[adf_control_key, source_table_parsed, obj_type, startTime, endTime, "FAILED", final_copy_query, run_id, err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+//////////////////////////////////FOR LOGGING^
+
+
+//RETURNING QUERY FOR POSSIBLE TROUBLESHOOTING
+var query_failed = "QUERY FAILED, COPY INTO STATEMENT: ";
+query_failed += final_copy_query;
+return query_failed;
+}
+
+
+$$
+;

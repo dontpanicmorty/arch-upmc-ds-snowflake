@@ -1,0 +1,102 @@
+CREATE OR REPLACE PROCEDURE HRA.SPU_EXPORT_SNPSCAN_JSON_DATA_CURRENT_CMS_BACKDATE("LAST_EXEC_DATE" VARCHAR(100))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Stored procedure for loading json files into blob storage from snowflake'
+EXECUTE AS CALLER
+AS '
+  var externalStageName = ''UTIL.HPDSDATALAKE_OUTGOING'';
+  var result = '''';
+  var i = 0;
+  var total_records = 0;
+  var fileName = '''';
+  var last_exec_dt = !LAST_EXEC_DATE ?  ''NA'' : LAST_EXEC_DATE;
+  var completion_dt = [''1900-01-01T00:00:00.000''];
+  try
+  {
+  //Created temp table to get count,completion datetime,unique_key,json_data from json vw
+   var rec_count = snowflake.execute({sqlText:`select count(*) from HRA.SNPSCAN_JSON_SELECT_CURRENT_CMS_BACKDATE_VW WHERE TO_TIMESTAMP_NTZ(COMPLETION_DATETIME) > ? 
+	    															 ORDER BY COMPLETION_DATETIME ASC`,binds:[last_exec_dt]});
+        rec_count.next();
+        var exec_iter = rec_count.getColumnValue(1);
+        var exec_loop = Math.ceil(exec_iter/1500);
+        var rec_offset = 0;
+        for(j=0;j<exec_loop;j++)
+        {     
+	    var resultSet = snowflake.createStatement({ sqlText: `CREATE OR REPLACE TEMPORARY TABLE HRA.SNPSCAN_JSON_SELECT_TEMP AS SELECT COUNT(*) AS DATA_COUNT,ARRAY_AGG(COMPLETION_DATETIME) AS COMPLETION_DATETIME,ARRAY_AGG(SNPSCAN_JSON_SELECT_VW_KEY) AS UNIQUE_KEY,ARRAY_AGG(JSON_DATA) AS JSON_DATA FROM 
+        (SELECT * FROM HRA.SNPSCAN_JSON_SELECT_CURRENT_CMS_BACKDATE_VW WHERE TO_TIMESTAMP_NTZ(COMPLETION_DATETIME) > TO_TIMESTAMP_NTZ(?) and is_valid_member = True  ORDER BY COMPLETION_DATETIME ASC LIMIT 1500 OFFSET `+ rec_offset +`)`,
+	    						binds:[last_exec_dt]});
+
+	    resultSet.execute();
+      //execute sql command
+	    var arr_stmt = snowflake.execute({sqlText: `SELECT DATA_COUNT,COMPLETION_DATETIME,UNIQUE_KEY,JSON_DATA FROM HRA.SNPSCAN_JSON_SELECT_TEMP`});
+	    arr_stmt.next();
+	    var json_len = arr_stmt.DATA_COUNT;
+	    var uniquekey_arr = arr_stmt.UNIQUE_KEY;
+        if(arr_stmt.getRowCount()>0)
+        {
+            var completion_dt = arr_stmt.COMPLETION_DATETIME ;    
+        }
+	    //write to blob with the snpscan prefix,json extension and uniquekey
+	    for(i=0;i<json_len;i++)
+            {
+			    var fileName = ''snpscan_'' + uniquekey_arr[i] + ''.json'';
+			    var stagePath = ''@'' + externalStageName + ''/snpscan_current_cms_backdate/''+ fileName;
+                // Create COPY statement with snpscan on the files
+			    var copyStatement =  `COPY INTO ` + stagePath + ` FROM (SELECT PARSE_JSON(JSON_DATA[`+i+`]) AS JSON_DATA FROM  HRA.SNPSCAN_JSON_SELECT_TEMP)
+									  FILE_FORMAT = HRA.OUTGOING_JSON_FORMAT
+								      OVERWRITE = TRUE
+								      SINGLE = TRUE`;
+			    var cp_rs = snowflake.execute({sqlText:copyStatement});
+			    cp_rs.next();
+			    if (cp_rs.getColumnValue(1) > 0)
+			    {
+				    var copy_status = ''SUCCESS'';
+			    }
+				//Log results to table for SUCCESS Scenarios
+			    var audit_entry = snowflake.createStatement({sqlText: `INSERT INTO LOGDATA.JSON_DATA_EXEC_CONFIG
+															(SOURCE_SYSTEM,
+															EXEC_TIME,
+															COMPLETION_DATETIME,
+															EXEC_STATUS,
+															EXEC_FILENAME)
+															SELECT 
+																''snpscan'' AS SOURCE_SYSTEM,
+																TO_TIMESTAMP_NTZ(CURRENT_TIMESTAMP()) AS exec_time,
+																TO_TIMESTAMP_NTZ(?),
+																?,
+																? 
+															FROM dual`,
+									binds:[completion_dt[i],copy_status,fileName]});
+			    audit_entry.execute();
+		    }
+            rec_offset = rec_offset + 1500;
+            total_records = total_records + i;
+        }
+    }
+    catch(err)
+    {
+    //Log results to table for FAILED scenarios
+         var copy_status = ''FAILED'';
+         var audit_failed = snowflake.createStatement({sqlText: `INSERT INTO LOGDATA.JSON_DATA_EXEC_CONFIG
+                                                                       (SOURCE_SYSTEM,
+                                                                       EXEC_TIME,
+                                                                       COMPLETION_DATETIME,
+                                                                       EXEC_STATUS,
+                                                                       EXEC_FILENAME,
+                                                                       ERROR_MESSAGE,
+                                                                       ERROR_CODE)
+                                                                   SELECT 
+                                                                       ''snpscan'' AS SOURCE_SYSTEM,
+                                                                       TO_TIMESTAMP_NTZ(CURRENT_TIMESTAMP()) AS exec_time,
+                                                                        TO_TIMESTAMP_NTZ(?),
+                                                                        ?,
+                                                                        ?,
+                                                                        ?,
+                                                                        ? 
+                												   FROM dual`,
+										binds:[completion_dt[i],copy_status,fileName,err.message,err.code]});                                        
+			 audit_failed.execute();
+    }
+    result+=  total_records +'' files copied to data lake'' ; 
+  return result;
+  ';

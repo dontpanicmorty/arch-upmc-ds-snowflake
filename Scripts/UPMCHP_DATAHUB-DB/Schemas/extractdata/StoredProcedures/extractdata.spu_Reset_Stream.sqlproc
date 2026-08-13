@@ -1,0 +1,11 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_RESET_STREAM(STREAM_NAME VARCHAR)
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+COMMENT = 'Creates a TMP table and executes DML against it to clear the relevant STREAM. Used mainly by ADF when the target is outside of Snowflake'
+AS
+$$
+    // Create a temporary table with the fields in the stream
+    var createTempTableSql = `CREATE OR REPLACE TEMPORARY TABLE RESET_STREAM_TMP_TBL AS SELECT TOP 1 * FROM ${STREAM_NAME}`;
+    var stmt = snowflake.createStatement({sqlText: createTempTableSql});
+    stmt.execute();
+$$;

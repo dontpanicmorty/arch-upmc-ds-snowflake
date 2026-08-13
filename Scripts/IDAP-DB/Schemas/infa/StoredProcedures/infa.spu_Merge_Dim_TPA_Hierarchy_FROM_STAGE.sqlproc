@@ -1,0 +1,39 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_DIM_TPA_HIERARCHY_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command = "";
+sql_command += "MERGE INTO DIMDATA.DIM_TPA_HIERARCHY AS T";
+sql_command += " USING INFA.DIM_TPA_HIERARCHY AS S";
+sql_command += " ON (T.DIM_TPA_HIERARCHY_KEY=S.DIM_TPA_HIERARCHY_KEY)";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'D' THEN DELETE";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'U' THEN UPDATE";
+sql_command += " SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT, T.INSERT_DATETIME=S.INSERT_DATETIME, T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME, T.TPA_CLIENT_ID = S.TPA_CLIENT_ID, T.TPA_ID = S.TPA_ID, T.TPA_DIV_ID = S.TPA_DIV_ID, T.TPA_CLIENT_DESC = S.TPA_CLIENT_DESC, T.TPA_ID_DESC = S.TPA_ID_DESC, T.TPA_DIV_DESC = S.TPA_DIV_DESC";
+sql_command += " WHEN NOT MATCHED THEN INSERT";
+sql_command += " (T.DIM_TPA_HIERARCHY_KEY, T.MD5_VALUE_TEXT, T.INSERT_DATETIME, T.LAST_UPDATED_DATETIME, T.TPA_CLIENT_ID, T.TPA_ID, T.TPA_DIV_ID, T.TPA_CLIENT_DESC, T.TPA_ID_DESC, T.TPA_DIV_DESC)";
+sql_command += " VALUES";
+sql_command += " (S.DIM_TPA_HIERARCHY_KEY, S.MD5_VALUE_TEXT, S.INSERT_DATETIME, S.LAST_UPDATED_DATETIME, S.TPA_CLIENT_ID, S.TPA_ID, S.TPA_DIV_ID, S.TPA_CLIENT_DESC, S.TPA_ID_DESC, S.TPA_DIV_DESC)";
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;

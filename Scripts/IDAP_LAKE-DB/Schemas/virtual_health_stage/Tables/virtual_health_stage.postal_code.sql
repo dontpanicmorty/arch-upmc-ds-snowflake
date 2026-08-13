@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.POSTAL_CODE
+(
+ID                       INT,
+CITY_ID                  INT,
+REGION_ID                INT,
+CODE                 VARCHAR,
+CREATED_AT     TIMESTAMP_NTZ,
+UPDATED_AT     TIMESTAMP_NTZ
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

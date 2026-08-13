@@ -1,0 +1,61 @@
+CREATE OR REPLACE PROCEDURE PROVIDER_DIRECTORY.SPU_REMOVE_TARGET_FILES(FULLFILEPATH VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+
+//Expects a fully qualified filepath including the stage and the trailing /
+//Example to purge the providers directory before loading new data to it: @PROVIDER_DIRECTORY.TEST_STAGE_OUT/providers/
+
+// Create Insert Overwrite command
+var sqlCommand =
+`
+REMOVE ${FULLFILEPATH};
+`;
+
+try
+{
+    //Execute SQL Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds: [FULLFILEPATH, "Procedure", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[FULLFILEPATH, "Procedure", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+    throw result;
+}
+return result;
+$$
+;

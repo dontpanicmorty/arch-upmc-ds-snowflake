@@ -1,0 +1,139 @@
+/**
+Writes the `JSON_DATA` column from a view with to the WEBSOLUTIONS_PUBLICWEB
+blob storage container in a standardized way.
+
+- `FILEPATH` should be the path under `STAGE_PATH` that we're writing to. Should
+  start with a slash.
+- `SCHEMA_NAME` should be the name of the schema of table/view we're working with
+- `VIEW_NAME` should be the name of the table/view we're working with
+- `WHERE_CLAUSE` is an optional string to append to the `SELECT JSON_DATA FROM $VIEW`
+  call to restrict it to only one result.
+- `DATE_STRING` is the current YYYY-MM-DD pattern, which will be appended to 
+  the filename as an intermediary folder
+- `STAGE_PATH` is the full path under a stage, starting with the @ sign, that
+  we'll write the file under. Technically, this and FILEPATH could be combined
+  into one variable, but this has a default value.
+
+This will intentionally throw an error if the call returns more than one row,
+as we only intend one file to ever be written to a given `FILEPATH`.
+*/
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_COPY_VIEW_TO_BLOB (
+  FILEPATH VARCHAR, 
+  SCHEMA_NAME VARCHAR,
+  VIEW_NAME VARCHAR, 
+  WHERE_CLAUSE VARCHAR,
+  DATE_STRING VARCHAR,
+  STAGE_PATH VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+let startTime = new Date();
+let sqlText, resultSet;
+
+// Prepend any standard pathing we want to have
+let stagePath = STAGE_PATH || '@EXTRACTDATA.HPDSDATALAKE_OUTGOING/cmspricing/mrf/';
+let fullFilepath = stagePath + FILEPATH;
+
+try {
+  // Sanity check
+  if (!FILEPATH.startsWith('/')) {
+    throw new Error('Filepath can not start with a slash.');
+  }
+  
+  // Ensure no one tried to cram two params in one
+  if (VIEW_NAME.indexOf('.') > -1 || SCHEMA_NAME.indexOf('.') > -1) {
+    throw new Error('Keep VIEW_NAME and SCHEMA_NAME separate. This can also only be run on data inside its own database.');
+  }
+
+  sqlText = `SELECT COUNT(*) AS CNT 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = '${SCHEMA_NAME}'
+      AND TABLE_NAME = '${VIEW_NAME}' 
+      AND COLUMN_NAME = 'JSON_DATA';`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  count = resultSet.getColumnValue('CNT');
+  if (count === 0) {
+    throw new Error(`Table/view ${SCHEMA_NAME}.${VIEW_NAME} was referenced, but did not have a JSON_DATA column to export.`);
+  }
+  
+  sqlText = `SELECT COUNT(JSON_DATA) AS CNT FROM ${VIEW_NAME} ${WHERE_CLAUSE}`;
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  let cnt = resultSet.getColumnValue('CNT');
+  if (cnt > 1) {
+    throw new Error(`Query returned ${cnt} rows. Only one row can be written at a time.`);
+  }
+
+  // Stringify the data, then set up the copy with the fileformat/options we want
+  sqlText = `COPY INTO ${fullFilepath} FROM (
+    SELECT PARSE_JSON(REPLACE(TO_JSON(JSON_DATA), 'XXXX-XX-XX', '${DATE_STRING}'))
+    FROM ${VIEW_NAME} ${WHERE_CLAUSE}
+  )
+  FILE_FORMAT = (FORMAT_NAME = EXTRACTDATA.WEBSOLUTIONS_PUBLICWEB_EXPORT_FILE_FORMAT)
+  overwrite = true, 
+  single = true
+  max_file_size = 5000000000;`; // 5GB, max
+
+  resultSet = snowflake.execute({sqlText});
+  resultSet.next();
+  const diag = `${resultSet.getColumnValue('output_bytes') / 1000} KB written to '${fullFilepath}'.`;
+
+  // Logging success
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,RESULT_TEXT
+      ,SQL_STATEMENT
+  ) VALUES (
+    '${fullFilepath}',
+    'FILE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${diag.replace(/'/g, "''")}',
+    '${sqlText.replace(/'/g, "''")}'
+  )`;
+  snowflake.execute({sqlText});
+
+  return diag;
+}
+// Error logging
+catch (err) {
+  sqlText = (sqlText || '(no SQL run yet)').replace(/'/g, "''");
+  let code = err.code || err.name;
+  let state = err.state || '(JavaScript error, not provided)'
+  let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+  let stack = (err.stackTraceTxt || err.stack).replace(/'/g, "''");
+  
+  let endTime = new Date();
+  sqlText = `INSERT INTO LOGDATA.EXTRACT_HISTORY (
+      NAME
+      ,TYPE
+      ,START_TIME
+      ,END_TIME
+      ,SQL_STATEMENT
+      ,ERROR_CODE
+      ,ERROR_STATE
+      ,ERROR_MESSAGE
+      ,ERROR_STACK_TRACE_TEXT
+  ) VALUES (
+    '${fullFilepath}',
+    'FILE',
+    '${startTime.toISOString()}',
+    '${endTime.toISOString()}',
+    '${sqlText}',
+    '${code}',
+    '${state}',
+    '${message}',
+    '${stack}'
+  )`;
+  snowflake.execute({sqlText});
+  throw err;
+}
+$$;

@@ -1,0 +1,66 @@
+{
+    "outputSchema": "NETWORK",
+    "outputTable": "BPL_RIDER_NETWORK_CROSSWALK",
+    "hasHeader": true,
+    "hasTrailer": false,
+    "fileType": "delimited",
+    "headerFormat": "BPL_RIDER_NETWORK_CROSSWALK_FILE_FORMAT_HEADER",
+    "fileFormat": "BPL_RIDER_NETWORK_CROSSWALK_FILE_FORMAT",
+    "truncReload": true,
+    "mappingTypes": {
+        "all": {
+        "mappingContents": [
+            {
+            "columnOrder": 1,
+            "inputField": "BPL_ID",
+            "outputField": "BPL_ID"
+            },
+            {
+            "columnOrder": 2,
+            "inputField": "BPL_NAME",
+            "outputField": "BPL_NAME"
+            },
+            {
+            "columnOrder": 3,
+            "inputField": "EFF_DATE",
+            "outputField": "EFF_DATE"
+            },
+            {
+            "columnOrder": 4,
+            "inputField": "TERM_DATE",
+            "outputField": "TERM_DATE"
+            }, 
+			{
+            "columnOrder": 5,
+            "inputField": "FORM_ID",
+            "outputField": "FORM_ID"
+            },               
+            {
+            "columnOrder": 6,
+            "inputField": "PHCY_NET",
+            "outputField": "PHCY_NET"
+            },
+            {
+            "columnOrder": 7,
+            "inputField": "MARKET_SEG",
+            "outputField": "MARKET_SEG"
+            },
+            {
+            "columnOrder": 8,
+            "inputField": "TPA_CLIENT_ID",
+            "outputField": "TPA_CLIENT_ID"
+            },
+			{
+            "columnOrder": 9,
+            "inputField": "TPA_ID",
+            "outputField": "TPA_ID"
+            },
+			{
+            "columnOrder": 10,
+            "inputField": "TPA_DIV_ID",
+            "outputField": "TPA_DIV_ID"
+            }
+       ]
+       }
+    }
+}

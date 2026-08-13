@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.LANGUAGE
+(
+ID                  INT,
+NAME            VARCHAR,
+POSITION            INT,
+ISO_639_3       VARCHAR,
+NISO_Z39        VARCHAR,
+ISO_639_1       VARCHAR,
+CUSTOM_CODE     VARCHAR,
+HIDDEN              INT
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

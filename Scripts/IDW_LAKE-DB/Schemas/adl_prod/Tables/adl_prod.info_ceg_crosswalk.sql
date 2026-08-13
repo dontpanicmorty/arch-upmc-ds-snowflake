@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE ADL_PROD.INFO_CEG_CROSSWALK
+(
+ENCOUNTER_MONTH                VARCHAR,
+ENCOUNTER_ID                   VARCHAR,
+CLINICAL_ENCOUNTER_GROUP       VARCHAR,
+CLAIM_NBR                      VARCHAR,
+ER_VISIT_LEVEL                 VARCHAR,
+UTILIZ_CNT                   NUMBER(1)
+)
+COMMENT='Created for ADL_PROD Migration'
+;

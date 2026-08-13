@@ -1,0 +1,35 @@
+CREATE OR REPLACE VIEW DIMDATA.FACT_ENROLLMENT_SNAPSHOT_VW
+AS
+SELECT
+Report_Date_Key,
+Report_Date,
+Fact_Enrollment_Key,
+MD5_Value_Text,
+Insert_Datetime,
+Last_Updated_Datetime,
+Report_Year_Month_Text,
+Dim_TPA_Hierarchy_Key,
+Dim_Member_Key,
+Dim_Enrollment_Span_Key,
+Dim_Plan_Key,
+Dim_Sales_Channel_Key,
+Eligibility_Start_Date_Key,
+Eligibility_End_Date_Key,
+Enrollment_Date_Key,
+Renewal_Date_Key,
+Eligibility_Start_Date,
+Eligibility_End_Date,
+Enrollment_Date,
+Renewal_Date,
+Dim_Group_Key,
+Dim_Sub_Group_Key,
+Dim_GL_Distribution_Key,
+Subscriber_Flag,
+Dim_Rate_Cell_Key,
+Eligibility_Days_In_Report_Month_Cnt,
+Dim_Rider_Key,
+Medical_Rider_Flag,
+Dim_Eligibility_Type_Key,
+Dim_Plan_Segment_Key
+FROM DIMDATA.FACT_ENROLLMENT_SNAPSHOT
+;

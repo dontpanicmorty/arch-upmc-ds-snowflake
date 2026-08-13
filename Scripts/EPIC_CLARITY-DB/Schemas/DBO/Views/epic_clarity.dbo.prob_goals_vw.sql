@@ -1,0 +1,11 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW DBO.PROB_GOALS
+AS
+SELECT
+ PROBLEM_ID
+, LINE
+, GOAL_ID
+, CM_PHY_OWNER_ID
+, CM_LOG_OWNER_ID
+FROM &{DBEXTRACT}.EPIC_CLARITY_STAGE.DBO__PROB_GOALS;
+!set variable_substitution=false;

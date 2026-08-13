@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_SAFETY
+(
+CLAIM_ID                         NUMBER(33,5),
+CLAIM_NUMBER                    VARCHAR,
+EVENT_NUMBER                    VARCHAR,
+DIVISION_DESCR                  VARCHAR,
+BUSINESS_UNIT_ROLLUP            VARCHAR,
+BUSINESS_UNIT_CODE              VARCHAR,
+BUSINESS_UNIT_DESCR             VARCHAR,
+DEPARTMENT_CODE                 VARCHAR,
+DEPARTMENT_DESCR                VARCHAR,
+EMPLOYEE_ID                     VARCHAR,
+MEMBER_NBR                      VARCHAR,
+SSN                             VARCHAR,
+DATE_OF_INJURY            TIMESTAMP_NTZ,
+DTTM_OF_EVENT             TIMESTAMP_NTZ,
+DTTM_OF_REPORT            TIMESTAMP_NTZ,
+REPORTING_LAG                    NUMBER(33,5),
+OSHA_REPORTABLE                 VARCHAR,
+CLAIM_TYPE                      VARCHAR,
+SPECIFIC_CAUSE_CODE             VARCHAR,
+SPECIFIC_CAUSE_DESCR            VARCHAR,
+BASIC_CAUSE_DESCR               VARCHAR,
+INJURY_CODE                     VARCHAR,
+INJURY_DESCR                    VARCHAR,
+SAFETY_CATEGORY                 VARCHAR,
+TOTAL_INCURRED                   NUMBER(33,5),
+TOTAL_PAID                       NUMBER(33,5),
+TOTAL_RESERVES                   NUMBER(33,5),
+TOTAL_WORK_LOSS_DAYS             NUMBER(33,5),
+TOTAL_RESTRICTED_DAYS            NUMBER(33,5),
+INSERT_DATE               TIMESTAMP_NTZ,
+UPDATE_DATE               TIMESTAMP_NTZ
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

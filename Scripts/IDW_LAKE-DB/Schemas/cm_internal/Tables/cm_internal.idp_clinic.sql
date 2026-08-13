@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_CLINIC
+(
+HCID                 VARCHAR,
+MEM_MONTH            VARCHAR,
+DATLAG                NUMBER(33,5),
+CURRLAG               NUMBER(33,5),
+CCC_VISIT             NUMBER(33,5),
+PFW_VISIT             NUMBER(33,5),
+GAP_VISIT             NUMBER(33,5),
+NEW_PCP_VISIT         NUMBER(33,5),
+PREV_PCP_VISIT        NUMBER(33,5),
+ANY_CLINIC_VISIT      NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

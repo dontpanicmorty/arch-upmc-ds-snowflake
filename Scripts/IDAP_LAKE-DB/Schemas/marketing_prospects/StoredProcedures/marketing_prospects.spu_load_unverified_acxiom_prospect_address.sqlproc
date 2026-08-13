@@ -1,0 +1,110 @@
+CREATE OR REPLACE PROCEDURE MARKETING_PROSPECTS.SPU_LOAD_UNVERIFIED_ACXIOM_PROSPECT_ADDRESS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `MARKETING_PROSPECTS.UNVERIFIED_ACXIOM_PROSPECT_ADDRESS`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE MARKETING_PROSPECTS.TMP_UNVERIFIED_ACXIOM_PROSPECT_ADDRESS
+AS
+SELECT DISTINCT CONCAT_ADDRESS AS ADDRESS, INPUT_ADDRESS_LINE2_4111 AS ADDRESS2LINE, INPUT_CITY_3040 AS CITY, INPUT_STATE_3038 AS STATE, INPUT_ZIP_CODE_3043 AS ZIP, INPUT_ZIP4_CODE_3044 AS ZIP4, ENTITY_REALID_PLACE_ID 
+from ACXIOMDB.FORMATTED_PROSPECTS_18_65
+UNION ALL
+SELECT DISTINCT CONCAT_ADDRESS AS ADDRESS, INPUT_ADDRESS_LINE2_4111 AS ADDRESS2LINE, INPUT_CITY_3040 AS CITY, INPUT_STATE_3038 AS STATE, INPUT_ZIP_CODE_3043 AS ZIP, INPUT_ZIP4_CODE_3044 AS ZIP4, ENTITY_REALID_PLACE_ID 
+from ACXIOMDB.FORMATTED_PROSPECTS_66_PLUS
+;`;
+
+
+// Create truncate statement to be executed.
+var sqlTruncateCommand = 
+`    
+TRUNCATE TABLE MARKETING_PROSPECTS.UNVERIFIED_ACXIOM_PROSPECT_ADDRESS
+;`;
+
+
+// Create insert statement to be executed.
+var sqlInsertCommand = 
+`    
+INSERT INTO MARKETING_PROSPECTS.UNVERIFIED_ACXIOM_PROSPECT_ADDRESS (ADDRESS_LINE_1, ADDRESS_LINE_2, CITY, STATE, ZIP, ZIP4, ENTITY_REALID_PLACE_ID)
+   SELECT DISTINCT ADDRESS, ADDRESS2LINE, CITY, STATE, ZIP, ZIP4, ENTITY_REALID_PLACE_ID 
+   FROM TMP_UNVERIFIED_ACXIOM_PROSPECT_ADDRESS
+;`;
+
+
+
+// Create view with the CEIL statement to split the table into batches for the pipeline run.
+var sqlViewCommand = 
+`CREATE OR REPLACE VIEW MARKETING_PROSPECTS.UNVERIFIED_ACXIOM_PROSPECT_ADDRESS_VW
+AS 
+SELECT ADDRESS_LINE_1, ADDRESS_LINE_2, CITY, STATE, ZIP, ZIP4, ENTITY_REALID_PLACE_ID, CEIL(ROW_NUMBER() OVER (ORDER BY ENTITY_REALID_PLACE_ID) / 5000) AS BATCH_NUMBER, ARRAY_TO_STRING(ARRAY_CONSTRUCT_COMPACT(ADDRESS_LINE_1, ADDRESS_LINE_2, CITY, STATE, ZIP),' ') as STREET, OBJECT_CONSTRUCT('STREET',STREET, 'INPUT_ID', ENTITY_REALID_PLACE_ID, 'MATCH', 'enhanced', 'CANDIDATES:', 10) AS JSON_SMARTY
+FROM UNVERIFIED_ACXIOM_PROSPECT_ADDRESS;`
+   
+try 
+{
+    //Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+
+    //Execute Truncate Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlTruncateCommand});
+    sfStatement.execute();
+    var result = "Succeeded";
+    
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+      sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+          (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+          VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText()]
+          }
+      )
+ 
+    //Execute View Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlViewCommand});
+    sfStatement.execute();
+    var result = "Succeeded";
+
+}
+catch (err)
+{
+    statement = snowflake.createStatement({ sqlText: sqlInsertCommand });
+    let code = err.code || err.name;
+    let state = err.state || '(JavaScript error, not provided)'
+    let message = (err.message || '(JavaScript error, not provided)').replace(/'/g, "''")
+    let endTime = new Date().toISOString();
+    result = procedureName + ' Failed'
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message]
+        }
+    );        
+    throw result;
+}
+
+return result;
+$$
+;

@@ -1,0 +1,162 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_SQLDB_COPY_INTO(ADF_SQLDB_COPY_CONTROL_KEY VARCHAR, RUN_ID VARCHAR, TARGET_DATABASE VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+//Version that supports only truncate/load and append incremental logic. Will not merge/update.
+ 
+// Taking passed adf_control_key and loading it into variable adf_control_key
+var adf_control_key = ADF_SQLDB_COPY_CONTROL_KEY;
+var run_id = RUN_ID;
+var target_database = TARGET_DATABASE
+ 
+//Variables for logging
+var startTime = new Date().toISOString();
+ 
+ 
+// Getting results from control file table for specified control file key
+var control_table_data = "select TARGET_DATA_LAKE_PATH, IS_ACTIVE, TARGET_TABLE_NAME, TARGET_SCHEMA_NAME, IS_INCREMENTAL_FLAG, IS_TRUNCATE_TABLE_FLAG, IS_COPY_INTO_FLAG from UTIL.ADF_SQLDB_COPY_CONTROL WHERE ADF_SQLDB_COPY_CONTROL_KEY = '"+adf_control_key+"';" ;
+var control_table_data_snowflake = snowflake.createStatement(
+           {
+           sqlText: control_table_data
+           }
+        );
+            var res_control_table_data = control_table_data_snowflake.execute();
+            res_control_table_data.next();
+ 
+//COLLECTING VARIABLES FROM CONTROL TABLE    
+var target_data_lake_path = res_control_table_data.getColumnValue(1);
+var is_active = res_control_table_data.getColumnValue(2);
+var target_table_name = res_control_table_data.getColumnValue(3);
+var target_schema_name = res_control_table_data.getColumnValue(4);
+var target_table_parsed = target_database+"."+target_schema_name +"."+target_table_name;
+ 
+//New Var to get the incremental flag
+var is_incremental = res_control_table_data.getColumnValue(5);
+var is_truncate = res_control_table_data.getColumnValue(6);
+var is_copy_into = res_control_table_data.getColumnValue(7); 
+ 
+ 
+//IF FILE IS INACTIVE LET USER KNOW
+if(is_active === false){
+    return "THIS FILE IS INACTIVE";
+}
+
+//IF COPY IS DISABLED
+if(is_copy_into === false){
+    return "THE COPY INTO IS DISABLED";
+}
+ 
+//TRUNCATE TABLE IF FULL LOAD
+if(is_truncate === true)
+{
+    truncate_table_sql = "TRUNCATE TABLE " +target_database+"."+target_schema_name+"."+target_table_name+";";
+    snowflake.execute ({sqlText: truncate_table_sql});
+ 
+}
+ 
+    var final_copy_query = "COPY INTO " +target_database+"."+target_schema_name+"."+target_table_name;
+ 
+        //GET THE LIST OF ALL COLUMNS OF TARGET DATABASE COMMA SEPARATED. SKIP IDENTITIES AND THE INSERT_DATETIME and LAST_UPDATED_DATETIME ADED ON SF SIDE
+        var targetcolumnlist = "select LISTAGG(column_name, ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION) as ColumnList from information_schema.columns where TABLE_SCHEMA = '" +target_schema_name+ "' and TABLE_NAME = '" +target_table_name+ "' and (CHARINDEX(column_name,(select SOURCE_QUERY from util.adf_sqldb_copy_control where ADF_SQLDB_COPY_CONTROL_KEY = '" + adf_control_key + "'), 1) != 0);"
+        var targetcolumnlist_snowflake = snowflake.createStatement(
+           {
+           sqlText: targetcolumnlist
+           }
+        );
+        var res_targetcolumnlist = targetcolumnlist_snowflake.execute();  
+        res_targetcolumnlist.next();
+
+        //GET THE SAME LIST WITH $1: APPENDED TO SUPPORT PARQUET USING ONE LARGE VARIANT COLUMN TO STORE DATA
+        var sourcecolumnlist = "select LISTAGG('$1:' || column_name, ',') WITHIN GROUP (ORDER BY ORDINAL_POSITION) as ColumnList from information_schema.columns where TABLE_SCHEMA = '" +target_schema_name+ "' and TABLE_NAME = '" +target_table_name+ "' and (CHARINDEX(column_name,(select SOURCE_QUERY from util.adf_sqldb_copy_control where ADF_SQLDB_COPY_CONTROL_KEY = '" + adf_control_key + "'), 1) != 0);"
+ 
+        var sourcecolumnlist_snowflake = snowflake.createStatement(
+           {
+           sqlText: sourcecolumnlist
+           }
+        );
+            var res_sourcecolumnlist = sourcecolumnlist_snowflake.execute();
+            res_sourcecolumnlist.next();  
+ 
+        //APPEND THESE STRINGS TO THE COPY QUERY
+        final_copy_query += ' (' + res_targetcolumnlist.getColumnValue(1) + ') FROM (SELECT ' + res_sourcecolumnlist.getColumnValue(1);
+        //ADDING HARDCODED STRINGS TO COPY INTO
+        final_copy_query += " FROM @UTIL.SNOWFLAKEDATA_DB_EXTRACT";
+        final_copy_query += "/";
+        final_copy_query += target_data_lake_path;
+        final_copy_query += "/"
+    
+        //ADDING FILE FORMAT IS SLIGHTLY DIFFERENT THAN THE GENERIC COPY
+        final_copy_query += " (FILE_FORMAT => UTIL.DB_EXTRACT_PARQUET_FILE_FORMAT));";
+
+ 
+try{
+//EXECUTING COPY OR MERGE INTO AND RETURNING RESULTS OF QUERY
+var sql_statement = snowflake.createStatement({
+    sqlText: final_copy_query
+});
+var sql_results = sql_statement.execute();
+ 
+///////////////////////////////////////For logging
+var endTime = new Date().toISOString();
+var result = "SUCCESS";
+ 
+var sqlLogCommand ="INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT, RUN_ID) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);";      
+ 
+ 
+snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [adf_control_key, target_table_parsed, "TABLE", startTime, endTime, sql_statement.getNumRowsInserted(), result, final_copy_query,run_id]
+        }
+    );
+ 
+////////////////////////////////////FOR LOGGING^
+ 
+ 
+ 
+var result_array = [];
+ 
+while (sql_results.next()) {
+    result_array.push(sql_results.getColumnValue(1));
+}
+ 
+//the return that provides the result set
+return result_array.toString();
+ 
+//the return that gives you 0 or 1
+//var test = result_array[0];
+//var test2 = "Copy executed with 0 files processed."
+//if(test == test2){
+//return "0";
+//}
+//return "1";
+ 
+ 
+}
+catch(err)
+{
+//////////////////////////////////FOR LOGGING
+var endTime = new Date().toISOString();
+var sqlLogCommand = "INSERT INTO LOGDATA.ADF_TABLE_LOAD_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, RUN_ID, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);";
+ 
+snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[adf_control_key, target_table_parsed, "TABLE", startTime, endTime, "FAILED", final_copy_query, run_id, err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+//////////////////////////////////FOR LOGGING^
+ 
+ 
+//RETURNING QUERY FOR POSSIBLE TROUBLESHOOTING
+var query_failed = "QUERY FAILED, COPY INTO STATEMENT: ";
+query_failed += final_copy_query;
+return query_failed;
+}
+ 
+$$
+;

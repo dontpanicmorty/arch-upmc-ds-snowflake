@@ -1,0 +1,138 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+/* get procedure start time and set variables */
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE`;
+
+/* Create INSERT OVERWRITE statement to be executed */
+var sqlInsertCommand =
+`INSERT OVERWRITE INTO RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE
+(
+HUB_CLAIM_AUTHORIZATION_DETAIL_HKEY,
+TPA_CLIENT_ID,
+TPA_ID,
+TPA_DIV_ID,
+HUB_CLAIM_AUTHORIZATION_HKEY,
+DATA_SOURCE_NAME,
+AUTHORIZATION_NBR,
+AUTHORIZATION_LINE_NBR,
+RENDERING_PROVIDER_ID,
+PROCEDURE_CODE,
+PROCEDURE_CODE_DESC,
+AUTHORIZATION_LINE_DETERMINATION_STATUS_DESC,
+AUTHORIZATION_LINE_DETERMINATION_DATE,
+SERVICE_BEGIN_DATE,
+SERVICE_END_DATE,
+AUTHORIZED_QTY,
+CONSUMED_QTY,
+DENIED_QTY,
+REQUESTED_QTY,
+ALLOWED_AMT,
+AUTHORIZED_AMT,
+AUTHORIZED_PER_UNIT_AMT,
+BALANCE_DUE_AMT,
+BILLED_AMT,
+COINSURANCE_AMT,
+COPAY_AMT,
+DEDUCTIBLE_APPLIED_AMT,
+PAID_AMT,
+PATIENT_PAY_APPLIED_AMT,
+PAYABLE_AMT,
+USUAL_AND_CUSTOMARY_AMT,
+TOOTH_ID,
+TOOTH_ARCH,
+TOOTH_QUADRANT
+)
+SELECT
+HUB_CLAIM_AUTHORIZATION_DETAIL_HKEY,
+TPA_CLIENT_ID,
+TPA_ID,
+TPA_DIV_ID,
+HUB_CLAIM_AUTHORIZATION_HKEY,
+DATA_SOURCE_NAME,
+AUTHORIZATION_NBR,
+AUTHORIZATION_LINE_NBR,
+RENDERING_PROVIDER_ID,
+PROCEDURE_CODE,
+PROCEDURE_CODE_DESC,
+AUTHORIZATION_LINE_DETERMINATION_STATUS_DESC,
+AUTHORIZATION_LINE_DETERMINATION_DATE,
+SERVICE_BEGIN_DATE,
+SERVICE_END_DATE,
+AUTHORIZED_QTY,
+CONSUMED_QTY,
+DENIED_QTY,
+REQUESTED_QTY,
+ALLOWED_AMT,
+AUTHORIZED_AMT,
+AUTHORIZED_PER_UNIT_AMT,
+BALANCE_DUE_AMT,
+BILLED_AMT,
+COINSURANCE_AMT,
+COPAY_AMT,
+DEDUCTIBLE_APPLIED_AMT,
+PAID_AMT,
+PATIENT_PAY_APPLIED_AMT,
+PAYABLE_AMT,
+USUAL_AND_CUSTOMARY_AMT,
+TOOTH_ID,
+TOOTH_ARCH,
+TOOTH_QUADRANT
+FROM RAWDATA.DATAHUB_CLAIM_AUTHORIZATION_DETAIL_BASE_SELECT_VW
+;`;
+
+try 
+{
+    /*Execute INSERT OVERRIDE Command */
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    /*Log results to table*/
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), result, sfStatement.getSqlText()]}
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand, binds:
+        [
+            targetTableName
+            ,"TABLE"
+            ,startTime
+            ,endTime
+            ,result
+            ,sfStatement.getSqlText()
+            ,err.code
+            ,err.state
+            ,err.message
+            ,err.stackTraceTxt
+        ]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

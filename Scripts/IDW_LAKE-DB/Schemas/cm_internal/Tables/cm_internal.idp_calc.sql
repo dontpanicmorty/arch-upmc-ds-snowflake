@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE CM_INTERNAL.IDP_CALC
+(
+FILE_MONTH        VARCHAR,
+HCID              VARCHAR,
+WAGE               NUMBER(33,5),
+TENURE             NUMBER(33,5),
+WAGE_INCREASE      NUMBER(33,5)
+)
+COMMENT='Created for CM_INTERNAL Migration'
+;

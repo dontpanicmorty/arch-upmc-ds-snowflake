@@ -1,0 +1,193 @@
+CREATE OR REPLACE PROCEDURE EXTRACTDATA.SPU_LOAD_CLAIM_HEADER_RIDER_ARRAY(JOB_ID VARCHAR, DATA_SOURCE_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `EXTRACTDATA.CLAIM_HEADER_RIDER_ARRAY`;
+
+// Create merge statement to be executed.
+// The UPDATE section ONLY includes columns that are not part of the HASH keys because if they changed, it would be a new HASH ;-)
+var sqlMergeCommand =
+`
+MERGE INTO EXTRACTDATA.CLAIM_HEADER_RIDER_ARRAY tgt
+USING (
+    SELECT
+    HUB_CLAIM_HKEY
+    ,TPA_CLIENT_ID
+    ,TPA_ID
+    ,TPA_DIV_ID
+    ,DATA_SOURCE_NAME
+    ,CLAIM_NBR
+    ,RIDER_CODE_ARRAY
+    FROM HUBDATA.CLAIM_HEADER_RIDER_ARRAY_VW
+    WHERE DATA_SOURCE_NAME = '${DATA_SOURCE_NAME}'
+
+    MINUS
+
+    SELECT 
+    HUB_CLAIM_HKEY
+    ,TPA_CLIENT_ID
+    ,TPA_ID
+    ,TPA_DIV_ID
+    ,DATA_SOURCE_NAME
+    ,CLAIM_NBR
+    ,RIDER_CODE_ARRAY
+    FROM EXTRACTDATA.CLAIM_HEADER_RIDER_ARRAY
+    WHERE DATA_SOURCE_NAME = '${DATA_SOURCE_NAME}'
+
+) SRC
+
+ON 
+    (
+    TGT.HUB_CLAIM_HKEY = SRC.HUB_CLAIM_HKEY
+    )
+
+WHEN MATCHED
+THEN UPDATE
+SET 
+    tgt.LAST_UPDATED_DATETIME = :1
+    ,tgt.RIDER_CODE_ARRAY = src.RIDER_CODE_ARRAY
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        HUB_CLAIM_HKEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,CLAIM_NBR
+        ,RIDER_CODE_ARRAY
+    )
+ VALUES 
+    (
+        HUB_CLAIM_HKEY
+        ,:1
+        ,:1
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIV_ID
+        ,DATA_SOURCE_NAME
+        ,CLAIM_NBR
+        ,RIDER_CODE_ARRAY
+    )
+;`;
+
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`DELETE FROM EXTRACTDATA.CLAIM_HEADER_RIDER_ARRAY
+    USING
+        (
+        SELECT
+        CLAIM_HEADER_RIDER_ARRAY.HUB_CLAIM_HKEY
+        FROM EXTRACTDATA.CLAIM_HEADER_RIDER_ARRAY
+            LEFT OUTER JOIN HUBDATA.CLAIM_HEADER_RIDER_ARRAY_VW
+                ON (CLAIM_HEADER_RIDER_ARRAY_VW.HUB_CLAIM_HKEY = CLAIM_HEADER_RIDER_ARRAY.HUB_CLAIM_HKEY
+                AND CLAIM_HEADER_RIDER_ARRAY_VW.DATA_SOURCE_NAME = '${DATA_SOURCE_NAME}')
+        WHERE CLAIM_HEADER_RIDER_ARRAY.DATA_SOURCE_NAME = '${DATA_SOURCE_NAME}'
+        AND CLAIM_HEADER_RIDER_ARRAY_VW.HUB_CLAIM_HKEY IS NULL
+        ) deletes
+    WHERE CLAIM_HEADER_RIDER_ARRAY.HUB_CLAIM_HKEY = deletes.HUB_CLAIM_HKEY
+;`;
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Execute MERGE Command
+    var startTime = new Date().toISOString();    
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();    
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

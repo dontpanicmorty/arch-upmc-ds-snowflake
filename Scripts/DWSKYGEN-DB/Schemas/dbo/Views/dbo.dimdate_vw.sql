@@ -1,0 +1,32 @@
+CREATE OR REPLACE VIEW DBO.DimDate_VW
+AS 
+SELECT 	$1:DateKey::NUMBER(38, 0) AS DateKey, 
+		$1:DATE_ID::DATE AS DATE_ID, 
+		$1:DateLabel::VARCHAR AS DateLabel, 
+		$1:YearKey::NUMBER(38, 0) AS YearKey, 
+		$1:YearLabel::VARCHAR AS YearLabel, 
+		$1:QuarterKey::NUMBER(38, 0) AS QuarterKey, 
+		$1:QuarterLabel::VARCHAR AS QuarterLabel, 
+		$1:QuarterOfYearKey::NUMBER(38, 0) AS QuarterOfYearKey, 
+		$1:QuarterOfYear::VARCHAR AS QuarterOfYear, 
+		$1:MonthKey::NUMBER(38, 0) AS MonthKey, 
+		$1:MonthLabel::VARCHAR AS MonthLabel, 
+		$1:MonthYearLabel::VARCHAR AS MonthYearLabel, 
+		$1:ShortMonthLabel::VARCHAR AS ShortMonthLabel, 
+		$1:ShortMonthYearLabel::VARCHAR AS ShortMonthYearLabel, 
+		$1:MonthOfYearKey::NUMBER(38, 0) AS MonthOfYearKey, 
+		$1:MonthOfYear::VARCHAR AS MonthOfYear, 
+		$1:IsFirstOfMonth::BOOLEAN AS IsFirstOfMonth, 
+		$1:FirstOfMonthDate::DATE AS FirstOfMonthDate, 
+		$1:DayOfWeekKey::NUMBER(38, 0) AS DayOfWeekKey, 
+		$1:DayOfWeek::VARCHAR AS DayOfWeek, 
+		$1:DayOfMonth::NUMBER(38, 0) AS DayOfMonth, 
+		$1:DayOfYear::NUMBER(38, 0) AS DayOfYear, 
+		$1:IsMonthEnd::BOOLEAN AS IsMonthEnd, 
+		$1:RecordStartDate::DATE AS RecordStartDate, 
+		$1:RecordEndDate::DATE AS RecordEndDate, 
+		$1:RecordIsCurrent::BOOLEAN AS RecordIsCurrent, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime, 
+		$1:RecordUpdateDatetime::TIMESTAMP_NTZ AS RecordUpdateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimDate/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

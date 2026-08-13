@@ -1,0 +1,91 @@
+{
+  "outputSchema": "PRICING",
+  "outputTable": "PLAN_INFO",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+  "fileFormat": "BUSINESS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "PLAN_CODE",
+          "outputField": "PLAN_CODE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "THRESHOLD_GROUPING",
+          "outputField": "THRESHOLD_GROUPING"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "MULTI",
+          "outputField": "MULTI"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "GROUPNBR",
+          "outputField": "GROUPNBR"
+        },
+        {
+          "columnOrder": 5,
+          "inputField": "PLAN_TYPE",
+          "outputField": "PLAN_TYPE"
+        },
+        {
+          "columnOrder": 6,
+          "inputField": "GPG",
+          "outputField": "GPG"
+        },
+        {
+          "columnOrder": 7,
+          "inputField": "PROV_SET",
+          "outputField": "PROV_SET"
+        },
+        {
+          "columnOrder": 8,
+          "inputField": "SEGMENT",
+          "outputField": "SEGMENT"
+        },
+        {
+          "columnOrder": 9,
+          "inputField": "CIGNA",
+          "outputField": "CIGNA"
+        },
+        {
+          "columnOrder": 10,
+          "inputField": "MMO",
+          "outputField": "MMO"
+        },
+        {
+          "columnOrder": 11,
+          "inputField": "ENTITY_TYPE",
+          "outputField": "ENTITY_TYPE"
+        },
+        {
+          "columnOrder": 12,
+          "inputField": "PLAN_NAME",
+          "outputField": "PLAN_NAME"
+        },
+        {
+          "columnOrder": 13,
+          "inputField": "PLAN_ID_TYPE",
+          "outputField": "PLAN_ID_TYPE"
+        },
+        {
+          "columnOrder": 14,
+          "inputField": "PLAN_ID",
+          "outputField": "PLAN_ID"
+        },
+        {
+          "columnOrder": 15,
+          "inputField": "MARKET_TYPE",
+          "outputField": "MARKET_TYPE"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,364 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_FILE_COPY_INTO_TABLE_IDW_LAKE(ADF_FILE_COPY_CONTROL_KEY VARCHAR, RUN_ID VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+AS '
+// Taking passed adf_control_key and loading it into variable adf_control_key
+var adf_control_key = parseInt(ADF_FILE_COPY_CONTROL_KEY);
+var run_id = RUN_ID;
+
+// Getting results from control file table for specified control file key
+var control_table_data = "select TARGET_DATA_LAKE_PATH, IS_ACTIVE,TARGET_SCHEMA_NAME, TARGET_TABLE_NAME, TRUNCATE_TABLE_FLAG, IS_COPY_INTO_FLAG, COPY_INTO_QUERY, QUERY_FILE_FORMAT, SOURCE_FILENAME_PATTERN, FIXED_WIDTH from UTIL.ADF_FILE_COPY_CONTROL WHERE ADF_FILE_COPY_CONTROL_KEY = "+adf_control_key+";" ;
+var control_table_data_snowflake = snowflake.createStatement(
+           {
+           sqlText: control_table_data
+           }
+        );
+                var res_control_table_data = control_table_data_snowflake.execute();
+    res_control_table_data.next();
+
+//COLLECTING VARIABLES FROM CONTROL TABLE    
+var target_data_lake_path = res_control_table_data.getColumnValue(1);
+var is_active = res_control_table_data.getColumnValue(2);
+var target_schema_name = res_control_table_data.getColumnValue(3);
+var target_table_name = res_control_table_data.getColumnValue(4);
+var truncate_table_flag = res_control_table_data.getColumnValue(5);
+var is_copy_into_flag = res_control_table_data.getColumnValue(6);
+var copy_into_query = res_control_table_data.getColumnValue(7);
+var query_file_format = res_control_table_data.getColumnValue(8);
+var source_filename_pattern = res_control_table_data.getColumnValue(9);
+var is_fixed_width = res_control_table_data.getColumnValue(10);
+
+//Variables for logging
+var startTime = new Date().toISOString();
+
+//IF FILE IS INACTIVE LET USER KNOW
+ if(is_active === false){
+     return "THIS FILE IS INACTIVE";
+    }
+//IF COPY INTO FLAG IS FALSE LET USER KNOW
+ if(is_copy_into_flag === false){
+     return "COPY INTO FLAG IS SET TO FALSE";
+    }
+
+//BREAKING TARGET_TABLE_NAME INTO SCHEMA AND TABLENAME FOR LATER USE
+//var target_table_name_parsed = target_table_name.split(''.'');
+//var schema_name = target_table_name_parsed[0];
+//var table_name = target_table_name_parsed[1];
+var table_full_name = target_schema_name.concat(".",target_table_name);
+
+
+var truncate_table_sql;
+//DOES TABLE NEED TO BE TRUNCATED, TRIPLE EQUALS BECAUSE FLAG IS A BOOLEAN
+ if(truncate_table_flag === true){
+     truncate_table_sql = "TRUNCATE TABLE "+table_full_name+";";
+     snowflake.execute ({sqlText: truncate_table_sql});
+    }
+
+
+//TIME TO BUILD COPY INTO
+var final_copy_query = "COPY INTO " +table_full_name+ " (";
+
+
+//COLLECTING COLUMN_NAMES and IS_IDENTITY results
+var column_data_sql = "select column_name, is_identity from information_schema.columns where table_schema = ''"+target_schema_name+"'' AND TABLE_NAME = ''"+target_table_name+"'' ORDER BY ORDINAL_POSITION ASC";
+var column_data_sql_snowflake = snowflake.createStatement(
+           {
+           sqlText: column_data_sql
+           }
+        );
+                var res_column_data = column_data_sql_snowflake.execute();
+
+var column_name;
+var identity_col;
+
+//WHILE LOOP TO BUILD COPY INTO STRING AND AVOID IDENTITY COLS
+while (res_column_data.next())  {
+    identity_col = res_column_data.getColumnValue(2);
+
+    if(identity_col == ''NO''){
+        column_name = res_column_data.getColumnValue(1);
+        final_copy_query += column_name;
+        final_copy_query += ", ";
+    }//END IF
+    
+    }//END WHILE
+    
+//Removing the final comma and space from last column
+final_copy_query = final_copy_query.substring(0,final_copy_query.length-2);
+
+//ADDING HARDCODED STRINGS TO COPY INTO
+final_copy_query += ") FROM (";
+
+
+//////////SELECT QUERY BUILDER/////////////////////
+//IF FIXED WIDTH THEN SKIP, IF NOT THEN USE THIS BUILDER
+if(is_fixed_width == "N"){
+
+var stage_name = " FROM @UTIL.SNOWFLAKEDATA_IDW_LAKE_FILE_DATA";
+
+// Getting the max ordinal number for the table 
+var max_ordinal_query = "select max(ordinal_position) from information_schema.columns where table_schema = ''"+target_schema_name+"'' AND table_name = ''"+target_table_name+"'';" ;
+var max_ordinal_snowflake = snowflake.createStatement(
+           {
+           sqlText: max_ordinal_query
+           }
+        );
+    var res_max_ordinal = max_ordinal_snowflake.execute();
+    res_max_ordinal.next();
+var max_ordinal_number = res_max_ordinal.getColumnValue(1);
+
+
+var query_builder;
+var column_gather_query = "select column_name, is_identity from information_schema.columns where table_schema = ''"+target_schema_name+"'' AND table_name = ''"+target_table_name+"'' and ordinal_position = "; 
+
+//Set variables to be used in SELECT before for loop
+var final_select_query = "SELECT";
+var current_ordinal_position = 1;
+
+var last = 1;
+//This for loop will go from 1 to whatever the max ordinal number is
+for (let i = 1; i <= max_ordinal_number; i++) {
+    //THIS GIVES US THE QUERY TO GET THE i NUMBERED COLUMN NAME
+    column_gather_query = column_gather_query + i + ";";
+    var column_gather_sql = snowflake.createStatement({sqlText: column_gather_query});
+    var column_gather_results = column_gather_sql.execute();
+   
+
+    
+    column_gather_results.next();
+    var col_name = column_gather_results.getColumnValue(1);
+    var is_identity = column_gather_results.getColumnValue(2);
+    //THIS RETURNS THE QUERY TO ITS STATE BEFORE ADDING i TO THE END
+    last = column_gather_query.lastIndexOf("=");
+    column_gather_query = column_gather_query.substring(0, last);
+    column_gather_query = column_gather_query + "= ";
+
+
+     //If the identity column is no we need will need to make sure it isnt filename or insert_datetime
+    if(is_identity == "NO"){
+        if(col_name == "FILE_NAME" || col_name == "LOAD_DATE"){
+            if(col_name == "FILE_NAME"){
+                final_select_query = final_select_query + " METADATA$FILENAME AS FILE_NAME,";
+            }
+            if(col_name == "LOAD_DATE"){
+                final_select_query = final_select_query + " METADATA$FILE_LAST_MODIFIED AS LOAD_DATE,";
+            
+            }
+            }
+            //If it isnt filename or insert datetime build query using column data
+            else{
+
+            //Build your query and increment the $ number
+            final_select_query = final_select_query + " $"+ current_ordinal_position;
+            final_select_query = final_select_query + " AS " + col_name+","
+            current_ordinal_position = current_ordinal_position + 1;
+        
+            }
+    
+    } //END IF IS IDENTITY
+
+    
+}// END OF FOR LOOP
+//If there is a comma at the end of the query, remove it
+if(final_select_query.at(-1) == ",")
+{
+    final_select_query = final_select_query.substr(0,final_select_query.length-1)
+}
+
+//Add stage
+final_select_query = final_select_query + stage_name;
+
+final_copy_query += final_select_query;
+
+}//END OF FIXED WIDTH IF STATEMENT
+
+else{
+final_copy_query += copy_into_query;
+}
+
+
+
+
+/////////////***********************//////////////////////
+
+
+final_copy_query += target_data_lake_path;
+
+
+//GETTING DATE PARTS FOR PATH
+var now = new Date();
+var month = now.getMonth()+1;
+if(month <10){
+    month = "0"+ month;
+} //END IF
+var day = now.getDate();
+if(day <10){
+    day = "0"+ day;
+} //END IF
+var year = now.getFullYear();
+
+
+//ADDING DATE TO COPY INTO FILE PATH
+final_copy_query += year;
+final_copy_query += "/";
+final_copy_query += month;
+final_copy_query += "/";
+final_copy_query += day;
+final_copy_query += "/";
+
+
+
+
+//////////////////////////////NEW CODE FOR LIST///////////////////////////////////
+//Set up query to list files in stage that match given pattern
+var list_query = "LIST @UTIL.SNOWFLAKEDATA_IDW_LAKE_FILE_DATA";
+
+//Using control table to build LIST command
+list_query = list_query + target_data_lake_path;
+list_query += year + "/" + month + "/" + day + "/";
+list_query += " PATTERN = ";
+//ADDING PATTERN STRING TO LIST QUERY
+list_query += "''.*" + source_filename_pattern + ".*'';";
+
+//AT THIS POINT THE LIST QUERY IS FUNCTIONAL AND CAN BE RUN
+var list_query_sql = snowflake.createStatement({sqlText: list_query});
+var list_query_results = list_query_sql.execute();
+
+//Initializing variables that will be used inside while loop
+var return_rows = [];
+var filename;
+var lastIndex;
+var extractedString;
+var i = 0;
+var single_copy_into_query;
+var filename_sql;
+var filename_results;
+var has_loaded_query = "SELECT COUNT(*) FROM LOGDATA.ADF_FILENAME_LOAD_HISTORY WHERE FILENAME = ''";
+var has_loaded;
+var endTime;
+var result;
+var extracted_string_length;
+var file_loaded_sql;
+var file_loaded_query;
+var file_loaded_results
+
+try{
+//Pushing results of list into an array named return_rows
+while(list_query_results.next()){
+return_rows.push(list_query_results.getColumnValue(1));
+}
+
+//While loop to run individual copy intos for each file on the list
+while (i < return_rows.length) {
+    //Get filename and build query to see if its loaded previously
+    filename = return_rows[i];
+    lastIndex = filename.lastIndexOf("/");
+    extractedString = filename.substring(lastIndex + 1);
+    has_loaded_query += extractedString + "'';";
+    filename_sql = snowflake.createStatement({sqlText: has_loaded_query});
+    filename_results = filename_sql.execute();
+    filename_results.next();
+    has_loaded = filename_results.getColumnValue(1);
+    //WE NOW HAVE A COUNT FOR ROWS WITH MATCHING FILENAME WHICH SHOULD BE A 0 OR 1
+
+    //IF STATEMENT CHECKS TO SEE IF FILE HAS BEEN LOADED, 1 IF IT HAS, 0 IF IT HAS NOT
+    if(has_loaded == 0){
+    single_copy_into_query = final_copy_query;
+    //ADDING FILENAME AND FILE FORMAT TO COMPLETE COPY INTO QUERY
+    single_copy_into_query += extractedString;
+    single_copy_into_query += " (FILE_FORMAT => ''"+query_file_format+"''));";
+   
+   //RUNNING THE QUERY
+    single_copy_sql = snowflake.createStatement({sqlText: single_copy_into_query});
+    single_copy_results = single_copy_sql.execute();
+
+
+    //QUERY SUCCESSFUL NOW WE NEED TO LOG + N FOR SKIPPED
+
+    ///////////////////////////////////////For logging
+    endTime = new Date().toISOString();
+    result = ''SUCCESS'';
+
+    var sqlLogCommand ="INSERT INTO LOGDATA.ADF_FILE_LOAD_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT, RUN_ID, FILENAME) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);";      
+
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [adf_control_key, table_full_name, "TABLE", startTime, endTime,     single_copy_sql.getNumRowsInserted(), result, single_copy_into_query,run_id, extractedString]
+        }
+    );
+
+////////////////////////////////////FOR LOGGING^
+
+//NOW WE NEED TO ADD THIS VALUE TO THE TABLE SO IT WONT BE LOADED IN THE FUTURE
+//Cannot add the filename if the table is a trunc and load table or it will never load again
+    if(truncate_table_flag !== true){
+    file_loaded_query = "INSERT INTO LOGDATA.ADF_FILENAME_LOAD_HISTORY VALUES(''" + extractedString + "'', ''" + endTime + "'')";
+    file_loaded_sql = snowflake.createStatement({sqlText: file_loaded_query});
+    file_loaded_results = file_loaded_sql.execute();
+    }
+
+
+    
+    } //END HAS_LOADED IF
+    else{
+    //Else runs if a file has been previously loaded into the data lake
+    single_copy_into_query = final_copy_query;
+    //ADDING FILENAME AND FILE FORMAT TO COMPLETE COPY INTO QUERY
+    single_copy_into_query += extractedString;
+    single_copy_into_query += " (FILE_FORMAT => ''"+query_file_format+"''));";
+    
+    ///////////////////////////////////////For logging
+    endTime = new Date().toISOString();
+    result = ''SKIPPED'';
+    var sqlLogCommand ="INSERT INTO LOGDATA.ADF_FILE_LOAD_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, RESULT_TEXT, SQL_STATEMENT, RUN_ID, FILENAME) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);";      
+  
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [adf_control_key, table_full_name, "TABLE", startTime, endTime, "0" , result, single_copy_into_query ,run_id, extractedString]
+        }
+    );
+
+
+////////////////////////////////////FOR LOGGING^
+    } //END HAS_LOADED ELSE
+    
+
+    //reset has_loaded_query to remove filename from end
+    lastIndex_test = has_loaded_query.lastIndexOf("=");
+    has_loaded_query = has_loaded_query.substring(0, lastIndex_test+1);
+    has_loaded_query += " ''"
+    
+    i++;
+}
+
+return "SUCCESS"
+
+}//END TRY
+
+catch(err)
+{
+
+//////////////////////////////////FOR LOGGING
+var endTime = new Date().toISOString();
+var sqlLogCommand = "INSERT INTO LOGDATA.ADF_FILE_LOAD_HISTORY (ADF_CONTROL_KEY, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, RUN_ID, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT) VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);";
+snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[adf_control_key, table_full_name, "TABLE", startTime, endTime, "FAILED", single_copy_into_query, run_id, err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+//////////////////////////////////FOR LOGGING^
+
+
+//RETURNING FAILED AFTER LOGGING ERRORS
+return "FAILED";
+}
+
+';

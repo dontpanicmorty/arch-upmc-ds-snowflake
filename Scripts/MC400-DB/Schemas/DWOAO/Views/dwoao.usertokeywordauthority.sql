@@ -1,0 +1,4 @@
+
+CREATE OR REPLACE VIEW DWOAO.UserToKeywordAuthority
+AS
+SELECT * FROM CDC_MERGE.DBO.UserToKeywordAuthority;

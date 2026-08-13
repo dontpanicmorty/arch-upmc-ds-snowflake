@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": true,
+  "isCopyIntoFlag": false,
+  "dataDomain": "provider",
+  "dataSourceName": "Cactus",
+  "targetTableName": "RAWDATA.CACTUS_PROVIDERID",
+  "sourceCloneTableName": "CACTUS.VISUALCACTUS.PROVIDERID",
+  "sourceFileStageName": null,
+  "sourceFilePath": null,
+  "sourceFileFormatName": null,
+  "sourceFilePattern": null,
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

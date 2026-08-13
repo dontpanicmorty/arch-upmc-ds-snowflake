@@ -1,0 +1,217 @@
+{
+    "isActive": true,
+    "isCloneFlag": false,
+    "isCopyIntoFlag": true,
+    "dataDomain": "provider",
+    "dataSourceName": "Skygen",
+    "targetTableName": "RAWDATA.SKYGEN_PROVIDER",
+    "sourceCloneTableName": null,
+    "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+    "sourceFilePath": "/provider/skygen",
+    "sourceFileFormatName": "RAWDATA.SKYGEN_PROVIDER_FILE_FORMAT",
+    "sourceFilePattern": "(?i)provider\\/skygen\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}/\\.*-providerClaim-Skygen__DW_Providers_.*[.]txt",    
+    "sourceFileDelimitedColumnCount": null,
+    "sourceFileFixedWidthMapping": [
+      {
+        "columnOrder": 1,
+        "columnName": "PROVIDER_KEY",
+        "startPosition": 1,
+        "length": 20
+      },
+      {
+        "columnOrder": 2,
+        "columnName": "HMO_CD",
+        "startPosition": 20,
+        "length": 2
+      },
+      {
+        "columnOrder": 3,
+        "columnName": "ACTION_IND",
+        "startPosition": 23,
+        "length": 1
+      },
+      {
+        "columnOrder": 4,
+        "columnName": "PROVIDER_TYPE",
+        "startPosition": 24,
+        "length": 1
+      },
+      {
+        "columnOrder": 5,
+        "columnName": "PROVIDER_NBR",
+        "startPosition": 25,
+        "length": 15
+      },
+      {
+        "columnOrder": 6,
+        "columnName": "MA_PROVIDER_NBR",
+        "startPosition": 40,
+        "length": 15
+      },
+      {
+        "columnOrder": 7,
+        "columnName": "LAST_NAME",
+        "startPosition": 55,
+        "length": 254
+      },
+      {
+        "columnOrder": 8,
+        "columnName": "FIRST_NAME",
+        "startPosition": 309,
+        "length": 30
+      },
+      {
+        "columnOrder": 9,
+        "columnName": "ADDRESS_LINE_1",
+        "startPosition": 339,
+        "length": 60
+      },
+      {
+        "columnOrder": 10,
+        "columnName": "ADDRESS_LINE_2",
+        "startPosition": 399,
+        "length": 60
+      },
+      {
+        "columnOrder": 11,
+        "columnName": "CITY",
+        "startPosition": 459,
+        "length": 30
+      },
+      {
+        "columnOrder": 12,
+        "columnName": "ZIPCODE",
+        "startPosition": 489,
+        "length": 10
+      },
+      {
+        "columnOrder": 13,
+        "columnName": "COUNTY_CODE",
+        "startPosition": 499,
+        "length": 2
+      },
+      {
+        "columnOrder": 14,
+        "columnName": "PHONE_AREA_CODE_NBR",
+        "startPosition": 501,
+        "length": 3
+      },
+      {
+        "columnOrder": 15,
+        "columnName": "PHONE_NBR",
+        "startPosition": 504,
+        "length": 7
+      },
+      {
+        "columnOrder": 16,
+        "columnName": "PHONE_EXT_NBR",
+        "startPosition": 511,
+        "length": 4
+      },
+      {
+        "columnOrder": 17,
+        "columnName": "EVENING_HOURS",
+        "startPosition": 515,
+        "length": 1
+      },
+      {
+        "columnOrder": 18,
+        "columnName": "SATURDAY_HOURS",
+        "startPosition": 516,
+        "length": 1
+      },
+      {
+        "columnOrder": 19,
+        "columnName": "AGE_RESTRICTION",
+        "startPosition": 517,
+        "length": 60
+      },
+      {
+        "columnOrder": 20,
+        "columnName": "SPECIALTY_1",
+        "startPosition": 577,
+        "length": 2
+      },
+      {
+        "columnOrder": 21,
+        "columnName": "SPECIALTY_2",
+        "startPosition": 579,
+        "length": 2
+      },
+      {
+        "columnOrder": 22,
+        "columnName": "SPECIALTY_3",
+        "startPosition": 581,
+        "length": 2
+      },
+      {
+        "columnOrder": 23,
+        "columnName": "LANGUAGE_1",
+        "startPosition": 583,
+        "length": 1
+      },
+      {
+        "columnOrder": 24,
+        "columnName": "LANGUAGE_2",
+        "startPosition": 584,
+        "length": 1
+      },
+      {
+        "columnOrder": 25,
+        "columnName": "LANGUAGE_3",
+        "startPosition": 585,
+        "length": 1
+      },
+      {
+        "columnOrder": 26,
+        "columnName": "HOS_AFFIL_1",
+        "startPosition": 586,
+        "length": 3
+      },
+      {
+        "columnOrder": 27,
+        "columnName": "HOS_AFFIL_2",
+        "startPosition": 589,
+        "length": 3
+      },
+      {
+        "columnOrder": 28,
+        "columnName": "HOS_AFFIL_3",
+        "startPosition": 592,
+        "length": 3
+      },
+      {
+        "columnOrder": 29,
+        "columnName": "WHEEL_CHAIR_ACCESS",
+        "startPosition": 595,
+        "length": 1
+      },
+      {
+        "columnOrder": 30,
+        "columnName": "MEDICAL_DEGREE",
+        "startPosition": 596,
+        "length": 15
+      },
+      {
+        "columnOrder": 31,
+        "columnName": "GROUP_AFFIL_1",
+        "startPosition": 611,
+        "length": 6
+      },
+      {
+        "columnOrder": 32,
+        "columnName": "EFFECT_DATE",
+        "startPosition": 617,
+        "length": 10
+      },
+      {
+        "columnOrder": 33,
+        "columnName": "TERM_DATE",
+        "startPosition": 627,
+        "length": 10
+      }
+    ],
+    "validateDataFlag": false,
+    "trimFixedWidthColumnsFlag": true
+  }
+  

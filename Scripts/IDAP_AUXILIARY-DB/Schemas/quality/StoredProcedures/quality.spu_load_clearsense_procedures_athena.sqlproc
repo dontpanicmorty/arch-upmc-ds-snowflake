@@ -1,0 +1,376 @@
+
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_LOAD_CLEARSENSE_PROCEDURES_ATHENA("RUN_ID" VARCHAR(16777216), "DATA_FLOW_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load QUALITY.CCD_PROCEDURES_ATHENA from XML_SECTION'
+EXECUTE AS OWNER
+AS '
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_LOAD_CLEARSENSE_PROCEDURES_ATHENA";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = ''Y'' AND DATA_FLOW_NAME = :1 AND STEP_PROCEDURE_NAME = :2
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,null
+    ,''Starting''
+    )
+`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Succeeded''
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Error''
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_PROCEDURES_ATHENA - START
+//-----------------------------------------
+
+
+    var sqlLogCommand = `
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+//
+
+    var sqlDeleteProceduresAthenaCommand = ` 
+DELETE FROM QUALITY.CCD_PROCEDURES_ATHENA WHERE MRN IN ( SELECT DISTINCT MRN FROM QUALITY.SECTION_XML ); 
+`;
+
+
+    var sqlInsertCcdProceduresAthenaCommand = `
+INSERT INTO QUALITY.CCD_PROCEDURES_ATHENA (
+     FILENAME,
+     SECTION_TITLE,
+     MRN,
+     TEMPLATE_ID_EXTENSION,
+     TEMPLATE_ID_ROOT,
+     TEMPLATE_ID_ROOT_2,
+     TEMPLATE_ID_EXTENSION_3,
+     TEMPLATE_ID_ROOT_3,
+     TEMPLATE_ID_ROOT_4,
+     PROCEDURE_SECTION_CODE,
+     PROCEDURE_SECTION_CODE_SYSTEM,
+     SECTION_CODE_SYSTEM_NAME,
+     PROCEDURE_SECTION_CODE_DISPLAY_NAME,
+     ENTRY_TYPE_CODE,
+     PROCEDURE_CLASS_CODE,
+     PROCEDURE_MOOD_CODE,
+     PROCEDURE_TEMPLATE_ROOT_1,
+     PROCEDURE_TEMPLATE_EXTENSION_2,
+     PROCEDURE_TEMPLATE_ROOT_2,
+     PROCEDURE_ROOT_3,
+     PROCEDURE_EXTENSION_4,
+     PROCEDURE_ROOT_4,
+     ENTRY_ID_EXTENSION,
+     ID_ASSIGN_AUTHORITY_NAME_1,
+     ID_ASSIGN_AUTHORITY_ROOT_1,
+     ID_ASSIGN_AUTHORITY_NAME_2,
+     ID_ASSIGN_AUTHORITY_EXTENSION_2,
+     ID_ASSIGN_AUTHORITY_ROOT_2,
+     PROCEDURE_CODE,
+     PROCEDURE_CODE_SYSTEM,
+     PROCEDURE_CODE_SYSTEM_NAME,
+     PROCEDURE_ORIGINAL_TEXT,
+     PROCEDURE_TEXT_REFERENCE_VALUE,
+     PROCEDURE_STATUS_CODE,
+     PROCEDURE_DATE,
+     PVID,
+     PVID_OID,
+     DOCTOR_FACILITY,
+     DOCTOR_FACILITY_OID,
+     NPI,
+     NPI_OID,
+     FEDERAL_TAX_ID,
+     FEDERAL_TAX_ID_OID,
+     STREET_ADDRESS,
+     STREET_ADDRESS_2,
+     CITY,
+     STATE,
+     POSTAL_CODE,
+     PHONE_USE,
+     PHONE_NUMBER,
+     PHONE_USE_2,
+     PHONE_NUMBER_2,
+     ASSIGNED_PERSON,
+     XML_ROW_NUM,
+     TS_LAST_MODIFY,
+     SCAN_TIME )
+SELECT
+     FILENAME,
+     SECTION_TITLE,
+     MRN,
+     TEMPLATE_ID_EXTENSION,
+     TEMPLATE_ID_ROOT,
+     TEMPLATE_ID_ROOT_2,
+     TEMPLATE_ID_EXTENSION_3,
+     TEMPLATE_ID_ROOT_3,
+     TEMPLATE_ID_ROOT_4,
+     PROCEDURE_SECTION_CODE,
+     PROCEDURE_SECTION_CODE_SYSTEM,
+     SECTION_CODE_SYSTEM_NAME,
+     PROCEDURE_SECTION_CODE_DISPLAY_NAME,
+     ENTRY_TYPE_CODE,
+     PROCEDURE_CLASS_CODE,
+     PROCEDURE_MOOD_CODE,
+     PROCEDURE_TEMPLATE_ROOT_1,
+     PROCEDURE_TEMPLATE_EXTENSION_2,
+     PROCEDURE_TEMPLATE_ROOT_2,
+     PROCEDURE_ROOT_3,
+     PROCEDURE_EXTENSION_4,
+     PROCEDURE_ROOT_4,
+     ENTRY_ID_EXTENSION,
+     ID_ASSIGN_AUTHORITY_NAME_1,
+     ID_ASSIGN_AUTHORITY_ROOT_1,
+     ID_ASSIGN_AUTHORITY_NAME_2,
+     ID_ASSIGN_AUTHORITY_EXTENSION_2,
+     ID_ASSIGN_AUTHORITY_ROOT_2,
+     PROCEDURE_CODE,
+     PROCEDURE_CODE_SYSTEM,
+     PROCEDURE_CODE_SYSTEM_NAME,
+     PROCEDURE_ORIGINAL_TEXT,
+     PROCEDURE_TEXT_REFERENCE_VALUE,
+     PROCEDURE_STATUS_CODE,
+     PROCEDURE_DATE,
+     PVID,
+     PVID_OID,
+     DOCTOR_FACILITY,
+     DOCTOR_FACILITY_OID,
+     NPI,
+     NPI_OID,
+     FEDERAL_TAX_ID,
+     FEDERAL_TAX_ID_OID,
+     STREET_ADDRESS,
+     STREET_ADDRESS_2,
+     CITY,
+     STATE,
+     POSTAL_CODE,
+     PHONE_USE,
+     PHONE_NUMBER,
+     PHONE_USE_2,
+     PHONE_NUMBER_2,
+     ASSIGNED_PERSON,
+     XML_ROW_NUM, 
+     TS_LAST_MODIFY,
+     SCAN_TIME 
+FROM QUALITY.CCD_PROCEDURES_ATHENA_VW;	
+`;
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_PROCEDURES_ATHENA - END
+//-----------------------------------------
+
+    try
+    {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME,stepProcedureName]
+        });        
+
+        // check and handle for empty response
+        if(!lookupSet.next())
+        {     
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString(''DATA_DOMAIN_NAME'');    
+        stepOrderNumber = lookupSet.getColumnValue(''STEP_ORDER_NUMBER'');
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+
+
+
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//--------------------------------------- 
+   
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteProceduresAthenaCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log record deletion stats to LOGDATA.TABLE_LOAD_HISTORY
+    var sqlLogCommandDel = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT,RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);
+`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommandDel,
+        binds: [RUN_ID, "QUALITY.CCD_PROCEDURES_ATHENA", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(), 
+                sfStatement.getNumRowsDeleted(), 
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+
+
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCcdProceduresAthenaCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log Insert results to LOGDATA.TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [RUN_ID, "QUALITY.CCD_PROCEDURES_ATHENA", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(),				
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+
+
+
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+        return "Success";
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }        
+';

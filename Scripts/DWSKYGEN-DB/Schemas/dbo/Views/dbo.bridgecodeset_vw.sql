@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW DBO.BridgeCodeSet_VW
+AS 
+SELECT 	$1:CodeSetKey::NUMBER(38, 0) AS CodeSetKey, 
+		$1:CodeKey::NUMBER(38, 0) AS CodeKey, 
+		$1:RecordCreateDatetime::TIMESTAMP_NTZ AS RecordCreateDatetime
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/BridgeCodeSet/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

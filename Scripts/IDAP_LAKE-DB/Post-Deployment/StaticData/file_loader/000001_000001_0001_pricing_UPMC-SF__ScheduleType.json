@@ -1,0 +1,36 @@
+{
+  "outputSchema": "PRICING",
+  "outputTable": "SCHEDULE_TYPE",
+  "hasHeader": true,
+  "hasTrailer": false,
+  "fileType": "delimited",
+  "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+  "fileFormat": "BUSINESS_FILE_FORMAT",
+  "truncReload": true,
+  "mappingTypes": {
+    "all": {
+      "mappingContents": [
+        {
+          "columnOrder": 1,
+          "inputField": "PROVIDER_TYPE",
+          "outputField": "PROVIDER_TYPE"
+        },
+        {
+          "columnOrder": 2,
+          "inputField": "SCHEDULE_TYPE",
+          "outputField": "SCHEDULE_TYPE"
+        },
+        {
+          "columnOrder": 3,
+          "inputField": "SCHEDULE_DETAIL",
+          "outputField": "SCHEDULE_DETAIL"
+        },
+        {
+          "columnOrder": 4,
+          "inputField": "BILLING_CLASS",
+          "outputField": "BILLING_CLASS"
+        }
+      ]
+    }
+  }
+}

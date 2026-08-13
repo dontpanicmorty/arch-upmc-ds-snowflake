@@ -1,0 +1,21 @@
+-- Generalized so it can be used in WRITE_EXTRACT_FILES and the tic-assemble script
+CREATE OR REPLACE FUNCTION EXTRACTDATA.FXN_GET_CURRENT_TIC_DATE()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+AS
+$$
+// Get the closest YYYY-MM-DD
+const d = new Date();
+// If it's after the 15th (arbitrary), use next month
+if (d.getUTCDate() > 15) {
+  // Second parameter is to make sure we don't jump a month - incrementing
+  // the month on August 31st sets it to September 31st, which is October
+  // 1st; this ensures we stay in the same month we're setting to.
+  d.setUTCMonth(d.getUTCMonth() + 1, 15);
+}
+// Finally, set it back to the first of the month
+d.setUTCDate(1);
+TOC_DATE = d.toISOString().split('T')[0];
+return TOC_DATE
+$$
+;

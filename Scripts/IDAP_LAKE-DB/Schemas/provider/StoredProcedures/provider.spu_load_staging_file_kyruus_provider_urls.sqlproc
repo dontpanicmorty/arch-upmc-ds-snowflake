@@ -1,0 +1,97 @@
+CREATE OR REPLACE PROCEDURE PROVIDER.SPU_LOAD_STAGING_FILE_KYRUUS_PROVIDER_URLS("DATESTRING" VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS '
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `STAGING_FILEKYRUUSPROVIDERURLS`;
+var copySql = "";                     // for logging/annotation
+var sourcePatternForLog = "";         // for logging;
+var fileName = "";
+
+
+let copyStatement1 = snowflake.createStatement({
+  sqlText: `
+  TRUNCATE TABLE PROVIDER.STAGING_FILEKYRUUSPROVIDERURLS;`
+});
+copyStatement1.execute();
+
+// 1) Derive date folder (today)
+    var dateStr = (arguments[0] || "").toString().trim();
+  if (dateStr.length === 0) {
+  throw "Input parameter dateString is required.";
+  };
+
+  // 2) Build stage path and COPY
+  var stageFolder = "@UTIL.HPDSDATALAKE_IDAPLAKE/provider/kyruus/online_scheduling_url/" + dateStr;
+  sourcePatternForLog = stageFolder + "/*";
+
+  var truncateSql = "TRUNCATE TABLE " + targetTableName;
+   
+  copySql =
+      "COPY INTO " + targetTableName + " " +
+      "FROM ( " +
+      "  SELECT " +
+      "    $1 AS PROVIDER_ID, " +
+      "    $2 AS LAST_NAME, " +
+      "    $3 AS FIRST_NAME, " +
+      "    $4 AS NPI, " +
+      "    $5 AS URL, " +
+      "    SPLIT_PART(METADATA$FILENAME,''/'',ARRAY_SIZE(SPLIT(METADATA$FILENAME,''/''))) AS FILE_NAME, " +
+      "    METADATA$FILE_LAST_MODIFIED AS LOAD_TIME " +
+      "  FROM " + stageFolder + " ( FILE_FORMAT => PROVIDER.KYRUUS_FILE_FORMAT ) " +
+      ")";
+
+
+try {
+       
+    //Execute Merge Command
+
+    statement = snowflake.createStatement({sqlText: copySql});
+    let sqlResult = statement.execute();
+    sqlResult.next();
+    let affectedNum = sqlResult.getNumRowsAffected();
+    result += targetTableName + " succeeded and affected " + affectedNum + " rows " + "\\n";
+    let endTime = new Date().toISOString()
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO UTIL.FILE_LOAD_COPY_CONTROL 
+          (INSERT_DATETIME, UPDATE_DATETIME, SOURCE_FILENAME_PATTERN, TARGET_TABLE_NAME,TRUNCATE_TABLE_FLAG, COPY_INTO_QUERY, FILES_PROCESSED, ROWS_LOADED)
+          VALUES (:1::timestamp_ltz,:2::timestamp_ltz,:3,:4,:5,:6,:7,:8);`;
+
+      snowflake.execute
+      (
+          {sqlText: sqlLogCommand,
+          binds: [ startTime, endTime,sourcePatternForLog, targetTableName, "TRUE", statement.getSqlText(), "1" , statement.getNumRowsInserted()]
+          }
+      );
+
+
+}
+catch (err)
+{
+    let code = err.code || err.name;
+    let state = err.state || ''(JavaScript error, not provided)''
+    let message = (err.message || ''(JavaScript error, not provided)'').replace(/''/g, "''''")
+    let stack = (err.stackTraceTxt || err.stack).replace(/''/g, "''''");
+    let endTime = new Date().toISOString();
+    var result = procedureName + '' Failed''
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+        
+    snowflake.execute
+    (
+        {sqlText: sqlLogCommand,
+        binds:[procedureName, "STORED_PROCEDURE", startTime, endTime, result, statement.getSqlText(), code, state, message, stack]
+        }
+    );
+    throw message;
+}
+return result;
+';

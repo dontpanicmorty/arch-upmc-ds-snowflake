@@ -1,0 +1,399 @@
+CREATE OR REPLACE FUNCTION STAGEDATA.FXN_BUILD_CLAIM_GROUP_CODE_ARRAY(ARRAY_TYPE string, DATA_SOURCE_NAME string, SOURCE_RECORD variant, END_INDEX_NBR double)
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+COMMENT ='Builds and returns an array for claim diagnosis or procedure codes'
+AS
+$$
+//This is the main processing case statement the break commands end processing.
+switch (ARRAY_TYPE)
+{
+  case 'diagnosisCode':{
+      return buildDiagnosisCodeArray(DATA_SOURCE_NAME, SOURCE_RECORD, END_INDEX_NBR)
+  }
+  case 'procedureCode':{
+    return buildProcedureCodeArray(DATA_SOURCE_NAME, SOURCE_RECORD, END_INDEX_NBR)
+  }
+  break;
+}
+
+//end main processing
+
+function buildDiagnosisCodeArray(dataSourceName, sourceRecord, endIndex)
+{
+switch (dataSourceName)
+    {
+    case 'NVA': {
+      return groupDiagnosisCodesForNVA(sourceRecord, endIndex);
+    }
+    case 'Envolve': {
+      return groupDiagnosisCodesForEnvolve(sourceRecord, endIndex);
+    }
+    case 'Skygen': {
+      return groupDiagnosisCodesForSkygen(sourceRecord, endIndex);
+    }
+    case 'MC400Dnt': {
+      return groupDiagnosisCodesForMC400Dnt(sourceRecord, endIndex);
+    }
+    case 'MC400Upm': {
+      return groupDiagnosisCodesForMC400Upm(sourceRecord, endIndex);
+    }
+  }
+}
+
+function buildProcedureCodeArray(dataSourceName, sourceRecord, endIndex)
+{
+switch (dataSourceName)
+    {
+    case 'MC400Upm': {
+      return groupProcedureCodesForMC400Upm(sourceRecord, endIndex);
+    }
+  }
+}
+
+function groupDiagnosisCodesForMC400Dnt(source, endIndex) {
+  // this is a list of fields that we want to group into an array of objects
+  const targetFields = [
+    {
+      target: 'icdDiagnosisCodePosition', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeValue', sourcePrefix: 'DIAGNOSIS', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeQualifier', sourcePrefix: 'DIAGQUALIFYR', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeVersion', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'poaCode', sourcePrefix: 'POA', primaryCode: null
+    }
+  ];
+  const startIndex = 1;
+  const gc = [];
+
+  // get ICD Type indicator to add everywhere as icdDiagnosisCodeVersion
+  let strDiagQuail = normalizeSpace(source['DIAGQUALIFYR01']);
+  let header_icdVersionCode = '';
+  
+  if (strDiagQuail.length == 3)
+    header_icdVersionCode = '10';
+  else 
+    header_icdVersionCode = '9';
+  
+  const icdVersionCode = header_icdVersionCode;
+
+  const gcArray = groupCodes(source, startIndex, endIndex, targetFields);
+  
+  return removeEmptyDiagnosisCodes(source, gcArray, DATA_SOURCE_NAME, icdVersionCode);
+
+}
+
+function groupDiagnosisCodesForMC400Upm(source, endIndex) {
+  // this is a list of fields that we want to group into an array of objects
+  const targetFields = [
+    {
+      target: 'icdDiagnosisCodePosition', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeValue', sourcePrefix: 'DIAGNOSIS', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeQualifier', sourcePrefix: 'DIAGQUALIFYR', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeVersion', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'poaCode', sourcePrefix: 'POA', primaryCode: null
+    }
+  ];
+  const startIndex = 1;
+
+  // get ICD Type indicator to add everywhere as icdDiagnosisCodeVersion
+  let strDiagQuail = normalizeSpace(source['DIAGQUALIFYR01']);
+  let header_icdVersionCode = '';
+
+  if (strDiagQuail.length == 3)
+    header_icdVersionCode = '10';
+  else 
+    header_icdVersionCode = '9';
+
+  const icdVersionCode = header_icdVersionCode;
+
+  const gcArray = groupCodes(source, startIndex, endIndex, targetFields);
+
+  return removeEmptyDiagnosisCodes(source, gcArray, DATA_SOURCE_NAME, icdVersionCode);
+}
+
+function groupDiagnosisCodesForEnvolve(source, endIndex) {
+  // this is a list of fields that we want to group into an array of objects
+  const targetFields = [
+    {
+      target: 'icdDiagnosisCodePosition', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeValue', sourcePrefix: 'DIAGNOSIS', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeQualifier', sourcePrefix: 'DIAGQUALIFYR', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeVersion', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'poaCode', sourcePrefix: 'POA', primaryCode: null
+    }
+      ];
+  const startIndex = 1;
+  const gc = [];
+
+  // get ICD Type indicator to add everywhere as icdDiagnosisCodeVersion
+    let header_icdVersionCode = '10';
+
+  const icdVersionCode = header_icdVersionCode;
+
+  const gcArray = groupCodes(source, startIndex, endIndex, targetFields);
+  
+  return removeEmptyDiagnosisCodes(source, gcArray, DATA_SOURCE_NAME, icdVersionCode);
+
+}
+
+function groupDiagnosisCodesForSkygen(source, endIndex) {
+  // this is a list of fields that we want to group into an array of objects
+  const targetFields = [
+    {
+      target: 'icdDiagnosisCodePosition', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeValue', sourcePrefix: 'DIAGNOSIS', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeVersion', sourcePrefix: null, primaryCode: null
+    }
+  ];
+  const startIndex = 1;
+  const gc = [];
+
+  // get ICD Type indicator to add everywhere as icdDiagnosisCodeVersion
+  let header_icdVersionCode = '10';
+
+  const icdVersionCode = header_icdVersionCode;
+
+  const gcArray = groupCodes(source, startIndex, endIndex, targetFields);
+  
+  return removeEmptyDiagnosisCodes(source, gcArray, DATA_SOURCE_NAME, icdVersionCode);
+
+}
+
+function groupDiagnosisCodesForNVA(source, endIndex) {
+
+  // this is a list of fields that we want to group into an array of objects
+
+  const targetFields = [
+    {
+      target: 'icdDiagnosisCodePosition', sourcePrefix: null, primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeValue', sourcePrefix: 'DIAGNOSIS', primaryCode: null
+    },
+    {
+      target: 'icdDiagnosisCodeVersion', sourcePrefix: 'ICD_TYPE', primaryCode: null
+    },
+  ];
+
+  const startIndex = 1;
+  const gc = [];
+
+  // get ICD Type indicator to add everywhere as icdDiagnosisCodeVersion
+
+  let header_icdVersionCode = source['ICD_TYPE'];
+  const icdVersionCode = header_icdVersionCode;
+  const gcArray = groupCodes(source, startIndex, endIndex, targetFields);
+
+  return removeEmptyDiagnosisCodes(source, gcArray, DATA_SOURCE_NAME, icdVersionCode);
+
+}
+
+function removeEmptyDiagnosisCodes(source, gcArray, dataSourceName, icdVersionCode)
+{
+  //converted from MarkLogic, basically just removes empty/blank codes
+  //removed lookup logic to referenceDataSingular, it does not apply anymore
+  //dataSourceName is not longer used, left in params for future use
+
+  
+  const gc = []; // output
+  for (const item of gcArray) {
+    if (item['icdDiagnosisCodeValue'].trim() != '' && item['icdDiagnosisCodeValue'] !== null) 
+      {
+        item.icdDiagnosisCodeVersion = icdVersionCode;
+        item.icdDiagnosisCodeValue = item['icdDiagnosisCodeValue']
+        item.icdDiagnosisClass = item['icdDiagnosisCodeValue'].toString().substr(0, 3);
+
+        gc.push(item);
+      }
+  }
+  return gc;
+}
+
+function groupProcedureCodesForMC400Upm(source, endIndex) 
+{
+  // this is a list of fields that we want to group into an array of objects
+
+  const targetFields = [
+    {target: 'icdProcedureCodePosition', sourcePrefix: null, primaryCode: null},
+    {
+      target: 'icdProcedureCodeValue',
+      sourcePrefix: 'SURGICAL',
+      primaryCode: null
+    },
+    {
+      target: 'icdProcedureCodeQualifier',
+      sourcePrefix: 'SURGPROCQUAL',
+      primaryCode: null
+    },
+    {target: 'icdProcedureCodeVersion', sourcePrefix: null, primaryCode: null}
+  ];
+
+  const startIndex = 1;
+  const gc = [];
+
+  // get ICD Type indicator to add everywhere as icdProcedureCodeVersion
+
+  //const icdVersionCode = '0';
+  var procQual = source['SURGPROCQUAL01'];
+  var strProcQuail = normalizeSpace(procQual);
+  var header_icdProcVersionCode = '';
+  
+  if (strProcQuail.length == 3)
+    header_icdProcVersionCode = '10';
+  else 
+    header_icdProcVersionCode = '9';
+  
+  icdVersionCode = header_icdProcVersionCode;
+  
+  const gcArray = groupCodes(source, startIndex, endIndex, targetFields);
+
+  for (const item of gcArray) {
+    if (item['icdProcedureCodeValue'].trim() != '' && item['icdProcedureCodeValue'] !== null) 
+      {
+      item['icdProcedureCodeVersion'] = icdVersionCode;
+      item.icdProcedureCodeValue = item['icdProcedureCodeValue'];
+      gc.push(item);
+    }
+  }
+  return gc;
+}
+
+function groupCodes(node, startIndex, endIndex, targetFields) 
+// Incoming records have multiple fields which are put into an array of values. The diagnosis codes
+// are formatted to match referenceDataSingular
+// The incoming records will have codes of one of these type:
+//
+// CODE1, CODE2, CODE
+// or
+// PRIMARYCODE, CODE2, CODE3
+//
+// This module will take a prefix and an optional primary code field name and create an array of values
+
+{
+
+  let objectArray = [];
+  for (let fieldIndex = startIndex; fieldIndex <= endIndex; fieldIndex++)
+    {
+    // create an object
+    const obj = {};
+
+    // enumerate through all of the target fields
+    for (const targetField of targetFields)
+      {
+      let val = ''; // default the value to ''
+      if (targetField['target'].includes('Position'))
+        {
+        // if the target field contains substring of 'Position', the value is the field index (position)
+        // val = fieldIndex.toString();
+        val = fieldIndex;
+        }
+      else if (targetField['sourcePrefix']) 
+        {
+          // do nothing if the sourcePrefix == null
+          // set the source field name based on prefix and position.  If it has a primary code, set it to that name.
+          var sourceFieldName = '';
+
+          // `primaryCode` field means there's a non-"index"ed version of the field
+          // for the first entry. Use that if we're working with it.
+          if (fieldIndex == 1 && targetField['primaryCode'])
+            sourceFieldName = targetField['primaryCode'];
+          // otherwise if there's a direct match for appending fieldIndex to sourcePrefix, use that
+          else
+            if (targetField['sourcePrefix'] + fieldIndex in node)
+              sourceFieldName = targetField['sourcePrefix'] + fieldIndex;
+            else 
+              {
+              // Otherwise: try finding something with 0s between sourcePrefix and fieldIndex
+              // If you came here because we actually have something with a thousand of the same
+              // field and need to implement '0001', please change the 3 to a 4, please update
+              // this sarcasm, and please accept my condolences.
+              for (let zeroes = 1; zeroes < 3; zeroes++) 
+                {
+                  let testKey =
+                    targetField.sourcePrefix +
+                    new Array(zeroes).fill('0').join('') + // make a string of N zeros
+                    fieldIndex;
+
+                  if (testKey in node)
+                    {
+                      sourceFieldName = testKey;
+                      break;
+                    }
+                }
+              }
+
+          val = node[sourceFieldName];
+          if (!val)
+            {
+              // business rule for setting reason code and suffix values if missing
+              switch (targetField['sourcePrefix'])
+                {
+                  case 'ReasonCd':
+                    {
+                    val = '9999';
+                    break;
+                    }
+                  case 'ReasonSuf':
+                    {
+                    val = 'N/A';
+                    break;
+                    }
+                  default:
+                    val = '';
+                }
+            }
+        }
+      // set the value for the current target field
+      obj[targetField['target']] = val;
+    }
+    objectArray.push(obj);
+  }
+  return objectArray;
+}
+
+function normalizeSpace(str)
+// Removes leading and trailing spaces along with string mulitple spaces down to a single space
+{
+  str = str.trim();
+  str = str.replace(/\s{2,}/g,' ');
+  return str;
+}
+
+function stripEmptyPositions(gcArray, attributeName)
+{
+  //removes empty position slots returned from groupCodes() based on the name of the field you care about
+  const gc = [];
+  for (const item of gcArray) if (item[attributeName].trim() != '') gc.push(item);
+
+  return gc;
+}
+
+$$
+;

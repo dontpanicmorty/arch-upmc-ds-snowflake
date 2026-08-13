@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS CLI 
+COMMENT = 'CLI production database'
+;

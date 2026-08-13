@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.MC400_DWOAO_RELATIONSHIPDESCRIPTIONS
+LIKE &{CDC_MERGE}.DBO.RELATIONSHIPDESCRIPTIONS
+;
+
+!set variable_substitution=false;

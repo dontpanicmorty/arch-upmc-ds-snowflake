@@ -1,0 +1,35 @@
+CREATE OR REPLACE FUNCTION LOGDATA.FXN_GET_UK_COLUMNS(TABLE_DDL STRING)
+RETURNS TABLE (UK_COLUMN STRING)
+LANGUAGE JAVASCRIPT
+AS
+$$
+{
+    processRow: function get_params(row, rowWriter, context){
+ 
+        var ukCols = getUKs(row.TABLE_DDL);
+        for (i = 0; i < ukCols.length; i++) {
+            rowWriter.writeRow({UK_COLUMN: ukCols[i] }); 
+        }
+         
+        function getUKs(tableDDL) {
+            var keyword = "unique"; //hopefully this is safe. It should be since it's lowercase
+            var ins = -1;
+            var s = tableDDL.split("\n");
+            for (var i = 0; i < s.length; i++) {  
+                ins = s[i].indexOf(keyword);
+                if (ins != -1) {
+                    var colList = s[i].substring(ins + keyword.length);
+                    colList = colList.replace("(", "");
+                    colList = colList.replace(")", "");
+                    var colArray = colList.split(",");
+                    for (c = 0; c < colArray.length; c++) {
+                        colArray[c] = colArray[c].trim();
+                    }
+                    return colArray;
+                }
+            }
+            return [];  // No Keys
+        }
+    }
+}
+$$;

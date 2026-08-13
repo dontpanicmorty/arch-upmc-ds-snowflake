@@ -1,0 +1,16 @@
+CREATE OR REPLACE TABLE EDW_RPT.MC_LAB_GROUPING
+(
+MC_LAB_FACT_KEY             NUMBER,
+LAB_SEQUENCE_NBR            NUMBER,
+ACCESSION_NBR              VARCHAR,
+RESULT_FLAG                VARCHAR,
+RESULT_COMMENTS            VARCHAR,
+LOAD_DATE            TIMESTAMP_NTZ,
+UPDATE_DATE          TIMESTAMP_NTZ,
+PANEL_CODE                 VARCHAR,
+PANEL_NAME                 VARCHAR,
+LAB_CODE                   VARCHAR,
+LAB_CODE_DESC              VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

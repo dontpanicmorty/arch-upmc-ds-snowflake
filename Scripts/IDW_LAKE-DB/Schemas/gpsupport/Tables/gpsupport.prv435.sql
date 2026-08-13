@@ -1,0 +1,13 @@
+CREATE OR REPLACE TABLE GPSUPPORT.PRV435
+(
+PROMISE_PROVIDER_NUMBER           VARCHAR,
+SERVICE_LOCATION                  VARCHAR,
+NPI_NUMBER                        VARCHAR,
+SPECIAL_INDICATOR_CODE            VARCHAR,
+EFFECTIVE_DATE                    VARCHAR,
+END_DATE                          VARCHAR,
+DATE_ADDED                        VARCHAR,
+LOAD_DATE                   TIMESTAMP_NTZ
+)
+COMMENT='Created for GPSUPPORT Migration'
+;

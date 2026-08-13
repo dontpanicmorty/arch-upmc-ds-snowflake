@@ -1,0 +1,10 @@
+CREATE OR REPLACE TABLE WPDW.RX_FOR_WELLNESS_MBR
+(
+MEMBER_NBR                VARCHAR,
+MAXDATE             TIMESTAMP_NTZ,
+NAME_LAST_FIRST           VARCHAR,
+PRODUCT                   VARCHAR,
+DOB                 TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

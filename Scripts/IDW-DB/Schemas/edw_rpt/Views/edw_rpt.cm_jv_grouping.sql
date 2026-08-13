@@ -1,0 +1,10 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW EDW_RPT.CM_JV_GROUPING
+AS
+SELECT
+CM_JV_GROUPING_KEY,
+MEMBERSHIP_KEY,
+VENTURE_KEY,
+LOAD_DATE
+FROM &{IDW_LAKE}.EDW_RPT.CM_JV_GROUPING;
+!set variable_substitution=false;

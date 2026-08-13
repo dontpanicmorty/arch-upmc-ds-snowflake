@@ -1,0 +1,195 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_DIAGNOSIS_RELATED_GROUP()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP AS tgt
+USING (
+        SELECT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,DIAGNOSIS_RELATED_GROUP_CODE
+        ,DIAGNOSIS_RELATED_GROUP_CODE_DESC
+        ,SEVERITY_OF_ILLNESS_NBR
+        ,DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+        ,DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+        ,DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME
+        ,MDC_CODE
+        ,MDC_DESC
+        ,RELATIVE_VALUE_NBR
+        ,AVERAGE_LENGTH_OF_STAY_NBR
+        ,EFFECTIVE_START_DATE
+        ,EFFECTIVE_END_DATE
+        FROM STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,DIAGNOSIS_RELATED_GROUP_CODE
+        ,DIAGNOSIS_RELATED_GROUP_CODE_DESC
+        ,SEVERITY_OF_ILLNESS_NBR
+        ,DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+        ,DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+        ,DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME
+        ,MDC_CODE
+        ,MDC_DESC
+        ,RELATIVE_VALUE_NBR
+        ,AVERAGE_LENGTH_OF_STAY_NBR
+        ,EFFECTIVE_START_DATE
+        ,EFFECTIVE_END_DATE
+        FROM DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP
+    ) AS src
+ON (tgt.DIAGNOSIS_RELATED_GROUP_CODE = src.DIAGNOSIS_RELATED_GROUP_CODE
+AND tgt.SEVERITY_OF_ILLNESS_NBR = src.SEVERITY_OF_ILLNESS_NBR
+AND tgt.DIAGNOSIS_RELATED_GROUP_TYPE_CODE = src.DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+AND tgt.DIAGNOSIS_RELATED_GROUP_VERSION_NBR = src.DIAGNOSIS_RELATED_GROUP_VERSION_NBR)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.DIAGNOSIS_RELATED_GROUP_CODE_DESC = src.DIAGNOSIS_RELATED_GROUP_CODE_DESC,
+    tgt.DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME = src.DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME,
+    tgt.MDC_CODE = src.MDC_CODE,
+    tgt.MDC_DESC = src.MDC_DESC,
+    tgt.RELATIVE_VALUE_NBR = src.RELATIVE_VALUE_NBR,
+    tgt.AVERAGE_LENGTH_OF_STAY_NBR = src.AVERAGE_LENGTH_OF_STAY_NBR,
+    tgt.EFFECTIVE_START_DATE = src.EFFECTIVE_START_DATE,
+    tgt.EFFECTIVE_END_DATE = src.EFFECTIVE_END_DATE
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_DIAGNOSIS_RELATED_GROUP_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIAGNOSIS_RELATED_GROUP_CODE
+        ,DIAGNOSIS_RELATED_GROUP_CODE_DESC
+        ,SEVERITY_OF_ILLNESS_NBR
+        ,DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+        ,DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+        ,DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME
+        ,MDC_CODE
+        ,MDC_DESC
+        ,RELATIVE_VALUE_NBR
+        ,AVERAGE_LENGTH_OF_STAY_NBR
+        ,EFFECTIVE_START_DATE
+        ,EFFECTIVE_END_DATE
+    )
+VALUES 
+    (
+        (SELECT IFNULL(MAX(DIM_DIAGNOSIS_RELATED_GROUP_KEY), 1000) FROM DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DIAGNOSIS_RELATED_GROUP_CODE
+        ,src.DIAGNOSIS_RELATED_GROUP_CODE_DESC
+        ,src.SEVERITY_OF_ILLNESS_NBR
+        ,src.DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+        ,src.DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+        ,src.DIAGNOSIS_RELATED_GROUP_CATEGORY_NAME
+        ,src.MDC_CODE
+        ,src.MDC_DESC
+        ,src.RELATIVE_VALUE_NBR
+        ,src.AVERAGE_LENGTH_OF_STAY_NBR
+        ,src.EFFECTIVE_START_DATE
+        ,src.EFFECTIVE_END_DATE
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_DIAGNOSIS_RELATED_GROUP_KEY IN
+(
+    SELECT DIM_DIAGNOSIS_RELATED_GROUP.DIM_DIAGNOSIS_RELATED_GROUP_KEY
+    FROM DIMDATA.DIM_DIAGNOSIS_RELATED_GROUP
+        LEFT OUTER JOIN 
+            (SELECT
+                DIAGNOSIS_RELATED_GROUP_CODE,
+                SEVERITY_OF_ILLNESS_NBR,
+                DIAGNOSIS_RELATED_GROUP_TYPE_CODE,
+                DIAGNOSIS_RELATED_GROUP_VERSION_NBR
+            FROM STAGEDATA.DIM_DIAGNOSIS_RELATED_GROUP_SELECT_VW
+            ) STAGE_DATA
+        ON (STAGE_DATA.DIAGNOSIS_RELATED_GROUP_CODE = DIM_DIAGNOSIS_RELATED_GROUP.DIAGNOSIS_RELATED_GROUP_CODE
+        AND STAGE_DATA.SEVERITY_OF_ILLNESS_NBR = DIM_DIAGNOSIS_RELATED_GROUP.SEVERITY_OF_ILLNESS_NBR
+        AND STAGE_DATA.DIAGNOSIS_RELATED_GROUP_TYPE_CODE = DIM_DIAGNOSIS_RELATED_GROUP.DIAGNOSIS_RELATED_GROUP_TYPE_CODE
+        AND STAGE_DATA.DIAGNOSIS_RELATED_GROUP_VERSION_NBR = DIM_DIAGNOSIS_RELATED_GROUP.DIAGNOSIS_RELATED_GROUP_VERSION_NBR)
+    WHERE STAGE_DATA.DIAGNOSIS_RELATED_GROUP_CODE IS NULL
+    AND DIM_DIAGNOSIS_RELATED_GROUP.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_DIAGNOSIS_RELATED_GROUP.DIM_DIAGNOSIS_RELATED_GROUP_KEY > 999
+);`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

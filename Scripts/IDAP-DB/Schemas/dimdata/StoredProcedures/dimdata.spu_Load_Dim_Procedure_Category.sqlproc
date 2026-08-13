@@ -1,0 +1,156 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_PROCEDURE_CATEGORY()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_PROCEDURE_CATEGORY`;
+
+// Create merge statement to be executed.  The table and matched clauses will be dynamically generated based off the is_full_load flag that is
+// passed into the procedure.  It will allow for a full sync from stagedata vs the CDC stream set.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_PROCEDURE_CATEGORY AS tgt
+USING (
+        SELECT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,DATA_SOURCE_NAME
+        ,PROCEDURE_CATEGORY_CODE
+        ,PROCEDURE_CATEGORY_DESC
+        FROM STAGEDATA.DIM_PROCEDURE_CATEGORY_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,DATA_SOURCE_NAME
+        ,PROCEDURE_CATEGORY_CODE
+        ,PROCEDURE_CATEGORY_DESC
+        FROM DIMDATA.DIM_PROCEDURE_CATEGORY
+    ) AS src
+ON (tgt.DIM_TPA_HIERARCHY_KEY = src.DIM_TPA_HIERARCHY_KEY
+AND tgt.DATA_SOURCE_NAME = src.DATA_SOURCE_NAME
+AND tgt.PROCEDURE_CATEGORY_CODE =src.PROCEDURE_CATEGORY_CODE)
+
+WHEN MATCHED 
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME=CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.PROCEDURE_CATEGORY_DESC=src.PROCEDURE_CATEGORY_DESC
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        DIM_PROCEDURE_CATEGORY_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,PROCEDURE_CATEGORY_CODE
+        ,PROCEDURE_CATEGORY_DESC
+        ,DATA_SOURCE_NAME
+    )
+    VALUES
+    (
+        (SELECT IFNULL(MAX(DIM_PROCEDURE_CATEGORY_KEY), 1000) FROM DIMDATA.DIM_PROCEDURE_CATEGORY) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DIM_TPA_HIERARCHY_KEY
+        ,src.PROCEDURE_CATEGORY_CODE
+        ,src.PROCEDURE_CATEGORY_DESC
+        ,src.DATA_SOURCE_NAME
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_PROCEDURE_CATEGORY
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME  = CURRENT_TIMESTAMP()
+WHERE DIM_PROCEDURE_CATEGORY_KEY IN
+(
+    SELECT DIM_PROCEDURE_CATEGORY.DIM_PROCEDURE_CATEGORY_KEY
+    FROM DIMDATA.DIM_PROCEDURE_CATEGORY
+        LEFT OUTER JOIN 
+            (SELECT 
+            DIM_TPA_HIERARCHY_KEY
+            ,DATA_SOURCE_NAME
+            ,PROCEDURE_CATEGORY_CODE
+            FROM STAGEDATA.DIM_PROCEDURE_CATEGORY_SELECT_VW) STAGE_DATA
+        ON (STAGE_DATA.DIM_TPA_HIERARCHY_KEY = DIM_PROCEDURE_CATEGORY.DIM_TPA_HIERARCHY_KEY
+        AND STAGE_DATA.DATA_SOURCE_NAME = DIM_PROCEDURE_CATEGORY.DATA_SOURCE_NAME
+        AND STAGE_DATA.PROCEDURE_CATEGORY_CODE = DIM_PROCEDURE_CATEGORY.PROCEDURE_CATEGORY_CODE)
+WHERE STAGE_DATA.PROCEDURE_CATEGORY_CODE IS NULL
+AND DIM_PROCEDURE_CATEGORY.IS_LOGICAL_DELETE_FLAG = FALSE
+AND DIM_PROCEDURE_CATEGORY.DIM_PROCEDURE_CATEGORY_KEY > 999
+)
+;`    
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

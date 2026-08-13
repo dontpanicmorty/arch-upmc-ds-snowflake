@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE VIRTUAL_HEALTH_STAGE.TASK_STANDARD_IMPORT_FILE
+(
+ID                              INT,
+AUTHOR_ID                       INT,
+FILENAME                    VARCHAR,
+FILENAME_ORIGINAL           VARCHAR,
+IN_PROGRESS                     INT,
+PARSE_LOG_SUMMARY           VARCHAR,
+FIRST_START_DATE      TIMESTAMP_NTZ,
+STARTS_COUNT                    INT,
+CREATED_DATE          TIMESTAMP_NTZ,
+UPDATED_DATE          TIMESTAMP_NTZ
+)
+COMMENT='Created for UPMCVH_PROD Migration'
+;

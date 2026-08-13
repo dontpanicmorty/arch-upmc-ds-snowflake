@@ -1,0 +1,16 @@
+{
+    "isActive": true,
+    "isCloneFlag": false,
+    "isCopyIntoFlag": true,
+    "dataDomain": "claim",
+    "dataSourceName": "FDB",
+    "targetTableName": "RAWDATA.FDB_RHICLSQ1_HICLSEQNO_MSTR",
+    "sourceCloneTableName": null,
+    "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+    "sourceFilePath": "/drug/firstdatabank/",
+    "sourceFileFormatName": "RAWDATA.IDAPLAKE_FDB_FILE_FORMAT",
+    "sourceFilePattern": "drug/firstdatabank/\\\\d{4}/\\\\d{2}/\\\\d{2}/NDDF Plus DB/NDDF Descriptive and Pricing/NDDF BASICS 3.0/Generic Formulation and Ingredient/RHICLSQ1_HICLSEQNO_MSTR",
+    "sourceFileDelimitedColumnCount": 3,
+    "sourceFileFixedWidthMapping": null,
+    "validateDataFlag": false
+  }

@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE EDW_RPT.CHC_MCO_PAYMENT_CYCLE
+(
+CHC_MCO_PAYMENT_CYCLE_KEY        NUMBER(38),
+PAYMENT_CYCLE_NBR                   VARCHAR,
+LOAD_DATE                     TIMESTAMP_NTZ,
+UPDATE_DATE                   TIMESTAMP_NTZ,
+PMT_ADJ_REASON_CD                   VARCHAR,
+ADJ_RATE_CELL                       VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

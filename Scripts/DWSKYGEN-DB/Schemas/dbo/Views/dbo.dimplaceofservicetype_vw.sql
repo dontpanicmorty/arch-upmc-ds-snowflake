@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW DBO.DimPlaceOfServiceType_VW
+AS 
+SELECT 	$1:PlaceOfServiceTypeKey::NUMBER(38, 0) AS PlaceOfServiceTypeKey, 
+		$1:PLACE_OF_SERVICE_TYPE::NUMBER(38, 0) AS PLACE_OF_SERVICE_TYPE, 
+		$1:PlaceOfServiceTypeDescription::VARCHAR AS PlaceOfServiceTypeDescription
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimPlaceOfServiceType/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT);

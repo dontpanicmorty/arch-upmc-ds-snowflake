@@ -1,0 +1,24 @@
+CREATE OR REPLACE TABLE WPDW.EAP_LIFEADVANTAGES_WEBHITS
+(
+GROUP_NAME               VARCHAR,
+LIFE_ADVANTAGES_CODE     VARCHAR,
+VISIT_MONTH              VARCHAR,
+NEW_USERS                VARCHAR,
+LIVES                    VARCHAR,
+TOTAL_USERS              VARCHAR,
+VISITORS                 VARCHAR,
+VISITS                   VARCHAR,
+PAGE_VIEWS               VARCHAR,
+HOME                     VARCHAR,
+SEARCH                   VARCHAR,
+EMOTIONAL_WELLBEING      VARCHAR,
+FINANCIAL                VARCHAR,
+HEALTH                   VARCHAR,
+LEGAL                    VARCHAR,
+PERSONAL_GROWTH          VARCHAR,
+RELATIONSHIPS            VARCHAR,
+RESILIENCE               VARCHAR,
+EMPLOYER_KEY             VARCHAR
+)
+COMMENT='Created for WPDW Migration'
+;

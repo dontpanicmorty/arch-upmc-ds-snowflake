@@ -1,0 +1,16 @@
+{
+    "isActive": true,
+    "isCloneFlag": false,
+    "isCopyIntoFlag": true,
+    "dataDomain": "claim",
+    "dataSourceName": "Skygen",
+    "targetTableName": "RAWDATA.SKYGEN_PAID_CLAIM_EXTRACTS",
+    "sourceCloneTableName": null,
+    "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+    "sourceFilePath": "/claim/skygen",
+    "sourceFileFormatName": "RAWDATA.SKYGEN_CLAIM_FILE_FORMAT",
+    "sourceFilePattern": "(?i)claim\\/skygen\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}/\\.*-claim-Skygen__DW_Utilization_.*[.]txt",
+    "sourceFileDelimitedColumnCount": 63,
+    "sourceFileFixedWidthMapping": null,
+    "validateDataFlag": false
+  }

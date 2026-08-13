@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_COVID_POS_DX
+(
+CORPORATION_ID               VARCHAR,
+GROUP_ID                     VARCHAR,
+DIVISION_ID                  VARCHAR,
+PLAN_NBR                     VARCHAR,
+CLAIM_NBR                    VARCHAR,
+SERVICE_BEGIN_DATE     TIMESTAMP_NTZ,
+PAYMENT_DATE           TIMESTAMP_NTZ,
+MEMBER_NBR                   VARCHAR,
+POSITIVE_CLM                  NUMBER(33,5),
+SUSPECTED_CLM                 NUMBER(33,5)
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

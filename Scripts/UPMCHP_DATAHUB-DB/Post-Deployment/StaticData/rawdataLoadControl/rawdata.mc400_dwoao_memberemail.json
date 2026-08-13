@@ -1,0 +1,16 @@
+{ 
+    "isActive": true, 
+    "isCloneFlag": true, 
+    "isCopyIntoFlag": false, 
+    "dataDomain": "member", 
+    "dataSourceName": "MC400Upm", 
+    "targetTableName": "RAWDATA.MC400_DWOAO_MEMBEREMAIL", 
+    "sourceCloneTableName": "CDC_MERGE.DBO.MEMBEREMAIL", 
+    "sourceFileStageName": null, 
+    "sourceFilePath": null, 
+    "sourceFileFormatName": null, 
+    "sourceFilePattern": null, 
+    "sourceFileDelimitedColumnCount": null, 
+    "sourceFileFixedWidthMapping": null, 
+    "validateDataFlag": null 
+} 

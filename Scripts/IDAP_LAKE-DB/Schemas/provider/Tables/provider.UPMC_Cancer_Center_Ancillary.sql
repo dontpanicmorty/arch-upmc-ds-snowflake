@@ -1,0 +1,20 @@
+CREATE OR REPLACE TABLE PROVIDER.UPMC_CANCER_CENTER_ANCILLARY (
+  UPMC_CANCER_CENTER_ANCILLARY_KEY  NUMBER(38,0) NOT NULL AUTOINCREMENT ORDER,
+  FILENAME                          VARCHAR,
+  INSERT_DATETIME                   TIMESTAMP_TZ(9),
+  SORT                              VARCHAR,
+  NAME                              VARCHAR,
+  ADDRESS_1                         VARCHAR,
+  ADDRESS_2                         VARCHAR,
+  CITY                              VARCHAR,
+  STATE                             VARCHAR,
+  ZIP_CODE                          VARCHAR,
+  PHONE                             VARCHAR,
+  COUNTY                            VARCHAR,
+  SRV_CAT_OF_PRVDR_ADDR_CAT         VARCHAR,
+  DO_NOT_PRINT                      VARCHAR,
+  CONSTRAINT PK_UPMC_CANCER_ANCILLARY PRIMARY KEY (UPMC_CANCER_CENTER_ANCILLARY_KEY),
+  CONSTRAINT UK_UPMC_CANCER_ANCILLARY UNIQUE (NAME, ADDRESS_1, ADDRESS_2, CITY, STATE, ZIP_CODE)
+  )
+COMMENT = 'UPMC CANCER CENTER ANCILLARY FILE FOR PRINT PROVIDER.'
+;

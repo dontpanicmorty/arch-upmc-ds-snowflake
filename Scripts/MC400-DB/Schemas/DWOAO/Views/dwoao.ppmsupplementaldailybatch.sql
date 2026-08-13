@@ -1,0 +1,7 @@
+
+CREATE OR REPLACE VIEW DWOAO.PPMSupplementalDailyBatch
+AS
+SELECT * FROM CDC_MERGE.DBO.PPMSupplementalDailyBatch
+WHERE TPAClient = '000001' AND TPAIdent = '000001' AND TPADiv ='0001';
+
+;

@@ -1,0 +1,157 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_EFF_SAT_TABLE(JOB_ID VARCHAR, HUB_TABLE_NAME VARCHAR, HKEY_NAME VARCHAR, EFF_SAT_TABLE_NAME VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = EFF_SAT_TABLE_NAME;
+
+//sql to insert an effective satellite record for a new hub record or hub record that was previously missing from the source data set and readded.
+var sqlEffectiveSatelliteInsert =
+`
+INSERT INTO ${EFF_SAT_TABLE_NAME}
+(${HKEY_NAME}, ROW_EFFECTIVE_DATETIME, ROW_EXPIRATION_DATETIME, IS_CURRENT_ROW_FLAG, DELETED_DATETIME)
+SELECT
+SRC.${HKEY_NAME}, :1, TO_TIMESTAMP_TZ('9999-12-31'), TRUE, TO_TIMESTAMP_TZ('9999-12-31')
+FROM ${SOURCE_VIEW_NAME} SRC
+    LEFT OUTER JOIN ${EFF_SAT_TABLE_NAME} EFF_SAT
+        ON (EFF_SAT.${HKEY_NAME} = SRC.${HKEY_NAME}
+        AND EFF_SAT.IS_CURRENT_ROW_FLAG = TRUE)
+WHERE EFF_SAT.${HKEY_NAME} IS NULL --There is no current eff_sat record
+OR (EFF_SAT.${HKEY_NAME} IS NOT NULL AND EFF_SAT.DELETED_DATETIME < :1) --There is a current delete eff_sat record
+
+UNION ALL
+
+-- This section will insert eff sat records for items that are longer in source so they can be considered DELETED
+SELECT
+HUB.${HKEY_NAME}, :1, TO_TIMESTAMP_TZ('9999-12-31'), TRUE, :1
+FROM ${HUB_TABLE_NAME} HUB
+    JOIN ${EFF_SAT_TABLE_NAME} EFF_SAT
+        ON (EFF_SAT.${HKEY_NAME} = HUB.${HKEY_NAME}
+        AND EFF_SAT.IS_CURRENT_ROW_FLAG = TRUE)
+    LEFT OUTER JOIN ${SOURCE_VIEW_NAME} SRC
+        ON (SRC.${HKEY_NAME} = HUB.${HKEY_NAME})
+WHERE HUB.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM ${SOURCE_VIEW_NAME})
+AND SRC.${HKEY_NAME} IS NULL --missing in the source dataset
+AND EFF_SAT.DELETED_DATETIME > :1 --the current eff sat record is not a delete
+;`;
+
+//This update command will set is_current_row_flag and row_expiration_datetime for previous satellite records
+var sqlEffectiveSatelliteUpdate =
+`
+UPDATE ${EFF_SAT_TABLE_NAME} EFF_SAT
+SET
+ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (${HKEY_NAME}, ROW_EFFECTIVE_DATETIME) IN
+    (
+    SELECT ${HKEY_NAME}, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT
+        EFF_SAT.${HKEY_NAME}
+        ,EFF_SAT.ROW_EFFECTIVE_DATETIME
+        ,ROW_NUMBER() OVER (PARTITION BY EFF_SAT.${HKEY_NAME} ORDER BY EFF_SAT.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM ${EFF_SAT_TABLE_NAME} EFF_SAT
+            JOIN ${HUB_TABLE_NAME} HUB
+                ON (HUB.${HKEY_NAME} = EFF_SAT.${HKEY_NAME})
+        WHERE HUB.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM ${SOURCE_VIEW_NAME})
+        AND EFF_SAT.IS_CURRENT_ROW_FLAG = TRUE
+        ) CURRENT_RECORDS
+    WHERE CURRENT_RECORDS.RNUM >=2
+    )
+;`;
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+    
+    //Execute EffectiveSatelliteInsert Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlEffectiveSatelliteInsert, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    //Execute EffectiveSatelliteUpdate Command
+    var startTime = new Date().toISOString();    
+    var sfStatement = snowflake.createStatement({sqlText: sqlEffectiveSatelliteUpdate, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

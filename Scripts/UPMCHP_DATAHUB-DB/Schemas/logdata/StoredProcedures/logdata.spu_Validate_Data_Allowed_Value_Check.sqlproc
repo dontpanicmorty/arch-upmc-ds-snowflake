@@ -1,0 +1,110 @@
+CREATE OR REPLACE PROCEDURE LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK(JOB_ID VARCHAR, TABLE_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+/*
+JOB_ID must be generated first by the top level caller so we can tie together the outputs.
+TABLE_NAME is actually SCHEMA.TABLE_NAME due to how dimdata sprocs were created. 
+Procedure compares what we have in UTIL.ALLWOED_VALUE_CONTROL against what we loaded in the incoming schema variable
+*/
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var columnName = 'not set';
+var loadDatetime = null;
+
+//Lookup Job
+var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+var resultSet = sfStatement.execute();
+while (resultSet.next())
+{
+    loadDatetime = resultSet.getColumnValue("START_TIME");
+}
+
+if (!loadDatetime)
+    {
+        var result = "Job Id:"+JOB_ID+" Not Found!";
+        throw result;
+    }
+
+// calling sprocs send in table_name as schema.table so we have to split it for this
+const objectArray = TABLE_NAME.split(".");
+const schemaName = objectArray[0];
+const tableName = objectArray[1];
+
+//get a list of all the columns we need to check
+sqlCommand = `SELECT DISTINCT COLUMNS.COLUMN_NAME, CONCAT('SELECT ', COLUMNS.COLUMN_NAME,  ' FROM ${schemaName}.', COLUMNS.TABLE_NAME, ' MINUS SELECT ALLOWED_VALUE FROM UTIL.ALLOWED_VALUE_CONTROL WHERE COLUMN_NAME = ') AS MINUS_QUERY
+FROM INFORMATION_SCHEMA.COLUMNS
+    JOIN UTIL.ALLOWED_VALUE_CONTROL
+        ON COLUMNS.TABLE_SCHEMA = ALLOWED_VALUE_CONTROL.SCHEMA_NAME
+        AND COLUMNS.COLUMN_NAME = ALLOWED_VALUE_CONTROL.COLUMN_NAME 
+WHERE COLUMNS.TABLE_SCHEMA = '${schemaName}'
+AND COLUMNS.TABLE_NAME = '${tableName}'`;
+var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+var resultSet = sfStatement.execute();
+
+// Loop the the columns allowed value columns for the given table
+while(resultSet.next())
+{
+    columnName = resultSet.getColumnValue('COLUMN_NAME');
+    minusQuery = resultSet.getColumnValue('MINUS_QUERY');
+    fullQuery = minusQuery.concat("'", columnName, "'");
+
+    //build the query to check for allowed values
+    sqlCommand = `SELECT COUNT(*) AS RESULT_COUNT FROM (${fullQuery})`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    var rsResultCount = sfStatement.execute();
+    rsResultCount.next(); 
+    var resultCount = rsResultCount.getColumnValue('RESULT_COUNT');
+    
+    //insert the results to the logdata table
+    if(resultCount === 0)
+    {
+        var result = "Succeeded";
+        var validationDescription = columnName+" passed allowed values check";
+        var sqlLogCommand =
+        `INSERT INTO LOGDATA.DATA_VALIDATION_RESULT 
+            (JOB_ID, TABLE_NAME, VALIDATION_PROCEDURE_NAME, RESULT_TEXT, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR, VALIDATION_DESC, SQL_STATEMENT) 
+        VALUES 
+            (:1, :2, :3, :4, :5, :6, :7, :8)
+        ;`;
+
+        snowflake.execute
+        (
+            {
+            sqlText: sqlLogCommand,
+            binds:[JOB_ID, TABLE_NAME, procedureName, result, resultCount, 0, validationDescription, sfStatement.getSqlText()]
+            }
+        );
+    }
+    else
+    {
+        var result = "Failed";
+        var validationDescription = "Validation failed because of invalid values in column: "+columnName;
+        var throwMessage = validationDescription + " SELECT * FROM LOGDATA.DATA_VALIDATION_RESULT WHERE JOB_ID = '"+JOB_ID+"' AND RESULT_TEXT = 'Failed';";
+        var sqlLogCommand =
+        `INSERT INTO LOGDATA.DATA_VALIDATION_RESULT 
+            (JOB_ID, TABLE_NAME, VALIDATION_PROCEDURE_NAME, RESULT_TEXT, VALIDATION_RESULT_NBR, EXPECTED_RESULT_NBR, VALIDATION_DESC, SQL_STATEMENT) 
+        VALUES 
+            (:1, :2, :3, :4, :5, :6, :7, :8)
+        ;`;
+
+        snowflake.execute
+        (
+            {
+            sqlText: sqlLogCommand,
+            binds:[JOB_ID, TABLE_NAME, procedureName, result, resultCount, 0, validationDescription, sfStatement.getSqlText()]
+            }
+        );    
+        throw throwMessage;
+    };    
+};
+
+return result;
+$$
+;

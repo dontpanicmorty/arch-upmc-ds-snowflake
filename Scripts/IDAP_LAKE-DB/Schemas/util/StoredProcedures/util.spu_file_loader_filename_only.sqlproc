@@ -1,0 +1,16 @@
+CREATE OR REPLACE PROCEDURE UTIL.SPU_FILE_LOADER(FILENAME VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT = 'Stored procedure for loading simple fixed / delimited files into Snowflake from blob storage'
+EXECUTE AS OWNER 
+AS
+$$
+// Proxy empty arguments to the full-parameter version
+let sqlText = `CALL UTIL.SPU_FILE_LOADER('${FILENAME}', '', '', '', '', '');`;
+let resultSet = snowflake.execute({sqlText});
+
+// Proxy the result back
+resultSet.next();
+return resultSet.getColumnValue(1);
+$$
+;

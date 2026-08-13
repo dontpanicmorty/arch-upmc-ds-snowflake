@@ -1,0 +1,8 @@
+CREATE OR REPLACE VIEW DBO.DimBenefitLevel_VW
+AS 
+SELECT 	$1:BenefitLevelKey::NUMBER(38, 0) AS BenefitLevelKey, 
+		$1:OON_FLAG::VARCHAR::BOOLEAN AS OON_FLAG, 
+		$1:BenefitLevelDescription::VARCHAR AS BenefitLevelDescription
+FROM 	'@DBO.HPDSDATALAKE_DBEXTRACT_DWSKYGEN/dbo/DimBenefitLevel/'
+		( FILE_FORMAT => DBO.DWSKYGEN_PARQUET_FILE_FORMAT)
+;

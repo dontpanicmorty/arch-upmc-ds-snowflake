@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW STAGING.MC4_BENLEVEL_LKP
+AS
+SELECT
+CODEVALUE,
+DESCRIPTION,
+INDICATOR
+FROM &{IDW_LAKE}.STAGING.MC4_BENLEVEL_LKP;
+!set variable_substitution=false;

@@ -1,0 +1,16 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "dataDomain": "member",
+  "dataSourceName": "UPMC-CORP",
+  "targetTableName": "RAWDATA.EMPI_DAILY_GLOBAL",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_IDAPLAKE",
+  "sourceFilePath": "/member/empi/member_extract",
+  "sourceFileFormatName": "RAWDATA.EMPI_DAILY_GLOBAL_FILE_FORMAT",
+  "sourceFilePattern": "member\\/empi\\/member_extract\\/\\\\d{4}\\/\\\\d{2}\\/\\\\d{2}/\\.*0000010000010001-member-empi__hp_member_extract_.*.txt",
+  "sourceFileDelimitedColumnCount": 17,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

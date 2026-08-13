@@ -1,0 +1,9 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW ADL_PROD.INFO_RX_MEDREC_FLAG
+AS
+SELECT
+MEMBER_NBR,
+MMI,
+RUN_DATE
+FROM &{IDW_LAKE}.ADL_PROD.INFO_RX_MEDREC_FLAG;
+!set variable_substitution=false;

@@ -1,0 +1,681 @@
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:sdtc="urn:hl7-org:sdtc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <realmCode code="US"></realmCode>
+  <typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3"></typeId>
+  <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.1.1"></templateId>
+  <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.1.2"></templateId>
+  <id extension="9320A190-12A0-11ED-8F70-55492948D70E" root="93207A80-12A0-11ED-8F70-55492948D70E"></id>
+  <code code="34133-9" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Summarization of Episode Note"></code>
+  <title>Patient Summarization (C-CDA 2.1 CCD)</title>
+  <effectiveTime value="20220802162039-0400"></effectiveTime>
+  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25"></confidentialityCode>
+  <languageCode code="en-US"></languageCode>
+  <recordTarget>
+    <patientRole>
+      <id extension="60a62070217a451348f2a3b9" root="2.16.840.1.113883.3.7723"></id>
+      <id extension="240561" root="2.16.840.1.113883.4.391.185.24629.1"></id>
+      <id extension="240561" root="2.16.840.1.113883.4.391.185.24629"></id>
+      <addr use="PST">
+        <streetAddressLine>27a Mcmutt St</streetAddressLine>
+        <city>Houston</city>
+        <state>PA</state>
+        <postalCode>15342</postalCode>
+        <country>US</country>
+      </addr>
+      <telecom use="HP" value="tel:(724)255-5186"></telecom>
+      <patient>
+        <name>
+          <given>Veronica</given>
+          <given>J</given>
+          <family>Schollaert</family>
+        </name>
+        <administrativeGenderCode code="F" codeSystem="2.16.840.1.113883.5.1" displayName="Female"></administrativeGenderCode>
+        <birthTime value="19750829"></birthTime>
+        <maritalStatusCode nullFlavor="NI"></maritalStatusCode>
+        <religiousAffiliationCode nullFlavor="NI"></religiousAffiliationCode>
+        <raceCode nullFlavor="NI"></raceCode>
+        <ethnicGroupCode nullFlavor="NI"></ethnicGroupCode>
+        <languageCommunication>
+          <languageCode code="en"></languageCode>
+          <modeCode nullFlavor="NI"></modeCode>
+          <proficiencyLevelCode nullFlavor="NI"></proficiencyLevelCode>
+          <preferenceInd value="true"></preferenceInd>
+        </languageCommunication>
+      </patient>
+    </patientRole>
+  </recordTarget>
+  <author>
+    <time value="202208021620-0400"></time>
+    <assignedAuthor>
+      <id extension=" " root="2.16.840.1.113883.3.57.1.3.31.32.1"></id>
+      <addr>
+        <streetAddressLine>600 Grant Street</streetAddressLine>
+        <streetAddressLine>22nd Floor</streetAddressLine>
+        <city>Pittsburgh</city>
+        <state>PA</state>
+        <postalCode>15219</postalCode>
+        <country>US</country>
+      </addr>
+      <telecom use="WP" value="tel:412.864.4336"></telecom>
+      <assignedAuthoringDevice>
+        <manufacturerModelName>Diameter Health Fusion v3.110.0</manufacturerModelName>
+        <softwareName>Diameter Health Quality C-CDA/QRDA Generator v3.110.0</softwareName>
+      </assignedAuthoringDevice>
+      <representedOrganization>
+        <id extension="00000" root="2.16.840.1.113883.3.7723"></id>
+        <name>ClinicalConnect HIE</name>
+        <telecom nullFlavor="NI"></telecom>
+        <addr nullFlavor="NI"></addr>
+      </representedOrganization>
+    </assignedAuthor>
+  </author>
+  <author>
+    <time value="20210520"></time>
+    <assignedAuthor>
+      <id extension="V3.0" root="2.16.840.1.113883.4.391.185"></id>
+      <addr nullFlavor="NI"></addr>
+      <telecom nullFlavor="NI"></telecom>
+      <assignedAuthoringDevice>
+        <manufacturerModelName>No Information</manufacturerModelName>
+        <softwareName>No information</softwareName>
+      </assignedAuthoringDevice>
+      <representedOrganization>
+        <id root="2.16.840.1.113883.4.391.185.24629"></id>
+        <name>Washington Healthcare Services Inc</name>
+        <telecom value="tel:(724)223-3100"></telecom>
+        <addr>
+          <streetAddressLine>95 Leonard Avenue, Bldg 2</streetAddressLine>
+          <city>Washington</city>
+          <state>PA</state>
+          <postalCode>15301</postalCode>
+          <country>US</country>
+        </addr>
+      </representedOrganization>
+    </assignedAuthor>
+  </author>
+  <custodian>
+    <assignedCustodian>
+      <representedCustodianOrganization>
+        <id extension=" " root="2.16.840.1.113883.3.57.1.3.31.32.1"></id>
+        <name>ClinicalConnect HIE</name>
+        <telecom use="WP" value="tel:412.864.4336"></telecom>
+        <addr>
+          <streetAddressLine>600 Grant Street</streetAddressLine>
+          <streetAddressLine>22nd Floor</streetAddressLine>
+          <city>Pittsburgh</city>
+          <state>PA</state>
+          <postalCode>15219</postalCode>
+          <country>US</country>
+        </addr>
+      </representedCustodianOrganization>
+    </assignedCustodian>
+  </custodian>
+  <documentationOf typeCode="DOC">
+    <serviceEvent classCode="PCPR">
+      <effectiveTime>
+        <low nullFlavor="NI"></low>
+        <high nullFlavor="NI"></high>
+      </effectiveTime>
+      <performer typeCode="PRF">
+        <assignedEntity>
+          <id extension="1750332342" root="2.16.840.1.113883.4.6"></id>
+          <addr>
+            <streetAddressLine>95 Leonard Avenue, Bldg 2</streetAddressLine>
+            <city>Washington</city>
+            <state>PA</state>
+            <postalCode>15301</postalCode>
+            <country nullFlavor="NI"></country>
+          </addr>
+          <telecom value="tel:(724)223-3100"></telecom>
+          <assignedPerson>
+            <name>
+              <given>John</given>
+              <family>Six</family>
+            </name>
+          </assignedPerson>
+        </assignedEntity>
+      </performer>
+    </serviceEvent>
+  </documentationOf>
+  <relatedDocument typeCode="RPLC">
+    <parentDocument>
+      <id extension="8CD01974-9947-43BB-9C07-B24442DDDA44" root="2.16.840.1.113883.4.391.185"></id>
+      <code code="34133-9" codeSystem="2.16.840.1.113883.6.1" displayName="SUMMARIZATION OF EPISODE NOTE"></code>
+    </parentDocument>
+  </relatedDocument>
+  <component>
+    <structuredBody>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.6.1"></templateId>
+          <code code="48765-2" codeSystem="2.16.840.1.113883.6.1" displayName="Allergies, adverse reactions, alerts"></code>
+          <title>Allergies</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section>
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.22.1"></templateId>
+          <code code="46240-8" codeSystem="2.16.840.1.113883.6.1" displayName="History of Encounters"></code>
+          <title>Encounters</title>
+          <text>
+            <table border="1" width="100%">
+              <colgroup>
+                <col width="14%"></col>
+                <col width="28%"></col>
+                <col width="28%"></col>
+                <col width="28%"></col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Encounter Date</th>
+                  <th>Encounter Type</th>
+                  <th>Care Provider</th>
+                  <th>Facility</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ID="encounters00001">
+                  <td>Start: 05-03-2021</td>
+                  <td ID="encounters00001code">(COVID) Covid Vaccine</td>
+                  <td>John Six</td>
+                  <td>COVID Vaccine Clinic Washington Crown Center</td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+          <entry>
+            <encounter classCode="ENC" moodCode="EVN">
+              <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.49"></templateId>
+              <id extension="46240-8_1-1_60a62070ac105d143449426f_2.16.840.1.113883.4.391.185_8CD01974-9947-43BB-9C07-B24442DDDA44" root="9321B300-12A0-11ED-8F70-55492948D70E"></id>
+              <code nullFlavor="NI">
+                <originalText>
+                  <reference value="#encounters00001code"></reference>
+                </originalText>
+              </code>
+              <text>
+                <reference value="#encounters00001"></reference>
+              </text>
+              <effectiveTime value="20210503"></effectiveTime>
+              <sdtc:dischargeDispositionCode nullFlavor="NI"></sdtc:dischargeDispositionCode>
+              <performer typeCode="PRF">
+                <assignedEntity>
+                  <id nullFlavor="UNK"></id>
+                  <telecom nullFlavor="NI"></telecom>
+                  <assignedPerson>
+                    <name>
+                      <given>John</given>
+                      <family>Six</family>
+                    </name>
+                  </assignedPerson>
+                </assignedEntity>
+              </performer>
+              <participant typeCode="LOC">
+                <participantRole classCode="SDLOC">
+                  <templateId root="2.16.840.1.113883.10.20.22.4.32"></templateId>
+                  <code nullFlavor="NA">
+                    <translation code="NI" codeSystem="2.16.840.1.113883.5.111"></translation>
+                  </code>
+                  <addr>
+                    <streetAddressLine>1500 W Chestnut St</streetAddressLine>
+                    <city>Washington</city>
+                    <state>PA</state>
+                    <postalCode>15301</postalCode>
+                    <country>USA</country>
+                  </addr>
+                  <playingEntity classCode="PLC">
+                    <name>COVID Vaccine Clinic Washington Crown Center</name>
+                  </playingEntity>
+                </participantRole>
+              </participant>
+            </encounter>
+          </entry>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.23"></templateId>
+          <code code="46264-8" codeSystem="2.16.840.1.113883.6.1" displayName="Medical Equipment"></code>
+          <title>Medical Equipment</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId root="2.16.840.1.113883.10.20.22.2.60"></templateId>
+          <code code="61146-7" codeSystem="2.16.840.1.113883.6.1" displayName="Goals"></code>
+          <title>Goals</title>
+          <text>No Information</text>
+        </section>
+      </component>
+      <component>
+        <section>
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.2.1"></templateId>
+          <code code="11369-6" codeSystem="2.16.840.1.113883.6.1" displayName="Immunizations"></code>
+          <title>Immunizations</title>
+          <text>
+            <table border="1" width="100%">
+              <colgroup>
+                <col width="11%"></col>
+                <col width="22%"></col>
+                <col width="22%"></col>
+                <col width="22%"></col>
+                <col width="22%"></col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Immunization Date</th>
+                  <th>Immunization</th>
+                  <th>Notes</th>
+                  <th>Care Provider</th>
+                  <th>Facility</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ID="immunizations00001">
+                  <td>05-03-2021</td>
+                  <td>SARS-COV-2 (COVID-19) vaccine, mRNA, spike protein, LNP, preservative free, 30 mcg/0.3mL dose</td>
+                  <td></td>
+                  <td>
+                    John Six
+                    <br></br>
+                    Other Phone: (724)223-3100
+                  </td>
+                  <td>
+                    Washington Healthcare Services Inc
+                    <br></br>
+                    Other Phone: (724)223-3100
+                  </td>
+                </tr>
+                <tr ID="immunizations00002">
+                  <td>04-12-2021</td>
+                  <td>SARS-COV-2 (COVID-19) vaccine, mRNA, spike protein, LNP, preservative free, 30 mcg/0.3mL dose</td>
+                  <td></td>
+                  <td>
+                    John Six
+                    <br></br>
+                    Other Phone: (724)223-3100
+                  </td>
+                  <td>
+                    Washington Healthcare Services Inc
+                    <br></br>
+                    Other Phone: (724)223-3100
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+          <entry>
+            <substanceAdministration classCode="SBADM" moodCode="EVN" negationInd="false">
+              <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.52"></templateId>
+              <id extension="11369-6_1-1_60a62070ac105d143449426f_2.16.840.1.113883.4.391.185_8CD01974-9947-43BB-9C07-B24442DDDA44" root="932339A0-12A0-11ED-8F70-55492948D70E"></id>
+              <text>
+                <reference value="#immunizations00001"></reference>
+              </text>
+              <statusCode code="completed"></statusCode>
+              <effectiveTime value="20210503163700-0400"></effectiveTime>
+              <routeCode nullFlavor="NI"></routeCode>
+              <doseQuantity nullFlavor="NI"></doseQuantity>
+              <consumable>
+                <manufacturedProduct classCode="MANU">
+                  <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.4.54"></templateId>
+                  <manufacturedMaterial>
+                    <code code="208" codeSystem="2.16.840.1.113883.12.292" displayName="SARS-COV-2 (COVID-19) vaccine, mRNA, spike protein, LNP, preservative free, 30 mcg/0.3mL dose"></code>
+                    <lotNumberText nullFlavor="NI"></lotNumberText>
+                  </manufacturedMaterial>
+                </manufacturedProduct>
+              </consumable>
+            </substanceAdministration>
+          </entry>
+          <entry>
+            <substanceAdministration classCode="SBADM" moodCode="EVN" negationInd="false">
+              <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.52"></templateId>
+              <id extension="11369-6_2-1_60a62070ac105d143449426f_2.16.840.1.113883.4.391.185_8CD01974-9947-43BB-9C07-B24442DDDA44" root="9323D5E0-12A0-11ED-8F70-55492948D70E"></id>
+              <text>
+                <reference value="#immunizations00002"></reference>
+              </text>
+              <statusCode code="completed"></statusCode>
+              <effectiveTime value="20210412163825-0400"></effectiveTime>
+              <routeCode nullFlavor="NI"></routeCode>
+              <doseQuantity nullFlavor="NI"></doseQuantity>
+              <consumable>
+                <manufacturedProduct classCode="MANU">
+                  <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.4.54"></templateId>
+                  <manufacturedMaterial>
+                    <code code="208" codeSystem="2.16.840.1.113883.12.292" displayName="SARS-COV-2 (COVID-19) vaccine, mRNA, spike protein, LNP, preservative free, 30 mcg/0.3mL dose"></code>
+                    <lotNumberText nullFlavor="NI"></lotNumberText>
+                  </manufacturedMaterial>
+                </manufacturedProduct>
+              </consumable>
+            </substanceAdministration>
+          </entry>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.21.2.3"></templateId>
+          <code code="62387-6" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Interventions"></code>
+          <title>Interventions</title>
+          <text>No Information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.1.1"></templateId>
+          <code code="10160-0" codeSystem="2.16.840.1.113883.6.1" displayName="Medications"></code>
+          <title>Medications</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section>
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.18"></templateId>
+          <code code="48768-6" codeSystem="2.16.840.1.113883.6.1" displayName="Payers"></code>
+          <title>Payers</title>
+          <text>
+            <table border="1" width="100%">
+              <colgroup>
+                <col width="14%"></col>
+                <col width="28%"></col>
+                <col width="28%"></col>
+                <col width="28%"></col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Payer Category</th>
+                  <th>Payer</th>
+                  <th>Policy ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ID="payers00001">
+                  <td></td>
+                  <td>Unknown</td>
+                  <td></td>
+                  <td>1204553851 2.16.840.1.113883.19</td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+          <entry>
+            <act classCode="ACT" moodCode="EVN">
+              <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.60"></templateId>
+              <id extension="48768-6_1-1_60a62070ac105d143449426f_2.16.840.1.113883.4.391.185_8CD01974-9947-43BB-9C07-B24442DDDA44" root="93242400-12A0-11ED-8F70-55492948D70E"></id>
+              <code code="48768-6" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Payment sources"></code>
+              <text>
+                <reference value="#payers00001"></reference>
+              </text>
+              <statusCode code="completed"></statusCode>
+              <entryRelationship typeCode="COMP">
+                <sequenceNumber nullFlavor="NI"></sequenceNumber>
+                <act classCode="ACT" moodCode="EVN">
+                  <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.61"></templateId>
+                  <id nullFlavor="NI"></id>
+                  <code nullFlavor="NI">
+                    <translation nullFlavor="NI"></translation>
+                  </code>
+                  <statusCode code="completed"></statusCode>
+                  <performer typeCode="PRF">
+                    <templateId root="2.16.840.1.113883.10.20.22.4.87"></templateId>
+                    <assignedEntity>
+                      <id extension="0FE1BEF6-F155-48DC-951B-5B2A2BC53756" root="2.16.840.1.113883.4.391.185"></id>
+                      <code code="PAYOR" codeSystem="2.16.840.1.113883.5.110" codeSystemName="HL7 RoleCode"></code>
+                      <addr use="PST">
+                        <streetAddressLine>PO Box 2995</streetAddressLine>
+                        <city>Pittsburgh</city>
+                        <state>PA</state>
+                        <postalCode>15230-2995</postalCode>
+                        <country>US</country>
+                      </addr>
+                      <telecom nullFlavor="NI"></telecom>
+                      <representedOrganization>
+                        <name>UPMC For You</name>
+                        <telecom value="tel:(888)876-2756"></telecom>
+                        <addr use="PST">
+                          <streetAddressLine>PO Box 2995</streetAddressLine>
+                          <city>Pittsburgh</city>
+                          <state>PA</state>
+                          <postalCode>15230-2995</postalCode>
+                          <country>US</country>
+                        </addr>
+                      </representedOrganization>
+                    </assignedEntity>
+                  </performer>
+                  <participant typeCode="COV">
+                    <templateId root="2.16.840.1.113883.10.20.22.4.89"></templateId>
+                    <time xsi:type="IVL_TS">
+                      <low nullFlavor="NI"></low>
+                      <high nullFlavor="NI"></high>
+                    </time>
+                    <participantRole classCode="PAT">
+                      <id extension="1204553851" root="2.16.840.1.113883.19"></id>
+                      <code code="SELF" codeSystem="2.16.840.1.113883.5.111" displayName="Self">
+                        <translation code="1" codeSystem="2.16.840.1.113883.4.391" displayName="Self - patient is the insured"></translation>
+                      </code>
+                      <addr use="PST">
+                        <streetAddressLine>PO Box 2995</streetAddressLine>
+                        <city>Pittsburgh</city>
+                        <state>PA</state>
+                        <postalCode>15230-2995</postalCode>
+                        <country>US</country>
+                      </addr>
+                      <playingEntity>
+                        <name>UPMC For You</name>
+                        <sdtc:birthTime nullFlavor="NI"></sdtc:birthTime>
+                      </playingEntity>
+                    </participantRole>
+                  </participant>
+                  <entryRelationship typeCode="REFR">
+                    <act classCode="ACT" moodCode="DEF">
+                      <id nullFlavor="NI"></id>
+                      <code nullFlavor="NI"></code>
+                      <text nullFlavor="NI"></text>
+                      <statusCode code="active"></statusCode>
+                    </act>
+                  </entryRelationship>
+                </act>
+              </entryRelationship>
+            </act>
+          </entry>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.10"></templateId>
+          <code code="18776-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Treatment plan"></code>
+          <title>Plan of Treatment</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.5.1"></templateId>
+          <code code="11450-4" codeSystem="2.16.840.1.113883.6.1" displayName="Problems"></code>
+          <title>Problems</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.7.1"></templateId>
+          <code code="47519-4" codeSystem="2.16.840.1.113883.6.1" displayName="Procedures"></code>
+          <title>Procedures</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.3.1"></templateId>
+          <code code="30954-2" codeSystem="2.16.840.1.113883.6.1" displayName="Results"></code>
+          <title>Results</title>
+          <text>
+            <paragraph>
+              <content>The data below is from unstructured sources</content>
+            </paragraph>
+            <content>No Results</content>
+          </text>
+        </section>
+      </component>
+      <component>
+        <section>
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.17"></templateId>
+          <code code="29762-2" codeSystem="2.16.840.1.113883.6.1" displayName="Social History"></code>
+          <title>Social History</title>
+          <text>
+            <table border="1" width="100%">
+              <colgroup>
+                <col width="14%"></col>
+                <col width="28%"></col>
+                <col width="28%"></col>
+                <col width="28%"></col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Detail</th>
+                  <th>Facility</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ID="socialHistory00001">
+                  <td></td>
+                  <td>Sex Assigned At Birth</td>
+                  <td ID="socialHistory00001value"></td>
+                  <td>
+                    Washington Healthcare Services Inc
+                    <br></br>
+                    Other Phone: (724)223-3100
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <templateId extension="2016-06-01" root="2.16.840.1.113883.10.20.22.4.200"></templateId>
+              <id extension="29762-2_1-1_60a62070ac105d143449426f_2.16.840.1.113883.4.391.185_8CD01974-9947-43BB-9C07-B24442DDDA44" root="93249930-12A0-11ED-8F70-55492948D70E"></id>
+              <code nullFlavor="OTH">
+                <translation code="76689-9" codeSystem="2.16.840.1.113883.6.1" displayName="Sex Assigned At Birth"></translation>
+                <translation codeSystem="2.16.840.1.113883.6.1" nullFlavor="NI"></translation>
+              </code>
+              <text>
+                <reference value="#socialHistory00001"></reference>
+              </text>
+              <statusCode code="completed"></statusCode>
+              <effectiveTime xsi:type="IVL_TS">
+                <low nullFlavor="NI"></low>
+                <high nullFlavor="NI"></high>
+              </effectiveTime>
+              <value xsi:type="ED">
+                <reference value="#socialHistory00001value"></reference>
+              </value>
+            </observation>
+          </entry>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.4.1"></templateId>
+          <code code="8716-3" codeSystem="2.16.840.1.113883.6.1" displayName="Vital Signs"></code>
+          <title>Vital Signs</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.14"></templateId>
+          <code code="47420-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Functional Status"></code>
+          <title>Functional Status</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section nullFlavor="NI">
+          <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.56"></templateId>
+          <code code="10190-7" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Mental Status"></code>
+          <title>Mental Status</title>
+          <text>No information</text>
+        </section>
+      </component>
+      <component>
+        <section>
+          <templateId extension="2016-11-01" root="2.16.840.1.113883.10.20.22.2.65"></templateId>
+          <code code="51848-0" codeSystem="2.16.840.1.113883.6.1" displayName="Evaluation note"></code>
+          <title>Evaluation note</title>
+          <text>
+            <table border="1" width="100%">
+              <colgroup>
+                <col width="14%"></col>
+                <col width="66%"></col>
+                <col width="20%"></col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Note Date &amp; Type</th>
+                  <th>Note</th>
+                  <th>Facility</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ID="notes00001">
+                  <td ID="notes00001code">Evaluation note</td>
+                  <td>No Information</td>
+                  <td>
+                    Washington Healthcare Services Inc
+                    <br></br>
+                    Other Phone: (724)223-3100
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+          <entry>
+            <act classCode="ACT" moodCode="EVN">
+              <templateId extension="2016-11-01" root="2.16.840.1.113883.10.20.22.4.202"></templateId>
+              <id extension="51848-0_0_60a62070ac105d143449426f_2.16.840.1.113883.4.391.185_8CD01974-9947-43BB-9C07-B24442DDDA44" root="93258390-12A0-11ED-8F70-55492948D70E"></id>
+              <code code="34109-9" codeSystem="2.16.840.1.113883.6.1" displayName="Note">
+                <originalText>
+                  <reference value="#notes00001code"></reference>
+                </originalText>
+                <translation code="51848-0" codeSystem="2.16.840.1.113883.6.1" displayName="Evaluation note"></translation>
+              </code>
+              <text>
+                <reference value="#notes00001"></reference>
+              </text>
+              <statusCode code="completed"></statusCode>
+              <effectiveTime nullFlavor="NI"></effectiveTime>
+            </act>
+          </entry>
+        </section>
+      </component>
+      <component>
+        <section>
+          <code code="X-DOCCMT" displayName="Document Comments"></code>
+          <title>Additional Source Comments</title>
+          <text>
+            <br></br>
+            <table>
+              <thead>
+                <tr>
+                  <th>REASON FOR VISIT (unrecognized section and content)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Covid Vaccine 2nd Dose</td>
+                </tr>
+              </tbody>
+            </table>
+            <br></br>
+            <br></br>
+            This clinical document has been generated using Diameter Health software that has been certified by the Office of the National Coordinator for Health Information Technology (ONC 15.99.04.3023.Diam.31.00.0.180918) and the National Committee for Quality Assurance (NCQA, as an eMeasure certified technology).
+            <br></br>
+            <br></br>
+            FOR RECORDS PERTAINING TO PATIENTS WHO ARE OR HAVE BEEN ENROLLED IN A CHEMICAL DEPENDENCY/SUBSTANCE ABUSE PROGRAM, SOME INFORMATION MAY BE OMITTED. This clinical summary was aggregated from multiple sources.  Caution should be exercised in using it in the provision of clinical care. This summary normalizes information from multiple sources, and as a consequence, information in this document may materially change the coding, format and clinical context of patient data. In addition, data may be omitted in some cases. CLINICAL DECISIONS SHOULD BE BASED ON THE PRIMARY CLINICAL RECORDS. Diameter Health, Inc. provides no warranty or guarantee of the accuracy or completeness of information in this document.
+          </text>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>

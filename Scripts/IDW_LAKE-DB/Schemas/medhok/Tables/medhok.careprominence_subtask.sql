@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE MEDHOK.CAREPROMINENCE_SUBTASK
+(
+MHK_SUBTASK_INT_ID                  VARCHAR,
+BUSINESS_PARTNERS                   VARCHAR,
+TASK_STATUS                         VARCHAR,
+MEDICAL_DIRECTOR_DECISION           VARCHAR,
+DECISION_REASON                     VARCHAR,
+CREATED_BY                          VARCHAR,
+CREATED_AT                    TIMESTAMP_NTZ,
+UPDATED_AT                    TIMESTAMP_NTZ,
+SUBTASK_DUE_DATE              TIMESTAMP_NTZ,
+COMMENT_CP                          VARCHAR,
+MHK_GRIEVANCE_INT_ID                VARCHAR,
+MHK_IRE_INT_ID                      VARCHAR,
+MHK_APPEALS_INT_ID                  VARCHAR,
+MHK_RX_INT_ID                       VARCHAR,
+MHK_RCA_INT_ID                      VARCHAR,
+MHK_AUTH_INT_ID                     VARCHAR,
+MHK_CTM_INT_ID                      VARCHAR,
+MHK_MBR_MGMT_INT_ID                 VARCHAR,
+MHK_PROV_DISPUTE_INT_ID             VARCHAR,
+UPDATED_BY                          VARCHAR,
+COMPLETED_BY                        VARCHAR,
+COMPLETED_AT                  TIMESTAMP_NTZ,
+MHK_MMR_INT_ID                      VARCHAR,
+ASSIGNED_TO                         VARCHAR,
+DATE_ASSIGNED                 TIMESTAMP_NTZ,
+CLIENT_ID                           VARCHAR,
+TPA_ID                              VARCHAR,
+TPA_DIV                             VARCHAR,
+FILE_NAME                           VARCHAR,
+LOAD_DATE                     TIMESTAMP_NTZ,
+CONSTRAINT CAREPROMINENCE_SUBTASK_PK PRIMARY KEY (MHK_SUBTASK_INT_ID)
+)
+COMMENT='Created for MEDHOK Migration'
+;

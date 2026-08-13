@@ -1,0 +1,18 @@
+CREATE OR REPLACE VIEW ODSDATA.PRACTITIONER_EDUCATION_REL_VW
+COMMENT = 'Replicated from Azure SQL DB'
+AS
+SELECT
+PractitionerEducationRel.$1::NUMBER(38,0) AS PRACTITIONER_EDUCATION_REL_KEY
+,PractitionerEducationRel.$2::NUMBER(38,0) AS PRACTITIONER_KEY
+,PractitionerEducationRel.$3::NUMBER(38,0) AS INSTITUTION_KEY
+,PractitionerEducationRel.$4::NUMBER(38,0) AS DEGREE_KEY
+,PractitionerEducationRel.$5::NUMBER(38,0) AS EDUCATIONAL_DEPARTMENT_KEY
+,PractitionerEducationRel.$6::NUMBER(38,0) AS EDUCATION_TYPE_KEY
+,PractitionerEducationRel.$7::DATE AS EDUCATION_START_DATE
+,PractitionerEducationRel.$8::DATETIME AS LAST_UPDATED_DATETIME
+,PractitionerEducationRel.$9::DATETIME AS INSERT_DATETIME
+,PractitionerEducationRel.$10::DATE AS EDUCATION_COMPLETION_DATE
+,PractitionerEducationRel.$11::VARCHAR AS GRADUATED_IND
+FROM @ODSDATA.HPDSDATALAKE_IDAPSQL/providerods/PractitionerEducationRel.txt
+(FILE_FORMAT => 'ODSDATA.PROVIDER_ODS_FILE_FORMAT')PractitionerEducationRel
+;

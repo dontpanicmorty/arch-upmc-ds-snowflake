@@ -1,0 +1,61 @@
+CREATE OR REPLACE FUNCTION STAGEDATA.FXN_GET_SERVICE_TYPE_CODE_MC400(DATA_SOURCE_NAME VARCHAR, HCFA VARCHAR, REVENUE_CODE VARCHAR) 
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT ='Returns the service_type_code for a claim record in MC400'
+AS
+$$
+const validDataSources = ['MC400Dnt','MC400Upm'];
+
+const serviceTypeLkp = [
+'INST-AMBSU',
+'INST-AUDIO',
+'INST-CARDI',
+'INST-FAMPL',
+'INST-HOSP',
+'INST-HOSPC',
+'INST-MHREI',
+'INST-MHREO',
+'INST-ONCOL',
+'INST-RADIO',
+'INST-RADMU',
+'INST-REHAB',
+'INST-SNF',
+'INST-SNFAD',
+'INST-SNFPE'
+];
+
+const trimmedRevenueCode = REVENUE_CODE ? REVENUE_CODE.trim() : '';
+
+const normalizedRevenueCode =
+trimmedRevenueCode.length >= 1 && trimmedRevenueCode.length <= 3
+? trimmedRevenueCode.padStart(4, '0')
+: trimmedRevenueCode;
+
+// Validate the data source
+
+if (!validDataSources.includes(DATA_SOURCE_NAME))
+{
+    throw 'Invalid DATA_SOURCE_NAME: '+DATA_SOURCE_NAME;
+}
+
+if (
+    serviceTypeLkp.includes(HCFA) ||
+    (normalizedRevenueCode >= '0100' && normalizedRevenueCode <= '0219') ||
+    normalizedRevenueCode == '0022' ||
+    normalizedRevenueCode == '0024'
+)
+    {
+    return 'F';
+    }
+
+// NULL ProviderTypeHCFA is a valid case and should be SM'd
+else 
+    if (HCFA && (HCFA.startsWith('PCPP') || HCFA.startsWith('SPEC'))) 
+        {
+        return 'P';
+        }
+
+return 'SM';
+
+$$
+;

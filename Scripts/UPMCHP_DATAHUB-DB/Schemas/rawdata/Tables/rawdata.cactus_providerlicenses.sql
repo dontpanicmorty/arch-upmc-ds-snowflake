@@ -1,0 +1,7 @@
+!set variable_substitution=true;
+
+CREATE OR REPLACE TABLE RAWDATA.CACTUS_PROVIDERLICENSES
+LIKE &{CACTUS}.VISUALCACTUS.PROVIDERLICENSES
+;
+
+!set variable_substitution=false;

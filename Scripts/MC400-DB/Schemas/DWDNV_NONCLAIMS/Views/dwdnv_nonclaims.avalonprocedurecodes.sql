@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW DWDNV_NONCLAIMS.AvalonProcedureCodes
+AS
+SELECT * FROM CDC_MERGE.DBO.AvalonProcedureCodes 
+;

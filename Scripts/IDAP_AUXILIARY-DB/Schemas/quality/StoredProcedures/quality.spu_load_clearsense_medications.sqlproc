@@ -1,0 +1,501 @@
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_LOAD_CLEARSENSE_MEDICATIONS("RUN_ID" VARCHAR(16777216), "DATA_FLOW_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load QUALITY.CCD_MEDICATIONS from XML_SECTION'
+EXECUTE AS OWNER
+AS '
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_LOAD_CLEARSENSE_MEDICATIONS";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = ''Y'' AND DATA_FLOW_NAME = :1 AND STEP_PROCEDURE_NAME = :2
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,null
+    ,''Starting''
+    )
+`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Succeeded''
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Error''
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_MEDICATIONS - START
+//-----------------------------------------
+
+
+    var sqlLogCommand = `
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+
+
+    var sqlDeleteMedicationsCommand = ` 
+DELETE FROM QUALITY.CCD_MEDICATIONS WHERE MRN IN ( SELECT DISTINCT MRN FROM QUALITY.SECTION_XML ); 
+`;
+
+
+    var sqlInsertCcdMedicationsCommand = `
+INSERT INTO QUALITY.CCD_MEDICATIONS(
+     SECTION_TITLE,
+     FILENAME,
+     MRN,
+     SECTION_TYPE_CODE,
+     SECTION_DISPLAY_NAME,
+     SECTION_CODE_SYSTEM,
+     SECTION_CODE_SYSTEM_NAME,
+     ENTRY_TYPE_CODE,
+     SA_CLASS_CODE,
+     SA_MOOD_CODE,
+     TEMPLATE_ID_ROOT,
+     TEMPLATE_ID_EXT,
+	 SA_FIELD_INDEX,
+     SA_STATUS_CODE,
+     SA_DATE_TYPE,
+     SA_DATE,
+     SA_ROUTE_CODE,
+     SA_ROUTE_DISPLAY,
+     SA_ROUTE_CODE_SYSTEM,
+     SA_ROUTE_CODE_SYSTEM_NAME,
+     MP_CLASS_CODE,
+     MFG_PROD_TEMPL_ROOT,
+     MFG_PROD_TEMPL_EXT,
+     MFG_MAT_CODE,
+     MFG_MAT_DISPLAY,
+     MFG_MAT_CODE_SYSTEM,
+     MFG_MAT_CODE_SYSTEM_NAME,
+     NDC_CODE,
+     NDC_NAME,
+     NDC_CODE_SYSTEM,
+     NDC_CODE_SYSTEM_NAME,
+     MED_DDI_CODE,
+     MED_DDI_NAME,
+     MED_DDI_CODE_SYSTEM,
+     MED_DDI_CODE_SYSTEM_NAME,
+     GPI_CODE,
+     GPI_NAME,
+     GPI_CODE_SYSTEM,
+     GPI_CODE_SYSTEM_NAME,
+     AA_EXT,
+     AA_ROOT,
+     AA_CODE,
+     AA_CODE_SYS,
+     AA_SYS_NAME,
+     AA_SYS_DISPLAY,
+     ASSIGNED_PERSON_NAME,
+     ER_TYPE_CODE,
+     ER_INVERSION_IND,
+     ER_OBS_CLASS_CODE,
+     ER_OBS_MOOD_CODE,
+     ER_OBS_TEMPL_ID_ROOT,
+     ER_OBS_TEMPL_ID_EXT,
+     OBS_NULL_FLAVOR,
+     OBS_CODE,
+     OBS_NAME,
+     OBS_CODE_SYSTEM,
+     OBS_CODE_SYSTEM_NAME,
+     OBS_STATUS_CODE,
+     OBS_EFF_TIME_NULL_FLAVOR,
+     OBS_VALUE_XSI_TYPE,
+     OBS_VALUE_NULL_FLAVOR,
+     OBS_VALUE_CODE_SYSTEM,
+     OBSERVATION_TRANSLATION_CODE,
+     OBS_VALUE_XLATE_DISPLAY,
+     OBS_VLAUE_XLATE_CODE_SYSTEM,
+     OBS_VALUE_XLATE_CODE_SYSTEM_NAME,
+     ER_ACT_CLASS_CODE,
+     ER_ACT_MOOD_CODE,
+     ACT_TEMPL_ID_ROOT,
+     ACT_TEMPL_ID_EXT,
+     ACT_CODE,
+     ACT_DISP_NAME,
+     ACT_CODE_SYSTEM,
+     ACT_C0DE_SYSTEM_NAME,
+     ACT_TEXT_REF_VALUE,
+     ACT_STATUS_CODE,
+     ER_SUPPLY_CLASS_CODE,
+     ER_SUPPLY_MOOD_CODE,
+     SUPPLY_TEMPL_ID_ROOT,
+     SUPPLY_TEMPL_ID_EXT,
+     SUPPLY_ID_ROOT,
+     SUPPLY_ID_EXT,
+     SUPPLY_STATUS_CODE,
+     SUPPLY_DATE,
+     SUPPLY_REPEAT,
+     SUPPLY_QTY,
+     SUPPLY_QTY_UNIT,
+     SUPPLY_CLASS_CODE,
+     SUPPLY_ROOT,
+     SUPPLY_EXT,
+     SUP_MATERIAL_CODE,
+     SUP_MATERIAL_NAME,
+     SUP_MATERIAL_CODE_SYSTEM,
+     SUP_MATERIAL_CODE_SYSEM_NAME,
+     PROD_CODE_GPI,
+     PROD_NAME_GPI,
+     PROD_SYS_GPI,
+     PROD_SYS_NAME_GPI,
+     PROD_CODE_NDC,
+     PROD_NAME_NDC,
+     PROD_SYS_NDC,
+     PROD_SYS_NAME_NDC,
+     SUPPLY_TIME_VALUE,
+     SUPPLY_AUTHOR_ID_ROOT,
+     SUPPLY_AUTHOR_ID_EXT,
+     SUPPLY_AUTHOR_ADDR_STREET,
+     SUPPLY_AUTHOR_ADDR_CITY,
+     SUPPLY_AUTHOR_ADDR_STATE,
+     SUPPLY_AUTHOR_ADDR_ZIP,
+     SUPPLY_AUTHOR_ADDR_COUNTRY,
+     SUPPLY_AUTHOR_PHONE_NUM,
+     PERSON_NAME,
+     XML_ROW_NUMBER,
+     XML_TS_LAST_MODIFY,
+     XML_TS_SCAN_TIME,
+     INSERT_DATETIME
+)
+SELECT SECTION_TITLE,
+       FILENAME,
+       MRN,
+       SECTION_TYPE_CODE,
+       SECTION_DISPLAY_NAME,
+       SECTION_CODE_SYSTEM,
+       SECTION_CODE_SYSTEM_NAME,
+       ENTRY_TYPE_CODE,
+       SA_CLASS_CODE,
+       SA_MOOD_CODE,
+       TEMPLATE_ID_ROOT,
+       NVL(TEMPLATE_ID_EXT,''NA'') AS TEMPLATE_ID_EXT,
+	   SA_FIELD_INDEX,
+       SA_STATUS_CODE,
+       SA_DATE_TYPE,
+       SA_DATE,
+       SA_ROUTE_CODE,
+       SA_ROUTE_DISPLAY,
+       SA_ROUTE_CODE_SYSTEM,
+       SA_ROUTE_CODE_SYSTEM_NAME,
+       MP_CLASS_CODE,
+       MFG_PROD_TEMPL_ROOT,
+       MFG_PROD_TEMPL_EXT,
+       NVL( MFG_MAT_CODE, ''NA'' ) AS MFG_MAT_CODE,
+       MFG_MAT_DISPLAY,
+       MFG_MAT_CODE_SYSTEM,
+       MFG_MAT_CODE_SYSTEM_NAME,
+       NDC_CODE,
+       NDC_NAME,
+       NDC_CODE_SYSTEM,
+       NDC_CODE_SYSTEM_NAME,
+       MED_DDI_CODE,
+       MED_DDI_NAME,
+       MED_DDI_CODE_SYSTEM,
+       MED_DDI_CODE_SYSTEM_NAME,
+       GPI_CODE,
+       GPI_NAME,
+       GPI_CODE_SYSTEM,
+       GPI_CODE_SYSTEM_NAME,
+       AA_EXT,
+       AA_ROOT,
+       AA_CODE,
+       AA_CODE_SYS,
+       AA_SYS_NAME,
+       AA_SYS_DISPLAY,
+       ASSIGNED_PERSON_NAME,
+       ER_TYPE_CODE,
+       ER_INVERSION_IND,
+       ER_OBS_CLASS_CODE,
+       ER_OBS_MOOD_CODE,
+       ER_OBS_TEMPL_ID_ROOT,
+       ER_OBS_TEMPL_ID_EXT,
+       OBS_NULL_FLAVOR,
+       OBS_CODE,
+       OBS_NAME,
+       OBS_CODE_SYSTEM,
+       OBS_CODE_SYSTEM_NAME,
+       OBS_STATUS_CODE,
+       OBS_EFF_TIME_NULL_FLAVOR,
+       OBS_VALUE_XSI_TYPE,
+       OBS_VALUE_NULL_FLAVOR,
+       OBS_VALUE_CODE_SYSTEM,
+       NVL ( OBSERVATION_TRANSLATION_CODE, ''NA'' ) AS OBSERVATION_TRANSLATION_CODE,
+       OBS_VALUE_XLATE_DISPLAY,
+       OBS_VLAUE_XLATE_CODE_SYSTEM,
+       OBS_VALUE_XLATE_CODE_SYSTEM_NAME,
+       ER_ACT_CLASS_CODE,
+       ER_ACT_MOOD_CODE,
+       ACT_TEMPL_ID_ROOT,
+       ACT_TEMPL_ID_EXT,
+       ACT_CODE,
+       ACT_DISP_NAME,
+       ACT_CODE_SYSTEM,
+       ACT_C0DE_SYSTEM_NAME,
+       ACT_TEXT_REF_VALUE,
+       ACT_STATUS_CODE,
+       ER_SUPPLY_CLASS_CODE,
+       ER_SUPPLY_MOOD_CODE,
+       SUPPLY_TEMPL_ID_ROOT,
+       SUPPLY_TEMPL_ID_EXT,
+       SUPPLY_ID_ROOT,
+       SUPPLY_ID_EXT,
+       SUPPLY_STATUS_CODE,
+       SUPPLY_DATE,
+       SUPPLY_REPEAT,
+       SUPPLY_QTY,
+       SUPPLY_QTY_UNIT,
+       SUPPLY_CLASS_CODE,
+       SUPPLY_ROOT,
+       SUPPLY_EXT,
+       SUP_MATERIAL_CODE,
+       SUP_MATERIAL_NAME,
+       SUP_MATERIAL_CODE_SYSTEM,
+       SUP_MATERIAL_CODE_SYSEM_NAME,
+       PROD_CODE_GPI,
+       PROD_NAME_GPI,
+       PROD_SYS_GPI,
+       PROD_SYS_NAME_GPI,
+       PROD_CODE_NDC,
+       PROD_NAME_NDC,
+       PROD_SYS_NDC,
+       PROD_SYS_NAME_NDC,
+       SUPPLY_TIME_VALUE,
+       SUPPLY_AUTHOR_ID_ROOT,
+       SUPPLY_AUTHOR_ID_EXT,
+       SUPPLY_AUTHOR_ADDR_STREET,
+       SUPPLY_AUTHOR_ADDR_CITY,
+       SUPPLY_AUTHOR_ADDR_STATE,
+       SUPPLY_AUTHOR_ADDR_ZIP,
+       SUPPLY_AUTHOR_ADDR_COUNTRY,
+       SUPPLY_AUTHOR_PHONE_NUM,
+       PERSON_NAME,
+       XML_ROW_NUMBER,
+       XML_TS_LAST_MODIFY,
+       XML_TS_SCAN_TIME,
+       CURRENT_TIMESTAMP()
+FROM QUALITY.CCD_MEDICATIONS_VW
+`;
+
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_MEDICATIONS - END
+//-----------------------------------------
+
+
+
+
+    try
+    {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME,stepProcedureName]
+        });        
+
+        // check and handle for empty response
+        if(!lookupSet.next())
+        {     
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString(''DATA_DOMAIN_NAME'');    
+        stepOrderNumber = lookupSet.getColumnValue(''STEP_ORDER_NUMBER'');
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+
+
+
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//--------------------------------------- 
+    
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteMedicationsCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log record deletion stats to LOGDATA.TABLE_LOAD_HISTORY
+    var sqlLogCommandDel = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT,RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);
+`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommandDel,
+        binds: [RUN_ID, "QUALITY.CCD_MEDICATIONS", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(), 
+                sfStatement.getNumRowsDeleted(), 
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+
+
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCcdMedicationsCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log Insert results to LOGDATA.TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [RUN_ID, "QUALITY.CCD_MEDICATIONS", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(),				
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+
+
+
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+        return "Success";
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }        
+';

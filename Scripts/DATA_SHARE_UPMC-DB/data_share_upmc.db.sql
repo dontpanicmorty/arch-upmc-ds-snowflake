@@ -1,0 +1,2 @@
+CREATE DATABASE IF NOT EXISTS DATA_SHARE_UPMC COMMENT = 'UPMC Data sharing repository for extral data sharing';
+USE DATABASE DATA_SHARE_UPMC;

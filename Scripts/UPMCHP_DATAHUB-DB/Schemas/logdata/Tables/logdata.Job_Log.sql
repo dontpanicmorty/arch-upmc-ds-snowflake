@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE LOGDATA.JOB_LOG
+(
+    JOB_ID VARCHAR NOT NULL COMMENT 'ADF Pipeline Group Id',
+    PROCEDURE_NAME VARCHAR NOT NULL COMMENT 'ADF Pipeline Name',
+    START_TIME TIMESTAMP_TZ(9) NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    END_TIME TIMESTAMP_TZ(9) NULL,
+    CONSTRAINT PK_JOB_LOG PRIMARY KEY (JOB_ID),
+    CONSTRAINT UK_JOB_LOG UNIQUE (PROCEDURE_NAME, START_TIME)
+)
+COMMENT='One row per top level ADF Pipeline to generate and track a JOB_ID which can be used to link together various logging and validaiton tables'
+;

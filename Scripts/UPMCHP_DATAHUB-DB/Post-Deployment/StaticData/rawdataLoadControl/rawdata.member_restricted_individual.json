@@ -1,0 +1,18 @@
+{
+  "isActive": true,
+  "isCloneFlag": false,
+  "isCopyIntoFlag": true,
+  "isTruncateReloadFlag": true,
+  "isParquetFlag": true,
+  "dataDomain": "member",
+  "dataSourceName": "UPMC-HP",
+  "targetTableName": "RAWDATA.MEMBER_RESTRICTED_INDIVIDUAL",
+  "sourceCloneTableName": null,
+  "sourceFileStageName": "@RAWDATA.HPDSDATALAKE_DBEXTRACT",
+  "sourceFilePath": "/idwcustom/edw_batch/memberrestrictedindividuals",
+  "sourceFileFormatName": "RAWDATA.MEMBER_RESTRICTED_INDIVIDUAL_FILE_FORMAT",
+  "sourceFilePattern": "(?i).*EDW_BATCH_\\\\d{5}\\\\.MEMBERRESTRICTEDINDIVIDUALS\\\\.parquet",
+  "sourceFileDelimitedColumnCount": null,
+  "sourceFileFixedWidthMapping": null,
+  "validateDataFlag": false
+}

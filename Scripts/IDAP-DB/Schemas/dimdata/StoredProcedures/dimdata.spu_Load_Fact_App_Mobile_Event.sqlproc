@@ -1,0 +1,161 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_FACT_APP_MOBILE_EVENT()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = 'DIMDATA.FACT_APP_MOBILE_EVENT';
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.FACT_APP_MOBILE_EVENT AS tgt
+USING (
+        SELECT
+        DIM_APP_DEVICE_KEY
+        ,DIM_APP_EVENT_KEY
+        ,DIM_MEMBER_KEY
+        ,DIM_MEMBER_ADDRESS_PHYSICAL_KEY
+        ,DIM_PLAN_KEY
+        ,DIM_GROUP_KEY
+        ,DIM_SUB_GROUP_KEY
+        ,APIM_LOGS_KEY
+        ,EVENT_SESSION_ID
+        ,EVENT_DATETIME_UTC
+        ,EVENT_DATE
+        ,EVENT_TIME
+        ,EVENT_RESPONSE_STATUS_CODE
+        ,EVENT_RESPONSE_STATUS_REASON
+        ,DEVICE_ID
+        ,DEVICE_LANGUAGE_CODE
+        ,DEVICE_APP_VERSION_NBR
+        FROM STAGEDATA.FACT_APP_MOBILE_EVENT_SELECT_VW
+    MINUS
+        SELECT
+        DIM_APP_DEVICE_KEY
+        ,DIM_APP_EVENT_KEY
+        ,DIM_MEMBER_KEY
+        ,DIM_MEMBER_ADDRESS_PHYSICAL_KEY
+        ,DIM_PLAN_KEY
+        ,DIM_GROUP_KEY
+        ,DIM_SUB_GROUP_KEY
+        ,APIM_LOGS_KEY
+        ,EVENT_SESSION_ID
+        ,EVENT_DATETIME_UTC
+        ,EVENT_DATE
+        ,EVENT_TIME
+        ,EVENT_RESPONSE_STATUS_CODE
+        ,EVENT_RESPONSE_STATUS_REASON
+        ,DEVICE_ID
+        ,DEVICE_LANGUAGE_CODE
+        ,DEVICE_APP_VERSION_NBR
+        FROM DIMDATA.FACT_APP_MOBILE_EVENT
+    ) AS src
+
+ON (src.APIM_LOGS_KEY = tgt.APIM_LOGS_KEY) 
+    
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP(),
+    tgt.DIM_MEMBER_KEY = src.DIM_MEMBER_KEY,
+    tgt.DIM_MEMBER_ADDRESS_PHYSICAL_KEY = src.DIM_MEMBER_ADDRESS_PHYSICAL_KEY,
+    tgt.DIM_PLAN_KEY = src.DIM_PLAN_KEY,
+    tgt.DIM_GROUP_KEY = src.DIM_GROUP_KEY,
+    tgt.DIM_SUB_GROUP_KEY = src.DIM_SUB_GROUP_KEY
+
+WHEN NOT MATCHED
+THEN INSERT
+    (
+        FACT_APP_MOBILE_EVENT_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,DIM_APP_DEVICE_KEY
+        ,DIM_APP_EVENT_KEY
+        ,DIM_MEMBER_KEY
+        ,DIM_MEMBER_ADDRESS_PHYSICAL_KEY
+        ,DIM_PLAN_KEY
+        ,DIM_GROUP_KEY
+        ,DIM_SUB_GROUP_KEY
+        ,APIM_LOGS_KEY
+        ,EVENT_SESSION_ID
+        ,EVENT_DATETIME_UTC
+        ,EVENT_DATE
+        ,EVENT_TIME
+        ,EVENT_RESPONSE_STATUS_CODE
+        ,EVENT_RESPONSE_STATUS_REASON
+        ,DEVICE_ID
+        ,DEVICE_LANGUAGE_CODE
+        ,DEVICE_APP_VERSION_NBR
+    )
+VALUES
+    (
+        (SELECT IFNULL(MAX(FACT_APP_MOBILE_EVENT_KEY), 1000) FROM DIMDATA.FACT_APP_MOBILE_EVENT) + ROW_NUMBER() OVER (ORDER BY 1)
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,src.DIM_APP_DEVICE_KEY
+        ,src.DIM_APP_EVENT_KEY
+        ,src.DIM_MEMBER_KEY
+        ,src.DIM_MEMBER_ADDRESS_PHYSICAL_KEY
+        ,src.DIM_PLAN_KEY
+        ,src.DIM_GROUP_KEY
+        ,src.DIM_SUB_GROUP_KEY
+        ,src.APIM_LOGS_KEY
+        ,src.EVENT_SESSION_ID
+        ,src.EVENT_DATETIME_UTC
+        ,src.EVENT_DATE
+        ,src.EVENT_TIME
+        ,src.EVENT_RESPONSE_STATUS_CODE
+        ,src.EVENT_RESPONSE_STATUS_REASON
+        ,src.DEVICE_ID
+        ,src.DEVICE_LANGUAGE_CODE
+        ,src.DEVICE_APP_VERSION_NBR
+    )
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

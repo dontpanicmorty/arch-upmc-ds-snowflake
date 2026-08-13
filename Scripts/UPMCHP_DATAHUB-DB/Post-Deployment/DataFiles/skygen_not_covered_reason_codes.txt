@@ -1,0 +1,1381 @@
+DATA_SOURCE_NAME	LOB	REASON_CODE	REASON_CODE_DESC	MEMBER_PAY_IND	CMS_REASON_CODE_DESC
+Skygen	CHC	1001_1	Product Not Effective on the Date of Service	Y	
+Skygen	CHIP	1001_1	Product Not Effective on the Date of Service	Y	
+Skygen	CM	1001_1	Product Not Effective on the Date of Service	Y	
+Skygen	MA	1001_1	Product Not Effective on the Date of Service	Y	
+Skygen	MC	1001_1	Product Not Effective on the Date of Service	Y	Group Not Eligible
+Skygen	CHC	1002_1	Invalid or Unrealistic Date of Birth	N	
+Skygen	CHIP	1002_1	Invalid or Unrealistic Date of Birth	N	
+Skygen	CM	1002_1	Invalid or Unrealistic Date of Birth	N	
+Skygen	MA	1002_1	Invalid or Unrealistic Date of Birth	N	
+Skygen	MC	1002_1	Invalid or Unrealistic Date of Birth	N	Invalid Date of Birth on File for Member
+Skygen	CHC	1003_1	Member Not Found	Y	
+Skygen	CHIP	1003_1	Member Not Found	Y	
+Skygen	CM	1003_1	Member Not Found	Y	
+Skygen	MA	1003_1	Member Not Found	Y	
+Skygen	MC	1003_1	Member Not Found	Y	Member Not Eligible
+Skygen	CHC	1006_1	Please resubmit with a valid place of service	N	
+Skygen	CHIP	1006_1	Please resubmit with a valid place of service	N	
+Skygen	CM	1006_1	Please resubmit with a valid place of service	N	
+Skygen	MA	1006_1	Please resubmit with a valid place of service	N	
+Skygen	MC	1006_1	Please resubmit with a valid place of service	N	Please resubmit with a valid place of service
+Skygen	CHC	1007_1	Please resubmit with the correct date of service	N	
+Skygen	CHIP	1007_1	Please resubmit with the correct date of service	N	
+Skygen	CM	1007_1	Please resubmit with the correct date of service	N	
+Skygen	MA	1007_1	Please resubmit with the correct date of service	N	
+Skygen	MC	1007_1	Please resubmit with the correct date of service	N	Please resubmit with the correct date of service
+Skygen	CHC	1009_1	Subscriber Not Found	Y	
+Skygen	CHIP	1009_1	Subscriber Not Found	Y	
+Skygen	CM	1009_1	Subscriber Not Found	Y	
+Skygen	MA	1009_1	Subscriber Not Found	Y	
+Skygen	MC	1009_1	Subscriber Not Found	Y	Member Not Eligible
+Skygen	CHC	1021_1	Duplicate Surface(s) Removed	N	
+Skygen	CHIP	1021_1	Duplicate Surface(s) Removed	N	
+Skygen	CM	1021_1	Duplicate Surface(s) Removed	N	
+Skygen	MA	1021_1	Duplicate Surface(s) Removed	N	
+Skygen	MC	1021_1	Duplicate Surface(s) Removed	N	Duplicate Surface(s) Removed
+Skygen	CHC	1022_1	Code/Subcode Switch Performed	N	
+Skygen	CHIP	1022_1	Code/Subcode Switch Performed	N	
+Skygen	CM	1022_1	Code/Subcode Switch Performed	N	
+Skygen	MA	1022_1	Code/Subcode Switch Performed	N	
+Skygen	MC	1022_1	Code/Subcode Switch Performed	N	Code/Subcode Switch Performed
+Skygen	CHC	1023_1	Please resubmit with required tooth number(s)	N	
+Skygen	CHIP	1023_1	Please resubmit with required tooth number(s)	N	
+Skygen	CM	1023_1	Please resubmit with required tooth number(s)	N	
+Skygen	MA	1023_1	Please resubmit with required tooth number(s)	N	
+Skygen	MC	1023_1	Please resubmit with required tooth number(s)	N	Please resubmit with required tooth number(s)
+Skygen	CHC	1024_1	Please resubmit with the required quadrant	N	
+Skygen	CHIP	1024_1	Please resubmit with the required quadrant	N	
+Skygen	CM	1024_1	Please resubmit with the required quadrant	N	
+Skygen	MA	1024_1	Please resubmit with the required quadrant	N	
+Skygen	MC	1024_1	Please resubmit with the required quadrant	N	Please resubmit with the required quadrant
+Skygen	CHC	1025_1	Please resubmit with the required arch	N	
+Skygen	CHIP	1025_1	Please resubmit with the required arch	N	
+Skygen	CM	1025_1	Please resubmit with the required arch	N	
+Skygen	MA	1025_1	Please resubmit with the required arch	N	
+Skygen	MC	1025_1	Please resubmit with the required arch	N	Please resubmit with the required arch
+Skygen	CHC	1026_1	The procedure code has been replaced due to amalgam/resin recoding	N	
+Skygen	CHIP	1026_1	The procedure code has been replaced due to amalgam/resin recoding	N	
+Skygen	CM	1026_1	The procedure code has been replaced due to amalgam/resin recoding	N	
+Skygen	MA	1026_1	The procedure code has been replaced due to amalgam/resin recoding	N	
+Skygen	MC	1026_1	The procedure code has been replaced due to amalgam/resin recoding	N	The procedure code has been replaced due to amalgam/resin recoding
+Skygen	CHC	1027_1	Please resubmit with a valid CDT code for this procedure	N	
+Skygen	CHIP	1027_1	Please resubmit with a valid CDT code for this procedure	N	
+Skygen	CM	1027_1	Please resubmit with a valid CDT code for this procedure	N	
+Skygen	MA	1027_1	Please resubmit with a valid CDT code for this procedure	N	
+Skygen	MC	1027_1	Please resubmit with a valid CDT code for this procedure	N	Please resubmit with a valid CDT code for this procedure
+Skygen	CHC	1028_1	The tooth, quadrant or arch is not valid with the submitted service	N	
+Skygen	CHIP	1028_1	The tooth, quadrant or arch is not valid with the submitted service	N	
+Skygen	CM	1028_1	The tooth, quadrant or arch is not valid with the submitted service	N	
+Skygen	MA	1028_1	The tooth, quadrant or arch is not valid with the submitted service	N	
+Skygen	MC	1028_1	The tooth, quadrant or arch is not valid with the submitted service	N	The tooth, quadrant or arch is not valid with the submitted service
+Skygen	CHC	1029_1	Please resubmit with a valid surface for the submitted procedure code	N	
+Skygen	CHIP	1029_1	Please resubmit with a valid surface for the submitted procedure code	N	
+Skygen	CM	1029_1	Please resubmit with a valid surface for the submitted procedure code	N	
+Skygen	MA	1029_1	Please resubmit with a valid surface for the submitted procedure code	N	
+Skygen	MC	1029_1	Please resubmit with a valid surface for the submitted procedure code	N	Please resubmit with a valid surface for the submitted procedure code
+Skygen	CHC	1030_1	Procedure Code Requires Modifier	N	
+Skygen	CHIP	1030_1	Procedure Code Requires Modifier	N	
+Skygen	CM	1030_1	Procedure Code Requires Modifier	N	
+Skygen	MA	1030_1	Procedure Code Requires Modifier	N	
+Skygen	MC	1030_1	Procedure Code Requires Modifier	N	Procedure Code Requires Modifier
+Skygen	CHC	1031_1	Please resubmit indicating a surface for the submitted procedure code	N	
+Skygen	CHIP	1031_1	Please resubmit indicating a surface for the submitted procedure code	N	
+Skygen	CM	1031_1	Please resubmit indicating a surface for the submitted procedure code	N	
+Skygen	MA	1031_1	Please resubmit indicating a surface for the submitted procedure code	N	
+Skygen	MC	1031_1	Please resubmit indicating a surface for the submitted procedure code	N	Please resubmit indicating a surface for the submitted procedure code
+Skygen	CHC	1032_1	Invalid Tooth for this Procedure Code	N	
+Skygen	CHIP	1032_1	Invalid Tooth for this Procedure Code	N	
+Skygen	CM	1032_1	Invalid Tooth for this Procedure Code	N	
+Skygen	MA	1032_1	Invalid Tooth for this Procedure Code	N	
+Skygen	MC	1032_1	Invalid Tooth for this Procedure Code	N	Invalid Tooth for this Procedure Code
+Skygen	CHC	1033_1	Invalid Surface for this Tooth	N	
+Skygen	CHIP	1033_1	Invalid Surface for this Tooth	N	
+Skygen	CM	1033_1	Invalid Surface for this Tooth	N	
+Skygen	MA	1033_1	Invalid Surface for this Tooth	N	
+Skygen	MC	1033_1	Invalid Surface for this Tooth	N	Invalid Surface for this Tooth
+Skygen	CHC	1034_1	Invalid Gender for Procedure	N	
+Skygen	CHIP	1034_1	Invalid Gender for Procedure	N	
+Skygen	CM	1034_1	Invalid Gender for Procedure	N	
+Skygen	MA	1034_1	Invalid Gender for Procedure	N	
+Skygen	MC	1034_1	Invalid Gender for Procedure	N	Invalid Gender for Procedure
+Skygen	CHC	1035_1	Please resubmit with a valid place of service	N	
+Skygen	CHIP	1035_1	Please resubmit with a valid place of service	N	
+Skygen	CM	1035_1	Please resubmit with a valid place of service	N	
+Skygen	MA	1035_1	Please resubmit with a valid place of service	N	
+Skygen	MC	1035_1	Please resubmit with a valid place of service	N	Please resubmit with a valid place of service
+Skygen	CHC	1036_1	According to plan guidelines procedure is not approved for provider specialty	Y	
+Skygen	CHIP	1036_1	According to plan guidelines procedure is not approved for provider specialty	Y	
+Skygen	CM	1036_1	According to plan guidelines procedure is not approved for provider specialty	Y	
+Skygen	MA	1036_1	According to plan guidelines procedure is not approved for provider specialty	Y	
+Skygen	MC	1036_1	According to plan guidelines procedure is not approved for provider specialty	Y	According to plan guidelines procedure is not approved for provider specialty
+Skygen	CHC	1037_1	Member age not within plan guidelines for this procedure	Y	
+Skygen	CHIP	1037_1	Member age not within plan guidelines for this procedure	Y	
+Skygen	CM	1037_1	Member age not within plan guidelines for this procedure	Y	
+Skygen	MA	1037_1	Member age not within plan guidelines for this procedure	Y	
+Skygen	MC	1037_1	Member age not within plan guidelines for this procedure	Y	This procedure code is inconsistent with the patient's age.
+Skygen	CHC	1038_1	The quantity billed exceeds the quantity allowed for this service	Y	
+Skygen	CHIP	1038_1	The quantity billed exceeds the quantity allowed for this service	Y	
+Skygen	CM	1038_1	The quantity billed exceeds the quantity allowed for this service	Y	
+Skygen	MA	1038_1	The quantity billed exceeds the quantity allowed for this service	Y	
+Skygen	MC	1038_1	The quantity billed exceeds the quantity allowed for this service	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1039_1	Service Not a Covered Benefit	Y	
+Skygen	CHIP	1039_1	Service Not a Covered Benefit	Y	
+Skygen	CM	1039_1	Service Not a Covered Benefit	Y	
+Skygen	MA	1039_1	Service Not a Covered Benefit	Y	
+Skygen	MC	1039_1	Service Not a Covered Benefit	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	1040_1	Service Exceeds Maximum Count Per Period	Y	
+Skygen	CHIP	1040_1	Service Exceeds Maximum Count Per Period	Y	
+Skygen	CM	1040_1	Service Exceeds Maximum Count Per Period	Y	
+Skygen	MA	1040_1	Service Exceeds Maximum Count Per Period	Y	
+Skygen	MC	1040_1	Service Exceeds Maximum Count Per Period	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1041_1	Authorization Required	Y	
+Skygen	CHIP	1041_1	Authorization Required	Y	
+Skygen	CM	1041_1	Authorization Required	Y	
+Skygen	MA	1041_1	Authorization Required	Y	
+Skygen	MC	1041_1	Authorization Required	Y	An authorization is required for these services and/or supplies. According to our records, we do not have an authorization on file. 
+Skygen	CHC	1042_1	This is a duplicate of a claim currently in process.	N	
+Skygen	CHIP	1042_1	This is a duplicate of a claim currently in process.	N	
+Skygen	CM	1042_1	This is a duplicate of a claim currently in process.	N	
+Skygen	MA	1042_1	This is a duplicate of a claim currently in process.	N	
+Skygen	MC	1042_1	This is a duplicate of a claim currently in process.	N	This is a duplicate of a claim currently in process.
+Skygen	CHC	1043_1	This is a duplicate of a previously processed claim	N	
+Skygen	CHIP	1043_1	This is a duplicate of a previously processed claim	N	
+Skygen	CM	1043_1	This is a duplicate of a previously processed claim	N	
+Skygen	MA	1043_1	This is a duplicate of a previously processed claim	N	
+Skygen	MC	1043_1	This is a duplicate of a previously processed claim	N	This is a duplicate of a previously processed claim
+Skygen	CHC	1044_1	This claim was submitted after the claim timely-filing limit	N	
+Skygen	CHIP	1044_1	This claim was submitted after the claim timely-filing limit	N	
+Skygen	CM	1044_1	This claim was submitted after the claim timely-filing limit	N	
+Skygen	MA	1044_1	This claim was submitted after the claim timely-filing limit	N	
+Skygen	MC	1044_1	This claim was submitted after the claim timely-filing limit	N	This claim was submitted after the claim timely-filing limit
+Skygen	CHC	1045_1	The member coverage was not in effect on the date the service was provided	Y	
+Skygen	CHIP	1045_1	The member coverage was not in effect on the date the service was provided	Y	
+Skygen	CM	1045_1	The member coverage was not in effect on the date the service was provided	Y	
+Skygen	MA	1045_1	The member coverage was not in effect on the date the service was provided	Y	
+Skygen	MC	1045_1	The member coverage was not in effect on the date the service was provided	Y	Member or Group Not Eligible
+Skygen	CHC	1046_1	Please resubmit claim with the EOB from the primary carrier	Y	
+Skygen	CHIP	1046_1	Please resubmit claim with the EOB from the primary carrier	Y	
+Skygen	CM	1046_1	Please resubmit claim with the EOB from the primary carrier	Y	
+Skygen	MA	1046_1	Please resubmit claim with the EOB from the primary carrier	Y	
+Skygen	MC	1046_1	Please resubmit claim with the EOB from the primary carrier	Y	Please resubmit claim with the EOB from the primary carrier
+Skygen	CHC	1047_1	The service is not eligible for the tooth number submitted	Y	
+Skygen	CHIP	1047_1	The service is not eligible for the tooth number submitted	Y	
+Skygen	CM	1047_1	The service is not eligible for the tooth number submitted	Y	
+Skygen	MA	1047_1	The service is not eligible for the tooth number submitted	Y	
+Skygen	MC	1047_1	The service is not eligible for the tooth number submitted	Y	This procedure is not covered for this tooth number.
+Skygen	CHC	1048_1	The member age or tooth is not within plan guidelines for this procedure	Y	
+Skygen	CHIP	1048_1	The member age or tooth is not within plan guidelines for this procedure	Y	
+Skygen	CM	1048_1	The member age or tooth is not within plan guidelines for this procedure	Y	
+Skygen	MA	1048_1	The member age or tooth is not within plan guidelines for this procedure	Y	
+Skygen	MC	1048_1	The member age or tooth is not within plan guidelines for this procedure	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	1051_1	Service denied - exceeds maximum allowed per period for procedure grouping	Y	
+Skygen	CHIP	1051_1	Service denied - exceeds maximum allowed per period for procedure grouping	Y	
+Skygen	CM	1051_1	Service denied - exceeds maximum allowed per period for procedure grouping	Y	
+Skygen	MA	1051_1	Service denied - exceeds maximum allowed per period for procedure grouping	Y	
+Skygen	MC	1051_1	Service denied - exceeds maximum allowed per period for procedure grouping	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1052_1	This is a duplicate of a claim currently in process	N	
+Skygen	CHIP	1052_1	This is a duplicate of a claim currently in process	N	
+Skygen	CM	1052_1	This is a duplicate of a claim currently in process	N	
+Skygen	MA	1052_1	This is a duplicate of a claim currently in process	N	
+Skygen	MC	1052_1	This is a duplicate of a claim currently in process	N	This is a duplicate of a claim currently in process
+Skygen	CHC	1053_1	Service Replaced by Alternative Benefit	N	
+Skygen	CHIP	1053_1	Service Replaced by Alternative Benefit	N	
+Skygen	CM	1053_1	Service Replaced by Alternative Benefit	N	
+Skygen	MA	1053_1	Service Replaced by Alternative Benefit	N	
+Skygen	MC	1053_1	Service Replaced by Alternative Benefit	N	Service Replaced by Alternative Benefit
+Skygen	CHC	1055_1	Invalid Modifier (1st Modifier)	N	
+Skygen	CHIP	1055_1	Invalid Modifier (1st Modifier)	N	
+Skygen	CM	1055_1	Invalid Modifier (1st Modifier)	N	
+Skygen	MA	1055_1	Invalid Modifier (1st Modifier)	N	
+Skygen	MC	1055_1	Invalid Modifier (1st Modifier)	N	Invalid Modifier (1st Modifier)
+Skygen	CHC	1056_1	Invalid Modifier (2nd Modifier)	N	
+Skygen	CHIP	1056_1	Invalid Modifier (2nd Modifier)	N	
+Skygen	CM	1056_1	Invalid Modifier (2nd Modifier)	N	
+Skygen	MA	1056_1	Invalid Modifier (2nd Modifier)	N	
+Skygen	MC	1056_1	Invalid Modifier (2nd Modifier)	N	Invalid Modifier (2nd Modifier)
+Skygen	CHC	1057_1	Invalid Modifier for Procedure Code	N	
+Skygen	CHIP	1057_1	Invalid Modifier for Procedure Code	N	
+Skygen	CM	1057_1	Invalid Modifier for Procedure Code	N	
+Skygen	MA	1057_1	Invalid Modifier for Procedure Code	N	
+Skygen	MC	1057_1	Invalid Modifier for Procedure Code	N	Invalid Modifier for Procedure Code
+Skygen	CHC	1058_1	Invalid 2nd Modifier for this Modifier	N	
+Skygen	CHIP	1058_1	Invalid 2nd Modifier for this Modifier	N	
+Skygen	CM	1058_1	Invalid 2nd Modifier for this Modifier	N	
+Skygen	MA	1058_1	Invalid 2nd Modifier for this Modifier	N	
+Skygen	MC	1058_1	Invalid 2nd Modifier for this Modifier	N	Invalid 2nd Modifier for this Modifier
+Skygen	CHC	1059_1	Service recoded based on claim submission history	N	
+Skygen	CHIP	1059_1	Service recoded based on claim submission history	N	
+Skygen	CM	1059_1	Service recoded based on claim submission history	N	
+Skygen	MA	1059_1	Service recoded based on claim submission history	N	
+Skygen	MC	1059_1	Service recoded based on claim submission history	N	Service recoded based on claim submission history
+Skygen	CHC	1060_1	Service recoded based on claim submission history	N	
+Skygen	CHIP	1060_1	Service recoded based on claim submission history	N	
+Skygen	CM	1060_1	Service recoded based on claim submission history	N	
+Skygen	MA	1060_1	Service recoded based on claim submission history	N	
+Skygen	MC	1060_1	Service recoded based on claim submission history	N	Service recoded based on claim submission history
+Skygen	CHC	1061_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	CHIP	1061_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	CM	1061_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	MA	1061_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	MC	1061_1	Based on the patient dental history this procedure code is not eligible	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	1062_1	Service is not covered under the benefit plan as indicated by a coverage rule	Y	
+Skygen	CHIP	1062_1	Service is not covered under the benefit plan as indicated by a coverage rule	Y	
+Skygen	CM	1062_1	Service is not covered under the benefit plan as indicated by a coverage rule	Y	
+Skygen	MA	1062_1	Service is not covered under the benefit plan as indicated by a coverage rule	Y	
+Skygen	MC	1062_1	Service is not covered under the benefit plan as indicated by a coverage rule	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	1064_1	Patient Did Not Meet Waiting Period Requirement for Service	Y	
+Skygen	CHIP	1064_1	Patient Did Not Meet Waiting Period Requirement for Service	Y	
+Skygen	CM	1064_1	Patient Did Not Meet Waiting Period Requirement for Service	Y	
+Skygen	MA	1064_1	Patient Did Not Meet Waiting Period Requirement for Service	Y	
+Skygen	MC	1064_1	Patient Did Not Meet Waiting Period Requirement for Service	Y	Patient Did Not Meet Waiting Period Requirement for Service
+Skygen	CHC	1065_1	Duplicate Surface(s) were Billed and could not be Recoded	N	
+Skygen	CHIP	1065_1	Duplicate Surface(s) were Billed and could not be Recoded	N	
+Skygen	CM	1065_1	Duplicate Surface(s) were Billed and could not be Recoded	N	
+Skygen	MA	1065_1	Duplicate Surface(s) were Billed and could not be Recoded	N	
+Skygen	MC	1065_1	Duplicate Surface(s) were Billed and could not be Recoded	N	Duplicate Surface(s) were Billed and could not be Recoded
+Skygen	CHC	1066_1	Invalid Number of Surfaces for Procedure	Y	
+Skygen	CHIP	1066_1	Invalid Number of Surfaces for Procedure	Y	
+Skygen	CM	1066_1	Invalid Number of Surfaces for Procedure	Y	
+Skygen	MA	1066_1	Invalid Number of Surfaces for Procedure	Y	
+Skygen	MC	1066_1	Invalid Number of Surfaces for Procedure	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1067_1	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	CHIP	1067_1	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	CM	1067_1	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	MA	1067_1	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	MC	1067_1	Provider Contract Not Effective on Date Of Service	Y	Services Need To Be Provided In Network To Be Eligible For Payment
+Skygen	CHC	1069_1	No Reimbursement Information Found For Service	Y	
+Skygen	CHIP	1069_1	No Reimbursement Information Found For Service	Y	
+Skygen	CM	1069_1	No Reimbursement Information Found For Service	Y	
+Skygen	MA	1069_1	No Reimbursement Information Found For Service	Y	
+Skygen	MC	1069_1	No Reimbursement Information Found For Service	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	1070_1	This service was bundled with another service and was processed in this claim	N	
+Skygen	CHIP	1070_1	This service was bundled with another service and was processed in this claim	N	
+Skygen	CM	1070_1	This service was bundled with another service and was processed in this claim	N	
+Skygen	MA	1070_1	This service was bundled with another service and was processed in this claim	N	
+Skygen	MC	1070_1	This service was bundled with another service and was processed in this claim	N	This service was bundled with another service and was processed in this claim
+Skygen	CHC	1071_1	Service denied. Quantity of service exceeds maximum limit	Y	
+Skygen	CHIP	1071_1	Service denied. Quantity of service exceeds maximum limit	Y	
+Skygen	CM	1071_1	Service denied. Quantity of service exceeds maximum limit	Y	
+Skygen	MA	1071_1	Service denied. Quantity of service exceeds maximum limit	Y	
+Skygen	MC	1071_1	Service denied. Quantity of service exceeds maximum limit	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1072_1	Recoded Service to remove 'C' surface (no such surface)	N	
+Skygen	CHIP	1072_1	Recoded Service to remove 'C' surface (no such surface)	N	
+Skygen	CM	1072_1	Recoded Service to remove 'C' surface (no such surface)	N	
+Skygen	MA	1072_1	Recoded Service to remove 'C' surface (no such surface)	N	
+Skygen	MC	1072_1	Recoded Service to remove 'C' surface (no such surface)	N	Recoded Service to remove 'C' surface (no such surface)
+Skygen	CHC	1073_1	Recoded surface due to B and F surfaces submitted for the same tooth	N	
+Skygen	CHIP	1073_1	Recoded surface due to B and F surfaces submitted for the same tooth	N	
+Skygen	CM	1073_1	Recoded surface due to B and F surfaces submitted for the same tooth	N	
+Skygen	MA	1073_1	Recoded surface due to B and F surfaces submitted for the same tooth	N	
+Skygen	MC	1073_1	Recoded surface due to B and F surfaces submitted for the same tooth	N	Recoded surface due to B and F surfaces submitted for the same tooth
+Skygen	CHC	1074_1	Surfaces B and F cannot be billed for the same tooth	N	
+Skygen	CHIP	1074_1	Surfaces B and F cannot be billed for the same tooth	N	
+Skygen	CM	1074_1	Surfaces B and F cannot be billed for the same tooth	N	
+Skygen	MA	1074_1	Surfaces B and F cannot be billed for the same tooth	N	
+Skygen	MC	1074_1	Surfaces B and F cannot be billed for the same tooth	N	Surfaces B and F cannot be billed for the same tooth
+Skygen	CHC	1075_1	This service is replaced by the full mouth x-ray	N	
+Skygen	CHIP	1075_1	This service is replaced by the full mouth x-ray	N	
+Skygen	CM	1075_1	This service is replaced by the full mouth x-ray	N	
+Skygen	MA	1075_1	This service is replaced by the full mouth x-ray	N	
+Skygen	MC	1075_1	This service is replaced by the full mouth x-ray	N	This service is replaced by the full mouth x-ray
+Skygen	CHC	1076_1	Unique Product Could Not Be Identified for this Claim	N	
+Skygen	CHIP	1076_1	Unique Product Could Not Be Identified for this Claim	N	
+Skygen	CM	1076_1	Unique Product Could Not Be Identified for this Claim	N	
+Skygen	MA	1076_1	Unique Product Could Not Be Identified for this Claim	N	
+Skygen	MC	1076_1	Unique Product Could Not Be Identified for this Claim	N	Unique Product Could Not Be Identified for this Claim
+Skygen	CHC	1078_1	Invalid service for primary tooth based on patient age	N	
+Skygen	CHIP	1078_1	Invalid service for primary tooth based on patient age	N	
+Skygen	CM	1078_1	Invalid service for primary tooth based on patient age	N	
+Skygen	MA	1078_1	Invalid service for primary tooth based on patient age	N	
+Skygen	MC	1078_1	Invalid service for primary tooth based on patient age	N	
+Skygen	CHC	1090_1	Missing procedure code representing an encounter level payment	N	
+Skygen	CHIP	1090_1	Missing procedure code representing an encounter level payment	N	
+Skygen	CM	1090_1	Missing procedure code representing an encounter level payment	N	
+Skygen	MA	1090_1	Missing procedure code representing an encounter level payment	N	
+Skygen	MC	1090_1	Missing procedure code representing an encounter level payment	N	Missing procedure code representing an encounter level payment
+Skygen	CHC	1091_1	Encounter Payment denied - no other valid services were billed	Y	
+Skygen	CHIP	1091_1	Encounter Payment denied - no other valid services were billed	Y	
+Skygen	CM	1091_1	Encounter Payment denied - no other valid services were billed	Y	
+Skygen	MA	1091_1	Encounter Payment denied - no other valid services were billed	Y	
+Skygen	MC	1091_1	Encounter Payment denied - no other valid services were billed	Y	Encounter Payment denied - no other valid services were billed
+Skygen	CHC	1092_1	No Authorization Schedule found for this service authorization	N	
+Skygen	CHIP	1092_1	No Authorization Schedule found for this service authorization	N	
+Skygen	CM	1092_1	No Authorization Schedule found for this service authorization	N	
+Skygen	MA	1092_1	No Authorization Schedule found for this service authorization	N	
+Skygen	MC	1092_1	No Authorization Schedule found for this service authorization	N	An authorization is required for these services and/or supplies. According to our records, we do not have an authorization on file. 
+Skygen	CHC	1093_1	No Guideline found for this service authorization	N	
+Skygen	CHIP	1093_1	No Guideline found for this service authorization	N	
+Skygen	CM	1093_1	No Guideline found for this service authorization	N	
+Skygen	MA	1093_1	No Guideline found for this service authorization	N	
+Skygen	MC	1093_1	No Guideline found for this service authorization	N	No Guideline found for this service authorization
+Skygen	CHC	1094_1	No Documentation Requirements found for this service authorization	N	
+Skygen	CHIP	1094_1	No Documentation Requirements found for this service authorization	N	
+Skygen	CM	1094_1	No Documentation Requirements found for this service authorization	N	
+Skygen	MA	1094_1	No Documentation Requirements found for this service authorization	N	
+Skygen	MC	1094_1	No Documentation Requirements found for this service authorization	N	No Documentation Requirements found for this service authorization
+Skygen	CHC	1095_1	Service Authorization Required	Y	
+Skygen	CHIP	1095_1	Service Authorization Required	Y	
+Skygen	CM	1095_1	Service Authorization Required	Y	
+Skygen	MA	1095_1	Service Authorization Required	Y	
+Skygen	MC	1095_1	Service Authorization Required	Y	An authorization is required for these services and/or supplies. According to our records, we do not have an authorization on file. 
+Skygen	CHC	1096_1	Service Authorization not Found	N	
+Skygen	CHIP	1096_1	Service Authorization not Found	N	
+Skygen	CM	1096_1	Service Authorization not Found	N	
+Skygen	MA	1096_1	Service Authorization not Found	N	
+Skygen	MC	1096_1	Service Authorization not Found	N	An authorization is required for these services and/or supplies. According to our records, we do not have an authorization on file. 
+Skygen	CHC	1098_1	Service Authorization Denied	Y	
+Skygen	CHIP	1098_1	Service Authorization Denied	Y	
+Skygen	CM	1098_1	Service Authorization Denied	Y	
+Skygen	MA	1098_1	Service Authorization Denied	Y	
+Skygen	MC	1098_1	Service Authorization Denied	Y	Service Authorization Denied
+Skygen	CHC	1099_1	Service Authorization found but matching authorization is not Valid	Y	
+Skygen	CHIP	1099_1	Service Authorization found but matching authorization is not Valid	Y	
+Skygen	CM	1099_1	Service Authorization found but matching authorization is not Valid	Y	
+Skygen	MA	1099_1	Service Authorization found but matching authorization is not Valid	Y	
+Skygen	MC	1099_1	Service Authorization found but matching authorization is not Valid	Y	Service Authorization found but matching authorization is not Valid
+Skygen	CHC	1100_1	Service Authorization Invalid for Place of Service	N	
+Skygen	CHIP	1100_1	Service Authorization Invalid for Place of Service	N	
+Skygen	CM	1100_1	Service Authorization Invalid for Place of Service	N	
+Skygen	MA	1100_1	Service Authorization Invalid for Place of Service	N	
+Skygen	MC	1100_1	Service Authorization Invalid for Place of Service	N	Service Authorization Invalid for Place of Service
+Skygen	CHC	1101_1	Service Authorization found but no quantity remaining	N	
+Skygen	CHIP	1101_1	Service Authorization found but no quantity remaining	N	
+Skygen	CM	1101_1	Service Authorization found but no quantity remaining	N	
+Skygen	MA	1101_1	Service Authorization found but no quantity remaining	N	
+Skygen	MC	1101_1	Service Authorization found but no quantity remaining	N	Service Authorization found but no quantity remaining
+Skygen	CHC	1102_1	The authorization number submitted does not match the authorization on file	Y	
+Skygen	CHIP	1102_1	The authorization number submitted does not match the authorization on file	Y	
+Skygen	CM	1102_1	The authorization number submitted does not match the authorization on file	Y	
+Skygen	MA	1102_1	The authorization number submitted does not match the authorization on file	Y	
+Skygen	MC	1102_1	The authorization number submitted does not match the authorization on file	Y	The authorization number submitted does not match the authorization on file
+Skygen	CHC	1103_1	The information on the authorization for this service does not match the claim	Y	
+Skygen	CHIP	1103_1	The information on the authorization for this service does not match the claim	Y	
+Skygen	CM	1103_1	The information on the authorization for this service does not match the claim	Y	
+Skygen	MA	1103_1	The information on the authorization for this service does not match the claim	Y	
+Skygen	MC	1103_1	The information on the authorization for this service does not match the claim	Y	The information on the authorization for this service does not match the claim
+Skygen	CHC	1104_1	Service Authorization Frequency Exceeded	Y	
+Skygen	CHIP	1104_1	Service Authorization Frequency Exceeded	Y	
+Skygen	CM	1104_1	Service Authorization Frequency Exceeded	Y	
+Skygen	MA	1104_1	Service Authorization Frequency Exceeded	Y	
+Skygen	MC	1104_1	Service Authorization Frequency Exceeded	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1105_1	Member has exceeded their maximum benefit	Y	
+Skygen	CHIP	1105_1	Member has exceeded their maximum benefit	Y	
+Skygen	CM	1105_1	Member has exceeded their maximum benefit	Y	
+Skygen	MA	1105_1	Member has exceeded their maximum benefit	Y	
+Skygen	MC	1105_1	Member has exceeded their maximum benefit	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1106_1	Service Exceeds Maximum Count Per Period Allowed for Provider Specialty	Y	
+Skygen	CHIP	1106_1	Service Exceeds Maximum Count Per Period Allowed for Provider Specialty	Y	
+Skygen	CM	1106_1	Service Exceeds Maximum Count Per Period Allowed for Provider Specialty	Y	
+Skygen	MA	1106_1	Service Exceeds Maximum Count Per Period Allowed for Provider Specialty	Y	
+Skygen	MC	1106_1	Service Exceeds Maximum Count Per Period Allowed for Provider Specialty	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	1107_1	Recoded according to Alternative Benefit specified by matching Authorization	N	
+Skygen	CHIP	1107_1	Recoded according to Alternative Benefit specified by matching Authorization	N	
+Skygen	CM	1107_1	Recoded according to Alternative Benefit specified by matching Authorization	N	
+Skygen	MA	1107_1	Recoded according to Alternative Benefit specified by matching Authorization	N	
+Skygen	MC	1107_1	Recoded according to Alternative Benefit specified by matching Authorization	N	Recoded according to Alternative Benefit specified by matching Authorization
+Skygen	CHC	1108_1	Service Authorization found but matching authorization has expired	N	
+Skygen	CHIP	1108_1	Service Authorization found but matching authorization has expired	N	
+Skygen	CM	1108_1	Service Authorization found but matching authorization has expired	N	
+Skygen	MA	1108_1	Service Authorization found but matching authorization has expired	N	
+Skygen	MC	1108_1	Service Authorization found but matching authorization has expired	N	Service Authorization found but matching authorization has expired
+Skygen	CHC	1117_1	Invalid Diagnosis Code	N	
+Skygen	CHIP	1117_1	Invalid Diagnosis Code	N	
+Skygen	CM	1117_1	Invalid Diagnosis Code	N	
+Skygen	MA	1117_1	Invalid Diagnosis Code	N	
+Skygen	MC	1117_1	Invalid Diagnosis Code	N	Invalid Diagnosis Code
+Skygen	CHC	1118_1	EHB product declared, but does not exist for this state	N	
+Skygen	CHIP	1118_1	EHB product declared, but does not exist for this state	N	
+Skygen	CM	1118_1	EHB product declared, but does not exist for this state	N	
+Skygen	MA	1118_1	EHB product declared, but does not exist for this state	N	
+Skygen	MC	1118_1	EHB product declared, but does not exist for this state	N	EHB product declared, but does not exist for this state
+Skygen	CHC	1119_1	EHB product not configured correctly	N	
+Skygen	CHIP	1119_1	EHB product not configured correctly	N	
+Skygen	CM	1119_1	EHB product not configured correctly	N	
+Skygen	MA	1119_1	EHB product not configured correctly	N	
+Skygen	MC	1119_1	EHB product not configured correctly	N	EHB product not configured correctly
+Skygen	CHC	1120_1	Please Submit with Correct Quantity	N	
+Skygen	CHIP	1120_1	Please Submit with Correct Quantity	N	
+Skygen	CM	1120_1	Please Submit with Correct Quantity	N	
+Skygen	MA	1120_1	Please Submit with Correct Quantity	N	
+Skygen	MC	1120_1	Please Submit with Correct Quantity	N	Please Submit with Correct Quantity
+Skygen	CHC	1121_1	Invalid Diagnosis Code for Date(s) of Service	N	
+Skygen	CHIP	1121_1	Invalid Diagnosis Code for Date(s) of Service	N	
+Skygen	CM	1121_1	Invalid Diagnosis Code for Date(s) of Service	N	
+Skygen	MA	1121_1	Invalid Diagnosis Code for Date(s) of Service	N	
+Skygen	MC	1121_1	Invalid Diagnosis Code for Date(s) of Service	N	Invalid Diagnosis Code for Date(s) of Service
+Skygen	CHC	1128_1	Tax ID submitted on the claim does not match Tax ID for payee	N	
+Skygen	CHIP	1128_1	Tax ID submitted on the claim does not match Tax ID for payee	N	
+Skygen	CM	1128_1	Tax ID submitted on the claim does not match Tax ID for payee	N	
+Skygen	MA	1128_1	Tax ID submitted on the claim does not match Tax ID for payee	N	
+Skygen	MC	1128_1	Tax ID submitted on the claim does not match Tax ID for payee	N	Tax ID submitted on the claim does not match Tax ID for payee
+Skygen	CHC	1140_1	Claim is expected to have Coordination of Benefits (COB) info. None was found.	Y	
+Skygen	CHIP	1140_1	Claim is expected to have Coordination of Benefits (COB) info. None was found.	Y	
+Skygen	CM	1140_1	Claim is expected to have Coordination of Benefits (COB) info. None was found.	Y	
+Skygen	MA	1140_1	Claim is expected to have Coordination of Benefits (COB) info. None was found.	Y	
+Skygen	MC	1140_1	Claim is expected to have Coordination of Benefits (COB) info. None was found.	Y	Claim is expected to have Coordination of Benefits (COB) info. None was found.
+Skygen	CHC	1141_1	Service requires pre-authorization per authorization exclusion formula	Y	
+Skygen	CHIP	1141_1	Service requires pre-authorization per authorization exclusion formula	Y	
+Skygen	CM	1141_1	Service requires pre-authorization per authorization exclusion formula	Y	
+Skygen	MA	1141_1	Service requires pre-authorization per authorization exclusion formula	Y	
+Skygen	MC	1141_1	Service requires pre-authorization per authorization exclusion formula	Y	Service requires pre-authorization per authorization exclusion formula
+Skygen	CHC	1143_1	Inappropriate procedure code for diagnosis	Y	
+Skygen	CHIP	1143_1	Inappropriate procedure code for diagnosis	Y	
+Skygen	CM	1143_1	Inappropriate procedure code for diagnosis	Y	
+Skygen	MA	1143_1	Inappropriate procedure code for diagnosis	Y	
+Skygen	MC	1143_1	Inappropriate procedure code for diagnosis	Y	Inappropriate procedure code for diagnosis
+Skygen	CHC	1145_1	The original claim is not in Paid processing state.	N	
+Skygen	CHIP	1145_1	The original claim is not in Paid processing state.	N	
+Skygen	CM	1145_1	The original claim is not in Paid processing state.	N	
+Skygen	MA	1145_1	The original claim is not in Paid processing state.	N	
+Skygen	MC	1145_1	The original claim is not in Paid processing state.	N	The original claim is not in Paid processing state.
+Skygen	CHC	1146_1	The original claim has at least one previously resubmitted service.	N	
+Skygen	CHIP	1146_1	The original claim has at least one previously resubmitted service.	N	
+Skygen	CM	1146_1	The original claim has at least one previously resubmitted service.	N	
+Skygen	MA	1146_1	The original claim has at least one previously resubmitted service.	N	
+Skygen	MC	1146_1	The original claim has at least one previously resubmitted service.	N	The original claim has at least one previously resubmitted service.
+Skygen	CHC	1147_1	The original claim has associated adjustment records and/or refunds.	N	
+Skygen	CHIP	1147_1	The original claim has associated adjustment records and/or refunds.	N	
+Skygen	CM	1147_1	The original claim has associated adjustment records and/or refunds.	N	
+Skygen	MA	1147_1	The original claim has associated adjustment records and/or refunds.	N	
+Skygen	MC	1147_1	The original claim has associated adjustment records and/or refunds.	N	The original claim has associated adjustment records and/or refunds.
+Skygen	CHC	1148_1	The original claim is system-generated (record source is 4).	N	
+Skygen	CHIP	1148_1	The original claim is system-generated (record source is 4).	N	
+Skygen	CM	1148_1	The original claim is system-generated (record source is 4).	N	
+Skygen	MA	1148_1	The original claim is system-generated (record source is 4).	N	
+Skygen	MC	1148_1	The original claim is system-generated (record source is 4).	N	The original claim is system-generated (record source is 4).
+Skygen	CHC	1149_1	The original does not match on 3 of the 4: Enrollee, Provider, Location, Tax ID.	N	
+Skygen	CHIP	1149_1	The original does not match on 3 of the 4: Enrollee, Provider, Location, Tax ID.	N	
+Skygen	CM	1149_1	The original does not match on 3 of the 4: Enrollee, Provider, Location, Tax ID.	N	
+Skygen	MA	1149_1	The original does not match on 3 of the 4: Enrollee, Provider, Location, Tax ID.	N	
+Skygen	MC	1149_1	The original does not match on 3 of the 4: Enrollee, Provider, Location, Tax ID.	N	The original does not match on 3 of the 4: Enrollee, Provider, Location, Tax ID.
+Skygen	CHC	1151_1	Corrected claim: The original claim was initially denied for untimely filing.	N	
+Skygen	CHIP	1151_1	Corrected claim: The original claim was initially denied for untimely filing.	N	
+Skygen	CM	1151_1	Corrected claim: The original claim was initially denied for untimely filing.	N	
+Skygen	MA	1151_1	Corrected claim: The original claim was initially denied for untimely filing.	N	
+Skygen	MC	1151_1	Corrected claim: The original claim was initially denied for untimely filing.	N	Corrected claim: The original claim was initially denied for untimely filing.
+Skygen	CHC	1152_1	Corrected claim: This correction does not meet the timely filing requirement.	Y	
+Skygen	CHIP	1152_1	Corrected claim: This correction does not meet the timely filing requirement.	Y	
+Skygen	CM	1152_1	Corrected claim: This correction does not meet the timely filing requirement.	Y	
+Skygen	MA	1152_1	Corrected claim: This correction does not meet the timely filing requirement.	Y	
+Skygen	MC	1152_1	Corrected claim: This correction does not meet the timely filing requirement.	Y	Corrected claim: This correction does not meet the timely filing requirement.
+Skygen	CHC	1153_1	Claim not submitted within the COB timely filing days defined on the product.	Y	
+Skygen	CHIP	1153_1	Claim not submitted within the COB timely filing days defined on the product.	Y	
+Skygen	CM	1153_1	Claim not submitted within the COB timely filing days defined on the product.	Y	
+Skygen	MA	1153_1	Claim not submitted within the COB timely filing days defined on the product.	Y	
+Skygen	MC	1153_1	Claim not submitted within the COB timely filing days defined on the product.	Y	Claim not submitted within the COB timely filing days defined on the product.
+Skygen	CHC	1161_1	The premium group and/or client is not effective on the date of service	Y	
+Skygen	CHIP	1161_1	The premium group and/or client is not effective on the date of service	Y	
+Skygen	CM	1161_1	The premium group and/or client is not effective on the date of service	Y	
+Skygen	MA	1161_1	The premium group and/or client is not effective on the date of service	Y	
+Skygen	MC	1161_1	The premium group and/or client is not effective on the date of service	Y	Member or Group Not Eligible
+Skygen	CHC	1162_1	The date of service precedes the premium group and/or client effective date	Y	
+Skygen	CHIP	1162_1	The date of service precedes the premium group and/or client effective date	Y	
+Skygen	CM	1162_1	The date of service precedes the premium group and/or client effective date	Y	
+Skygen	MA	1162_1	The date of service precedes the premium group and/or client effective date	Y	
+Skygen	MC	1162_1	The date of service precedes the premium group and/or client effective date	Y	Member or Group Not Eligible
+Skygen	CHC	1167_1	Services that do not include a billed charge to the patient are not covered	N	
+Skygen	CHIP	1167_1	Services that do not include a billed charge to the patient are not covered	N	
+Skygen	CM	1167_1	Services that do not include a billed charge to the patient are not covered	N	
+Skygen	MA	1167_1	Services that do not include a billed charge to the patient are not covered	N	
+Skygen	MC	1167_1	Services that do not include a billed charge to the patient are not covered	N	Services that do not include a billed charge to the patient are not covered
+Skygen	CHC	2013_1	Member age exceeds student cutoff age for service date	Y	
+Skygen	CHIP	2013_1	Member age exceeds student cutoff age for service date	Y	
+Skygen	CM	2013_1	Member age exceeds student cutoff age for service date	Y	
+Skygen	MA	2013_1	Member age exceeds student cutoff age for service date	Y	
+Skygen	MC	2013_1	Member age exceeds student cutoff age for service date	Y	Member Not Eligible
+Skygen	CHC	2014_1	Member age exceeds dependent cutoff age for service date	Y	
+Skygen	CHIP	2014_1	Member age exceeds dependent cutoff age for service date	Y	
+Skygen	CM	2014_1	Member age exceeds dependent cutoff age for service date	Y	
+Skygen	MA	2014_1	Member age exceeds dependent cutoff age for service date	Y	
+Skygen	MC	2014_1	Member age exceeds dependent cutoff age for service date	Y	Member Not Eligible
+Skygen	CHC	3000_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	CHIP	3000_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	CM	3000_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	MA	3000_1	Based on the patient dental history this procedure code is not eligible	Y	
+Skygen	MC	3000_1	Based on the patient dental history this procedure code is not eligible	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3001_1	Payment is included in the allowance for another service/procedure	N	
+Skygen	CHIP	3001_1	Payment is included in the allowance for another service/procedure	N	
+Skygen	CM	3001_1	Payment is included in the allowance for another service/procedure	N	
+Skygen	MA	3001_1	Payment is included in the allowance for another service/procedure	N	
+Skygen	MC	3001_1	Payment is included in the allowance for another service/procedure	N	This service was bundled with another service and was processed in this claim
+Skygen	CHC	3006_1	Service not permitted on same date of service as other procedures billed	Y	
+Skygen	CHIP	3006_1	Service not permitted on same date of service as other procedures billed	Y	
+Skygen	CM	3006_1	Service not permitted on same date of service as other procedures billed	Y	
+Skygen	MA	3006_1	Service not permitted on same date of service as other procedures billed	Y	
+Skygen	MC	3006_1	Service not permitted on same date of service as other procedures billed	Y	Service not permitted on same date of service as other procedures billed
+Skygen	CHC	3009_1	Tooth previously extracted	Y	
+Skygen	CHIP	3009_1	Tooth previously extracted	Y	
+Skygen	CM	3009_1	Tooth previously extracted	Y	
+Skygen	MA	3009_1	Tooth previously extracted	Y	
+Skygen	MC	3009_1	Tooth previously extracted	Y	Tooth previously extracted
+Skygen	CHC	3010_1	Not covered with any procedure code except X-Rays	Y	
+Skygen	CHIP	3010_1	Not covered with any procedure code except X-Rays	Y	
+Skygen	CM	3010_1	Not covered with any procedure code except X-Rays	Y	
+Skygen	MA	3010_1	Not covered with any procedure code except X-Rays	Y	
+Skygen	MC	3010_1	Not covered with any procedure code except X-Rays	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3011_1	Service Denied:  Not Billable with any other service code	N	
+Skygen	CHIP	3011_1	Service Denied:  Not Billable with any other service code	N	
+Skygen	CM	3011_1	Service Denied:  Not Billable with any other service code	N	
+Skygen	MA	3011_1	Service Denied:  Not Billable with any other service code	N	
+Skygen	MC	3011_1	Service Denied:  Not Billable with any other service code	N	Service Denied:  Not Billable with any other service code
+Skygen	CHC	3012_1	Service not billable after full dentures	Y	
+Skygen	CHIP	3012_1	Service not billable after full dentures	Y	
+Skygen	CM	3012_1	Service not billable after full dentures	Y	
+Skygen	MA	3012_1	Service not billable after full dentures	Y	
+Skygen	MC	3012_1	Service not billable after full dentures	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3013_1	Not billable on same day as D8080	Y	
+Skygen	CHIP	3013_1	Not billable on same day as D8080	Y	
+Skygen	CM	3013_1	Not billable on same day as D8080	Y	
+Skygen	MA	3013_1	Not billable on same day as D8080	Y	
+Skygen	MC	3013_1	Not billable on same day as D8080	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3014_1	Included in records fee	N	
+Skygen	CHIP	3014_1	Included in records fee	N	
+Skygen	CM	3014_1	Included in records fee	N	
+Skygen	MA	3014_1	Included in records fee	N	
+Skygen	MC	3014_1	Included in records fee	N	This service was bundled with another service and was processed in this claim
+Skygen	CHC	3015_1	Service Denied:  Not covered in combination with previously performed services	Y	
+Skygen	CHIP	3015_1	Service Denied:  Not covered in combination with previously performed services	Y	
+Skygen	CM	3015_1	Service Denied:  Not covered in combination with previously performed services	Y	
+Skygen	MA	3015_1	Service Denied:  Not covered in combination with previously performed services	Y	
+Skygen	MC	3015_1	Service Denied:  Not covered in combination with previously performed services	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3016_1	Service Denied:  Not billable with another restoration code	N	
+Skygen	CHIP	3016_1	Service Denied:  Not billable with another restoration code	N	
+Skygen	CM	3016_1	Service Denied:  Not billable with another restoration code	N	
+Skygen	MA	3016_1	Service Denied:  Not billable with another restoration code	N	
+Skygen	MC	3016_1	Service Denied:  Not billable with another restoration code	N	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3017_1	Service Denied:  Included as part of another covered benefit	N	
+Skygen	CHIP	3017_1	Service Denied:  Included as part of another covered benefit	N	
+Skygen	CM	3017_1	Service Denied:  Included as part of another covered benefit	N	
+Skygen	MA	3017_1	Service Denied:  Included as part of another covered benefit	N	
+Skygen	MC	3017_1	Service Denied:  Included as part of another covered benefit	N	This service was bundled with another service and was processed in this claim
+Skygen	CHC	3018_1	Service Denied:  Service count exceeded benefit limitation	Y	
+Skygen	CHIP	3018_1	Service Denied:  Service count exceeded benefit limitation	Y	
+Skygen	CM	3018_1	Service Denied:  Service count exceeded benefit limitation	Y	
+Skygen	MA	3018_1	Service Denied:  Service count exceeded benefit limitation	Y	
+Skygen	MC	3018_1	Service Denied:  Service count exceeded benefit limitation	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	3019_1	Service Denied:  Service does not meet benefit criteria	Y	
+Skygen	CHIP	3019_1	Service Denied:  Service does not meet benefit criteria	Y	
+Skygen	CM	3019_1	Service Denied:  Service does not meet benefit criteria	Y	
+Skygen	MA	3019_1	Service Denied:  Service does not meet benefit criteria	Y	
+Skygen	MC	3019_1	Service Denied:  Service does not meet benefit criteria	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3024_1	Removal of space maintainer not payable to provider who initially placed it	Y	
+Skygen	CHIP	3024_1	Removal of space maintainer not payable to provider who initially placed it	Y	
+Skygen	CM	3024_1	Removal of space maintainer not payable to provider who initially placed it	Y	
+Skygen	MA	3024_1	Removal of space maintainer not payable to provider who initially placed it	Y	
+Skygen	MC	3024_1	Removal of space maintainer not payable to provider who initially placed it	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3025_1	Removal of post and core requires history of a post and core	Y	
+Skygen	CHIP	3025_1	Removal of post and core requires history of a post and core	Y	
+Skygen	CM	3025_1	Removal of post and core requires history of a post and core	Y	
+Skygen	MA	3025_1	Removal of post and core requires history of a post and core	Y	
+Skygen	MC	3025_1	Removal of post and core requires history of a post and core	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3026_1	Restoration performed less than 90 days prior to an extraction	Y	
+Skygen	CHIP	3026_1	Restoration performed less than 90 days prior to an extraction	Y	
+Skygen	CM	3026_1	Restoration performed less than 90 days prior to an extraction	Y	
+Skygen	MA	3026_1	Restoration performed less than 90 days prior to an extraction	Y	
+Skygen	MC	3026_1	Restoration performed less than 90 days prior to an extraction	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3046_1	Please resubmit claim with primary carrier EOB information at service level only	Y	
+Skygen	CHIP	3046_1	Please resubmit claim with primary carrier EOB information at service level only	Y	
+Skygen	CM	3046_1	Please resubmit claim with primary carrier EOB information at service level only	Y	
+Skygen	MA	3046_1	Please resubmit claim with primary carrier EOB information at service level only	Y	
+Skygen	MC	3046_1	Please resubmit claim with primary carrier EOB information at service level only	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3100_1	Service must be billed in conjunction with extraction	Y	
+Skygen	CHIP	3100_1	Service must be billed in conjunction with extraction	Y	
+Skygen	CM	3100_1	Service must be billed in conjunction with extraction	Y	
+Skygen	MA	3100_1	Service must be billed in conjunction with extraction	Y	
+Skygen	MC	3100_1	Service must be billed in conjunction with extraction	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3101_1	Apicoectomy requires a prior root canal	Y	
+Skygen	CHIP	3101_1	Apicoectomy requires a prior root canal	Y	
+Skygen	CM	3101_1	Apicoectomy requires a prior root canal	Y	
+Skygen	MA	3101_1	Apicoectomy requires a prior root canal	Y	
+Skygen	MC	3101_1	Apicoectomy requires a prior root canal	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3102_1	Retrograde Filling requires a prior root canal	Y	
+Skygen	CHIP	3102_1	Retrograde Filling requires a prior root canal	Y	
+Skygen	CM	3102_1	Retrograde Filling requires a prior root canal	Y	
+Skygen	MA	3102_1	Retrograde Filling requires a prior root canal	Y	
+Skygen	MC	3102_1	Retrograde Filling requires a prior root canal	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3103_1	Root Amputation requires a prior root canal	Y	
+Skygen	CHIP	3103_1	Root Amputation requires a prior root canal	Y	
+Skygen	CM	3103_1	Root Amputation requires a prior root canal	Y	
+Skygen	MA	3103_1	Root Amputation requires a prior root canal	Y	
+Skygen	MC	3103_1	Root Amputation requires a prior root canal	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3106_1	Dentures require prior extraction or proof of missing teeth	Y	
+Skygen	CHIP	3106_1	Dentures require prior extraction or proof of missing teeth	Y	
+Skygen	CM	3106_1	Dentures require prior extraction or proof of missing teeth	Y	
+Skygen	MA	3106_1	Dentures require prior extraction or proof of missing teeth	Y	
+Skygen	MC	3106_1	Dentures require prior extraction or proof of missing teeth	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3108_1	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	CHIP	3108_1	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	CM	3108_1	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	MA	3108_1	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	MC	3108_1	Periodic Orthodontic Treatment requires history of initial banding code	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3117_1	Service denied - not covered on this Provider's Fee Schedule	Y	
+Skygen	CHIP	3117_1	Service denied - not covered on this Provider's Fee Schedule	Y	
+Skygen	CM	3117_1	Service denied - not covered on this Provider's Fee Schedule	Y	
+Skygen	MA	3117_1	Service denied - not covered on this Provider's Fee Schedule	Y	
+Skygen	MC	3117_1	Service denied - not covered on this Provider's Fee Schedule	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3127_1	Nitrous not billable alone, or with only diagnostic/adjunctive general services	Y	
+Skygen	CHIP	3127_1	Nitrous not billable alone, or with only diagnostic/adjunctive general services	Y	
+Skygen	CM	3127_1	Nitrous not billable alone, or with only diagnostic/adjunctive general services	Y	
+Skygen	MA	3127_1	Nitrous not billable alone, or with only diagnostic/adjunctive general services	Y	
+Skygen	MC	3127_1	Nitrous not billable alone, or with only diagnostic/adjunctive general services	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3163_1	Service not permitted on same DOS or within 90 days of service	Y	
+Skygen	CHIP	3163_1	Service not permitted on same DOS or within 90 days of service	Y	
+Skygen	CM	3163_1	Service not permitted on same DOS or within 90 days of service	Y	
+Skygen	MA	3163_1	Service not permitted on same DOS or within 90 days of service	Y	
+Skygen	MC	3163_1	Service not permitted on same DOS or within 90 days of service	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3164_1	Restoration performed less than 30 days prior to a prefabricated or cast crown	Y	
+Skygen	CHIP	3164_1	Restoration performed less than 30 days prior to a prefabricated or cast crown	Y	
+Skygen	CM	3164_1	Restoration performed less than 30 days prior to a prefabricated or cast crown	Y	
+Skygen	MA	3164_1	Restoration performed less than 30 days prior to a prefabricated or cast crown	Y	
+Skygen	MC	3164_1	Restoration performed less than 30 days prior to a prefabricated or cast crown	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3166_1	Re-cementation/removal of space maintainer requires history of space maintainer	Y	
+Skygen	CHIP	3166_1	Re-cementation/removal of space maintainer requires history of space maintainer	Y	
+Skygen	CM	3166_1	Re-cementation/removal of space maintainer requires history of space maintainer	Y	
+Skygen	MA	3166_1	Re-cementation/removal of space maintainer requires history of space maintainer	Y	
+Skygen	MC	3166_1	Re-cementation/removal of space maintainer requires history of space maintainer	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3177_1	This sealant repair requires history of sealant applied	Y	
+Skygen	CHIP	3177_1	This sealant repair requires history of sealant applied	Y	
+Skygen	CM	3177_1	This sealant repair requires history of sealant applied	Y	
+Skygen	MA	3177_1	This sealant repair requires history of sealant applied	Y	
+Skygen	MC	3177_1	This sealant repair requires history of sealant applied	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3182_1	D2957 must be billed in conjunction with D2954	Y	
+Skygen	CHIP	3182_1	D2957 must be billed in conjunction with D2954	Y	
+Skygen	CM	3182_1	D2957 must be billed in conjunction with D2954	Y	
+Skygen	MA	3182_1	D2957 must be billed in conjunction with D2954	Y	
+Skygen	MC	3182_1	D2957 must be billed in conjunction with D2954	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3183_1	D2953 must be billed in conjunction with D2952	Y	
+Skygen	CHIP	3183_1	D2953 must be billed in conjunction with D2952	Y	
+Skygen	CM	3183_1	D2953 must be billed in conjunction with D2952	Y	
+Skygen	MA	3183_1	D2953 must be billed in conjunction with D2952	Y	
+Skygen	MC	3183_1	D2953 must be billed in conjunction with D2952	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3275_1	Not covered on same DOS as pulpotomies root canals and/or permanent restorations	Y	
+Skygen	CHIP	3275_1	Not covered on same DOS as pulpotomies root canals and/or permanent restorations	Y	
+Skygen	CM	3275_1	Not covered on same DOS as pulpotomies root canals and/or permanent restorations	Y	
+Skygen	MA	3275_1	Not covered on same DOS as pulpotomies root canals and/or permanent restorations	Y	
+Skygen	MC	3275_1	Not covered on same DOS as pulpotomies root canals and/or permanent restorations	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	3300_1	Services prior to 4/1/2021 must be submitted to previous servicer		
+Skygen	CHIP	3300_1	Services prior to 4/1/2021 must be submitted to previous servicer		
+Skygen	CM	3300_1	Services prior to 4/1/2021 must be submitted to previous servicer		
+Skygen	MA	3300_1	Services prior to 4/1/2021 must be submitted to previous servicer		
+Skygen	MC	3300_1	Services prior to 4/1/2021 must be submitted to previous servicer		Member or Group Not Eligible
+Skygen	CHC	3400_1	Service denied - exceeds maximum allowed per period through insurer rules	Y	
+Skygen	CHIP	3400_1	Service denied - exceeds maximum allowed per period through insurer rules	Y	
+Skygen	CM	3400_1	Service denied - exceeds maximum allowed per period through insurer rules	Y	
+Skygen	MA	3400_1	Service denied - exceeds maximum allowed per period through insurer rules	Y	
+Skygen	MC	3400_1	Service denied - exceeds maximum allowed per period through insurer rules	Y	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 
+Skygen	CHC	5114_1	Service Denied due to client business rules	Y	
+Skygen	CHIP	5114_1	Service Denied due to client business rules	Y	
+Skygen	CM	5114_1	Service Denied due to client business rules	Y	
+Skygen	MA	5114_1	Service Denied due to client business rules	Y	
+Skygen	MC	5114_1	Service Denied due to client business rules	Y	The service rendered is not covered, and you may be assessed a non-covered charge. Please refer to Chapter 4 of your Evidence of Coverage for additional information.
+Skygen	CHC	6123_1	Benefit Level Exception Service Authorization Denied	Y	
+Skygen	CHIP	6123_1	Benefit Level Exception Service Authorization Denied	Y	
+Skygen	CM	6123_1	Benefit Level Exception Service Authorization Denied	Y	
+Skygen	MA	6123_1	Benefit Level Exception Service Authorization Denied	Y	
+Skygen	MC	6123_1	Benefit Level Exception Service Authorization Denied	Y	Authorization is denied for these services/supplies. Payment has been denied.
+Skygen	CHC	-1_-1	Not Applicable	N	
+Skygen	CHIP	-1_-1	Not Applicable	N	
+Skygen	CM	-1_-1	Not Applicable	N	
+Skygen	MA	-1_-1	Not Applicable	N	
+Skygen	MC	-1_-1	Not Applicable	N	
+Skygen	CHC	0_0	Unknown	N	
+Skygen	CHIP	0_0	Unknown	N	
+Skygen	CM	0_0	Unknown	N	
+Skygen	MA	0_0	Unknown	N	
+Skygen	MC	0_0	Unknown	N	
+Skygen	CHC	2_2	Default (Undefined) Denial Reason	N	
+Skygen	CHIP	2_2	Default (Undefined) Denial Reason	N	
+Skygen	CM	2_2	Default (Undefined) Denial Reason	N	
+Skygen	MA	2_2	Default (Undefined) Denial Reason	N	
+Skygen	MC	2_2	Default (Undefined) Denial Reason	N	
+Skygen	CHC	4_2	Service not provided	N	
+Skygen	CHIP	4_2	Service not provided	N	
+Skygen	CM	4_2	Service not provided	N	
+Skygen	MA	4_2	Service not provided	N	
+Skygen	MC	4_2	Service not provided	N	
+Skygen	CHC	5_2	Claim payment made to the incorrect provider	N	
+Skygen	CHIP	5_2	Claim payment made to the incorrect provider	N	
+Skygen	CM	5_2	Claim payment made to the incorrect provider	N	
+Skygen	MA	5_2	Claim payment made to the incorrect provider	N	
+Skygen	MC	5_2	Claim payment made to the incorrect provider	N	
+Skygen	CHC	6_2	Duplicate service - Service Previously Paid	N	
+Skygen	CHIP	6_2	Duplicate service - Service Previously Paid	N	
+Skygen	CM	6_2	Duplicate service - Service Previously Paid	N	
+Skygen	MA	6_2	Duplicate service - Service Previously Paid	N	
+Skygen	MC	6_2	Duplicate service - Service Previously Paid	N	
+Skygen	CHC	7_2	Service is Not a Covered Benefit	Y	
+Skygen	CHIP	7_2	Service is Not a Covered Benefit	Y	
+Skygen	CM	7_2	Service is Not a Covered Benefit	Y	
+Skygen	MA	7_2	Service is Not a Covered Benefit	Y	
+Skygen	MC	7_2	Service is Not a Covered Benefit	Y	
+Skygen	CHC	16_2	Provider submitted claim for the wrong patient	N	
+Skygen	CHIP	16_2	Provider submitted claim for the wrong patient	N	
+Skygen	CM	16_2	Provider submitted claim for the wrong patient	N	
+Skygen	MA	16_2	Provider submitted claim for the wrong patient	N	
+Skygen	MC	16_2	Provider submitted claim for the wrong patient	N	
+Skygen	CHC	17_2	Benefit was paid by primary carrier	N	
+Skygen	CHIP	17_2	Benefit was paid by primary carrier	N	
+Skygen	CM	17_2	Benefit was paid by primary carrier	N	
+Skygen	MA	17_2	Benefit was paid by primary carrier	N	
+Skygen	MC	17_2	Benefit was paid by primary carrier	N	
+Skygen	CHC	18_2	Service performed requires a narrative	N	
+Skygen	CHIP	18_2	Service performed requires a narrative	N	
+Skygen	CM	18_2	Service performed requires a narrative	N	
+Skygen	MA	18_2	Service performed requires a narrative	N	
+Skygen	MC	18_2	Service performed requires a narrative	N	
+Skygen	CHC	19_2	Provider billed in error, provider office to resubmit correct claim.	N	
+Skygen	CHIP	19_2	Provider billed in error, provider office to resubmit correct claim.	N	
+Skygen	CM	19_2	Provider billed in error, provider office to resubmit correct claim.	N	
+Skygen	MA	19_2	Provider billed in error, provider office to resubmit correct claim.	N	
+Skygen	MC	19_2	Provider billed in error, provider office to resubmit correct claim.	N	
+Skygen	CHC	21_2	Claim payment made to the incorrect provider	N	
+Skygen	CHIP	21_2	Claim payment made to the incorrect provider	N	
+Skygen	CM	21_2	Claim payment made to the incorrect provider	N	
+Skygen	MA	21_2	Claim payment made to the incorrect provider	N	
+Skygen	MC	21_2	Claim payment made to the incorrect provider	N	
+Skygen	CHC	22_2	Service denied.  Provider only contracted for existing ortho patients.	Y	
+Skygen	CHIP	22_2	Service denied.  Provider only contracted for existing ortho patients.	Y	
+Skygen	CM	22_2	Service denied.  Provider only contracted for existing ortho patients.	Y	
+Skygen	MA	22_2	Service denied.  Provider only contracted for existing ortho patients.	Y	
+Skygen	MC	22_2	Service denied.  Provider only contracted for existing ortho patients.	Y	
+Skygen	CHC	27_2	Included in the case fee amount for D7880	N	
+Skygen	CHIP	27_2	Included in the case fee amount for D7880	N	
+Skygen	CM	27_2	Included in the case fee amount for D7880	N	
+Skygen	MA	27_2	Included in the case fee amount for D7880	N	
+Skygen	MC	27_2	Included in the case fee amount for D7880	N	
+Skygen	CHC	28_2	Included in the case fee amount for D8680	N	
+Skygen	CHIP	28_2	Included in the case fee amount for D8680	N	
+Skygen	CM	28_2	Included in the case fee amount for D8680	N	
+Skygen	MA	28_2	Included in the case fee amount for D8680	N	
+Skygen	MC	28_2	Included in the case fee amount for D8680	N	
+Skygen	CHC	29_2	Included in the case fee amount for D9940	N	
+Skygen	CHIP	29_2	Included in the case fee amount for D9940	N	
+Skygen	CM	29_2	Included in the case fee amount for D9940	N	
+Skygen	MA	29_2	Included in the case fee amount for D9940	N	
+Skygen	MC	29_2	Included in the case fee amount for D9940	N	
+Skygen	CHC	30_2	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	CHIP	30_2	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	CM	30_2	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	MA	30_2	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	MC	30_2	Periodic Orthodontic Treatment requires history of initial banding code	Y	
+Skygen	CHC	31_2	Service authorization found but matching authorization has expired	Y	
+Skygen	CHIP	31_2	Service authorization found but matching authorization has expired	Y	
+Skygen	CM	31_2	Service authorization found but matching authorization has expired	Y	
+Skygen	MA	31_2	Service authorization found but matching authorization has expired	Y	
+Skygen	MC	31_2	Service authorization found but matching authorization has expired	Y	
+Skygen	CHC	32_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	CHIP	32_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	CM	32_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	MA	32_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	MC	32_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	CHC	33_2	Non-emergency care received outside of the U.S. is excluded from coverage		
+Skygen	CHIP	33_2	Non-emergency care received outside of the U.S. is excluded from coverage		
+Skygen	CM	33_2	Non-emergency care received outside of the U.S. is excluded from coverage		
+Skygen	MA	33_2	Non-emergency care received outside of the U.S. is excluded from coverage		
+Skygen	MC	33_2	Non-emergency care received outside of the U.S. is excluded from coverage		
+Skygen	CHC	34_2	100% of Medicaid payments withheld per The Medicaid Inspector General	N	
+Skygen	CHIP	34_2	100% of Medicaid payments withheld per The Medicaid Inspector General	N	
+Skygen	CM	34_2	100% of Medicaid payments withheld per The Medicaid Inspector General	N	
+Skygen	MA	34_2	100% of Medicaid payments withheld per The Medicaid Inspector General	N	
+Skygen	MC	34_2	100% of Medicaid payments withheld per The Medicaid Inspector General	N	
+Skygen	CHC	42_2	Automatically denied because a cancelation was submitted	Y	
+Skygen	CHIP	42_2	Automatically denied because a cancelation was submitted	Y	
+Skygen	CM	42_2	Automatically denied because a cancelation was submitted	Y	
+Skygen	MA	42_2	Automatically denied because a cancelation was submitted	Y	
+Skygen	MC	42_2	Automatically denied because a cancelation was submitted	Y	
+Skygen	CHC	1000_2	Provider sent refund check for claim/services.	N	
+Skygen	CHIP	1000_2	Provider sent refund check for claim/services.	N	
+Skygen	CM	1000_2	Provider sent refund check for claim/services.	N	
+Skygen	MA	1000_2	Provider sent refund check for claim/services.	N	
+Skygen	MC	1000_2	Provider sent refund check for claim/services.	N	
+Skygen	CHC	1004_1	Provider Not Found*		
+Skygen	CHIP	1004_1	Provider Not Found*		
+Skygen	CM	1004_1	Provider Not Found*		
+Skygen	MA	1004_1	Provider Not Found*		
+Skygen	MC	1004_1	Provider Not Found*		
+Skygen	CHC	1005_1	Location Not Found*		
+Skygen	CHIP	1005_1	Location Not Found*		
+Skygen	CM	1005_1	Location Not Found*		
+Skygen	MA	1005_1	Location Not Found*		
+Skygen	MC	1005_1	Location Not Found*		
+Skygen	CHC	1008_1	Provider Not Contracted for Patient*		
+Skygen	CHIP	1008_1	Provider Not Contracted for Patient*		
+Skygen	CM	1008_1	Provider Not Contracted for Patient*		
+Skygen	MA	1008_1	Provider Not Contracted for Patient*		
+Skygen	MC	1008_1	Provider Not Contracted for Patient*		
+Skygen	CHC	1010_1	Insurer Not Found*		
+Skygen	CHIP	1010_1	Insurer Not Found*		
+Skygen	CM	1010_1	Insurer Not Found*		
+Skygen	MA	1010_1	Insurer Not Found*		
+Skygen	MC	1010_1	Insurer Not Found*		
+Skygen	CHC	1013_1	Payee Not Found*		
+Skygen	CHIP	1013_1	Payee Not Found*		
+Skygen	CM	1013_1	Payee Not Found*		
+Skygen	MA	1013_1	Payee Not Found*		
+Skygen	MC	1013_1	Payee Not Found*		
+Skygen	CHC	1014_1	Subscriber Contract Type Not Found*		
+Skygen	CHIP	1014_1	Subscriber Contract Type Not Found*		
+Skygen	CM	1014_1	Subscriber Contract Type Not Found*		
+Skygen	MA	1014_1	Subscriber Contract Type Not Found*		
+Skygen	MC	1014_1	Subscriber Contract Type Not Found*		
+Skygen	CHC	1015_1	Benefit Level Not Found*		
+Skygen	CHIP	1015_1	Benefit Level Not Found*		
+Skygen	CM	1015_1	Benefit Level Not Found*		
+Skygen	MA	1015_1	Benefit Level Not Found*		
+Skygen	MC	1015_1	Benefit Level Not Found*		
+Skygen	CHC	1016_1	IPA Not Found*		
+Skygen	CHIP	1016_1	IPA Not Found*		
+Skygen	CM	1016_1	IPA Not Found*		
+Skygen	MA	1016_1	IPA Not Found*		
+Skygen	MC	1016_1	IPA Not Found*		
+Skygen	CHC	1018_1	Member Address Not Found*		
+Skygen	CHIP	1018_1	Member Address Not Found*		
+Skygen	CM	1018_1	Member Address Not Found*		
+Skygen	MA	1018_1	Member Address Not Found*		
+Skygen	MC	1018_1	Member Address Not Found*		
+Skygen	CHC	1019_1	Services On Claim Are Payable From Multiple Checking Accounts*		
+Skygen	CHIP	1019_1	Services On Claim Are Payable From Multiple Checking Accounts*		
+Skygen	CM	1019_1	Services On Claim Are Payable From Multiple Checking Accounts*		
+Skygen	MA	1019_1	Services On Claim Are Payable From Multiple Checking Accounts*		
+Skygen	MC	1019_1	Services On Claim Are Payable From Multiple Checking Accounts*		
+Skygen	CHC	1020_1	Unable to Determine Risk for Service*		
+Skygen	CHIP	1020_1	Unable to Determine Risk for Service*		
+Skygen	CM	1020_1	Unable to Determine Risk for Service*		
+Skygen	MA	1020_1	Unable to Determine Risk for Service*		
+Skygen	MC	1020_1	Unable to Determine Risk for Service*		
+Skygen	CHC	1024_2	Service recoupment/adjustment per audit findings.	Y	
+Skygen	CHIP	1024_2	Service recoupment/adjustment per audit findings.	Y	
+Skygen	CM	1024_2	Service recoupment/adjustment per audit findings.	Y	
+Skygen	MA	1024_2	Service recoupment/adjustment per audit findings.	Y	
+Skygen	MC	1024_2	Service recoupment/adjustment per audit findings.	Y	
+Skygen	CHC	1025_2	Please resubmit with the required arch	N	
+Skygen	CHIP	1025_2	Please resubmit with the required arch	N	
+Skygen	CM	1025_2	Please resubmit with the required arch	N	
+Skygen	MA	1025_2	Please resubmit with the required arch	N	
+Skygen	MC	1025_2	Please resubmit with the required arch	N	
+Skygen	CHC	1039_2	Service is Not a Covered Benefit	Y	
+Skygen	CHIP	1039_2	Service is Not a Covered Benefit	Y	
+Skygen	CM	1039_2	Service is Not a Covered Benefit	Y	
+Skygen	MA	1039_2	Service is Not a Covered Benefit	Y	
+Skygen	MC	1039_2	Service is Not a Covered Benefit	Y	
+Skygen	CHC	1044_2	This claim was submitted after the claim timely-filing limit	N	
+Skygen	CHIP	1044_2	This claim was submitted after the claim timely-filing limit	N	
+Skygen	CM	1044_2	This claim was submitted after the claim timely-filing limit	N	
+Skygen	MA	1044_2	This claim was submitted after the claim timely-filing limit	N	
+Skygen	MC	1044_2	This claim was submitted after the claim timely-filing limit	N	
+Skygen	CHC	1046_2	Please resubmit claim with the EOB from the primary carrier	N	
+Skygen	CHIP	1046_2	Please resubmit claim with the EOB from the primary carrier	N	
+Skygen	CM	1046_2	Please resubmit claim with the EOB from the primary carrier	N	
+Skygen	MA	1046_2	Please resubmit claim with the EOB from the primary carrier	N	
+Skygen	MC	1046_2	Please resubmit claim with the EOB from the primary carrier	N	
+Skygen	CHC	1054_1	Invalid Provider Status*		
+Skygen	CHIP	1054_1	Invalid Provider Status*		
+Skygen	CM	1054_1	Invalid Provider Status*		
+Skygen	MA	1054_1	Invalid Provider Status*		
+Skygen	MC	1054_1	Invalid Provider Status*		
+Skygen	CHC	1060_2	Service recoded based on claim submission history	N	
+Skygen	CHIP	1060_2	Service recoded based on claim submission history	N	
+Skygen	CM	1060_2	Service recoded based on claim submission history	N	
+Skygen	MA	1060_2	Service recoded based on claim submission history	N	
+Skygen	MC	1060_2	Service recoded based on claim submission history	N	
+Skygen	CHC	1063_1	Unable to Determine Benefit Accumulation Period for Patient or Family*		
+Skygen	CHIP	1063_1	Unable to Determine Benefit Accumulation Period for Patient or Family*		
+Skygen	CM	1063_1	Unable to Determine Benefit Accumulation Period for Patient or Family*		
+Skygen	MA	1063_1	Unable to Determine Benefit Accumulation Period for Patient or Family*		
+Skygen	MC	1063_1	Unable to Determine Benefit Accumulation Period for Patient or Family*		
+Skygen	CHC	1067_2	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	CHIP	1067_2	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	CM	1067_2	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	MA	1067_2	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	MC	1067_2	Provider Contract Not Effective on Date Of Service	Y	
+Skygen	CHC	1068_1	Multiple Provider Contracts Found for Date Of Service*		
+Skygen	CHIP	1068_1	Multiple Provider Contracts Found for Date Of Service*		
+Skygen	CM	1068_1	Multiple Provider Contracts Found for Date Of Service*		
+Skygen	MA	1068_1	Multiple Provider Contracts Found for Date Of Service*		
+Skygen	MC	1068_1	Multiple Provider Contracts Found for Date Of Service*		
+Skygen	CHC	1077_1	Provider Not Contracted For Product*		
+Skygen	CHIP	1077_1	Provider Not Contracted For Product*		
+Skygen	CM	1077_1	Provider Not Contracted For Product*		
+Skygen	MA	1077_1	Provider Not Contracted For Product*		
+Skygen	MC	1077_1	Provider Not Contracted For Product*		
+Skygen	CHC	1081_2	Encounter claims must include T1015, U9 modifier and appropriate procedure codes	N	
+Skygen	CHIP	1081_2	Encounter claims must include T1015, U9 modifier and appropriate procedure codes	N	
+Skygen	CM	1081_2	Encounter claims must include T1015, U9 modifier and appropriate procedure codes	N	
+Skygen	MA	1081_2	Encounter claims must include T1015, U9 modifier and appropriate procedure codes	N	
+Skygen	MC	1081_2	Encounter claims must include T1015, U9 modifier and appropriate procedure codes	N	
+Skygen	CHC	1091_2	Encounter Payment Denied - no other valid services were billed	N	
+Skygen	CHIP	1091_2	Encounter Payment Denied - no other valid services were billed	N	
+Skygen	CM	1091_2	Encounter Payment Denied - no other valid services were billed	N	
+Skygen	MA	1091_2	Encounter Payment Denied - no other valid services were billed	N	
+Skygen	MC	1091_2	Encounter Payment Denied - no other valid services were billed	N	
+Skygen	CHC	1095_2	Service authorization required	N	
+Skygen	CHIP	1095_2	Service authorization required	N	
+Skygen	CM	1095_2	Service authorization required	N	
+Skygen	MA	1095_2	Service authorization required	N	
+Skygen	MC	1095_2	Service authorization required	N	
+Skygen	CHC	1097_1	Service Authorization found but not Determined*		
+Skygen	CHIP	1097_1	Service Authorization found but not Determined*		
+Skygen	CM	1097_1	Service Authorization found but not Determined*		
+Skygen	MA	1097_1	Service Authorization found but not Determined*		
+Skygen	MC	1097_1	Service Authorization found but not Determined*		
+Skygen	CHC	1098_2	Service Authorization Denied	N	
+Skygen	CHIP	1098_2	Service Authorization Denied	N	
+Skygen	CM	1098_2	Service Authorization Denied	N	
+Skygen	MA	1098_2	Service Authorization Denied	N	
+Skygen	MC	1098_2	Service Authorization Denied	N	
+Skygen	CHC	1109_1	Provider payments have been suspended*		
+Skygen	CHIP	1109_1	Provider payments have been suspended*		
+Skygen	CM	1109_1	Provider payments have been suspended*		
+Skygen	MA	1109_1	Provider payments have been suspended*		
+Skygen	MC	1109_1	Provider payments have been suspended*		
+Skygen	CHC	1110_1	Service Pending Post Treatment Review*		
+Skygen	CHIP	1110_1	Service Pending Post Treatment Review*		
+Skygen	CM	1110_1	Service Pending Post Treatment Review*		
+Skygen	MA	1110_1	Service Pending Post Treatment Review*		
+Skygen	MC	1110_1	Service Pending Post Treatment Review*		
+Skygen	CHC	1111_1	Service Denied Pending Review of Ortho Case*		
+Skygen	CHIP	1111_1	Service Denied Pending Review of Ortho Case*		
+Skygen	CM	1111_1	Service Denied Pending Review of Ortho Case*		
+Skygen	MA	1111_1	Service Denied Pending Review of Ortho Case*		
+Skygen	MC	1111_1	Service Denied Pending Review of Ortho Case*		
+Skygen	CHC	1112_1	More than one material codesets exist for this service		
+Skygen	CHIP	1112_1	More than one material codesets exist for this service		
+Skygen	CM	1112_1	More than one material codesets exist for this service		
+Skygen	MA	1112_1	More than one material codesets exist for this service		
+Skygen	MC	1112_1	More than one material codesets exist for this service		
+Skygen	CHC	1113_1	The service is a material codeset, but the provider type is not a 3 or 4		
+Skygen	CHIP	1113_1	The service is a material codeset, but the provider type is not a 3 or 4		
+Skygen	CM	1113_1	The service is a material codeset, but the provider type is not a 3 or 4		
+Skygen	MA	1113_1	The service is a material codeset, but the provider type is not a 3 or 4		
+Skygen	MC	1113_1	The service is a material codeset, but the provider type is not a 3 or 4		
+Skygen	CHC	1114_1	The Frame Order Type is NULL for this service, but a FRAME_ID exists		
+Skygen	CHIP	1114_1	The Frame Order Type is NULL for this service, but a FRAME_ID exists		
+Skygen	CM	1114_1	The Frame Order Type is NULL for this service, but a FRAME_ID exists		
+Skygen	MA	1114_1	The Frame Order Type is NULL for this service, but a FRAME_ID exists		
+Skygen	MC	1114_1	The Frame Order Type is NULL for this service, but a FRAME_ID exists		
+Skygen	CHC	1115_1	There is no FRAME_ACCOUNTING_RULES record for this FRAME_ORDER_TYPE_ID and DOS		
+Skygen	CHIP	1115_1	There is no FRAME_ACCOUNTING_RULES record for this FRAME_ORDER_TYPE_ID and DOS		
+Skygen	CM	1115_1	There is no FRAME_ACCOUNTING_RULES record for this FRAME_ORDER_TYPE_ID and DOS		
+Skygen	MA	1115_1	There is no FRAME_ACCOUNTING_RULES record for this FRAME_ORDER_TYPE_ID and DOS		
+Skygen	MC	1115_1	There is no FRAME_ACCOUNTING_RULES record for this FRAME_ORDER_TYPE_ID and DOS		
+Skygen	CHC	1116_1	Vision Material Quantity Unbundling Performed		
+Skygen	CHIP	1116_1	Vision Material Quantity Unbundling Performed		
+Skygen	CM	1116_1	Vision Material Quantity Unbundling Performed		
+Skygen	MA	1116_1	Vision Material Quantity Unbundling Performed		
+Skygen	MC	1116_1	Vision Material Quantity Unbundling Performed		
+Skygen	CHC	1122_1	A material plan is required for this vision material entered in VOM or PWP		
+Skygen	CHIP	1122_1	A material plan is required for this vision material entered in VOM or PWP		
+Skygen	CM	1122_1	A material plan is required for this vision material entered in VOM or PWP		
+Skygen	MA	1122_1	A material plan is required for this vision material entered in VOM or PWP		
+Skygen	MC	1122_1	A material plan is required for this vision material entered in VOM or PWP		
+Skygen	CHC	1123_1	A codeset is required for this vision material entered in VOM or PWP		
+Skygen	CHIP	1123_1	A codeset is required for this vision material entered in VOM or PWP		
+Skygen	CM	1123_1	A codeset is required for this vision material entered in VOM or PWP		
+Skygen	MA	1123_1	A codeset is required for this vision material entered in VOM or PWP		
+Skygen	MC	1123_1	A codeset is required for this vision material entered in VOM or PWP		
+Skygen	CHC	1124_1	Supplier information is required for vision orders and was not found		
+Skygen	CHIP	1124_1	Supplier information is required for vision orders and was not found		
+Skygen	CM	1124_1	Supplier information is required for vision orders and was not found		
+Skygen	MA	1124_1	Supplier information is required for vision orders and was not found		
+Skygen	MC	1124_1	Supplier information is required for vision orders and was not found		
+Skygen	CHC	1125_1	Invalid code for vision material		
+Skygen	CHIP	1125_1	Invalid code for vision material		
+Skygen	CM	1125_1	Invalid code for vision material		
+Skygen	MA	1125_1	Invalid code for vision material		
+Skygen	MC	1125_1	Invalid code for vision material		
+Skygen	CHC	1126_1	An accounting rule is required for partially covered vision orders		
+Skygen	CHIP	1126_1	An accounting rule is required for partially covered vision orders		
+Skygen	CM	1126_1	An accounting rule is required for partially covered vision orders		
+Skygen	MA	1126_1	An accounting rule is required for partially covered vision orders		
+Skygen	MC	1126_1	An accounting rule is required for partially covered vision orders		
+Skygen	CHC	1127_1	Unable to determine contract service category*		
+Skygen	CHIP	1127_1	Unable to determine contract service category*		
+Skygen	CM	1127_1	Unable to determine contract service category*		
+Skygen	MA	1127_1	Unable to determine contract service category*		
+Skygen	MC	1127_1	Unable to determine contract service category*		
+Skygen	CHC	1130_1	No network found for the claim facility*		
+Skygen	CHIP	1130_1	No network found for the claim facility*		
+Skygen	CM	1130_1	No network found for the claim facility*		
+Skygen	MA	1130_1	No network found for the claim facility*		
+Skygen	MC	1130_1	No network found for the claim facility*		
+Skygen	CHC	1131_1	No network found for the claim facility and product*		
+Skygen	CHIP	1131_1	No network found for the claim facility and product*		
+Skygen	CM	1131_1	No network found for the claim facility and product*		
+Skygen	MA	1131_1	No network found for the claim facility and product*		
+Skygen	MC	1131_1	No network found for the claim facility and product*		
+Skygen	CHC	1132_1	No network found for the claim facility and product benefit level*		
+Skygen	CHIP	1132_1	No network found for the claim facility and product benefit level*		
+Skygen	CM	1132_1	No network found for the claim facility and product benefit level*		
+Skygen	MA	1132_1	No network found for the claim facility and product benefit level*		
+Skygen	MC	1132_1	No network found for the claim facility and product benefit level*		
+Skygen	CHC	1133_1	No facility contract found for the claim date*		
+Skygen	CHIP	1133_1	No facility contract found for the claim date*		
+Skygen	CM	1133_1	No facility contract found for the claim date*		
+Skygen	MA	1133_1	No facility contract found for the claim date*		
+Skygen	MC	1133_1	No facility contract found for the claim date*		
+Skygen	CHC	1134_1	Facility contract found but contract not active*		
+Skygen	CHIP	1134_1	Facility contract found but contract not active*		
+Skygen	CM	1134_1	Facility contract found but contract not active*		
+Skygen	MA	1134_1	Facility contract found but contract not active*		
+Skygen	MC	1134_1	Facility contract found but contract not active*		
+Skygen	CHC	1135_1	Facility reimbursement not found for claim contract*		
+Skygen	CHIP	1135_1	Facility reimbursement not found for claim contract*		
+Skygen	CM	1135_1	Facility reimbursement not found for claim contract*		
+Skygen	MA	1135_1	Facility reimbursement not found for claim contract*		
+Skygen	MC	1135_1	Facility reimbursement not found for claim contract*		
+Skygen	CHC	1136_1	Facility reimbursement not found for claim contract service category*		
+Skygen	CHIP	1136_1	Facility reimbursement not found for claim contract service category*		
+Skygen	CM	1136_1	Facility reimbursement not found for claim contract service category*		
+Skygen	MA	1136_1	Facility reimbursement not found for claim contract service category*		
+Skygen	MC	1136_1	Facility reimbursement not found for claim contract service category*		
+Skygen	CHC	1137_1	No network found for the claim*		
+Skygen	CHIP	1137_1	No network found for the claim*		
+Skygen	CM	1137_1	No network found for the claim*		
+Skygen	MA	1137_1	No network found for the claim*		
+Skygen	MC	1137_1	No network found for the claim*		
+Skygen	CHC	1138_1	No payee found for the claim*		
+Skygen	CHIP	1138_1	No payee found for the claim*		
+Skygen	CM	1138_1	No payee found for the claim*		
+Skygen	MA	1138_1	No payee found for the claim*		
+Skygen	MC	1138_1	No payee found for the claim*		
+Skygen	CHC	1139_1	Invalid reimbursement method for facility claim*		
+Skygen	CHIP	1139_1	Invalid reimbursement method for facility claim*		
+Skygen	CM	1139_1	Invalid reimbursement method for facility claim*		
+Skygen	MA	1139_1	Invalid reimbursement method for facility claim*		
+Skygen	MC	1139_1	Invalid reimbursement method for facility claim*		
+Skygen	CHC	1142_1	Tax ID Missing*		
+Skygen	CHIP	1142_1	Tax ID Missing*		
+Skygen	CM	1142_1	Tax ID Missing*		
+Skygen	MA	1142_1	Tax ID Missing*		
+Skygen	MC	1142_1	Tax ID Missing*		
+Skygen	CHC	1150_1	Corrected claim processing is not enabled for the processing group*		
+Skygen	CHIP	1150_1	Corrected claim processing is not enabled for the processing group*		
+Skygen	CM	1150_1	Corrected claim processing is not enabled for the processing group*		
+Skygen	MA	1150_1	Corrected claim processing is not enabled for the processing group*		
+Skygen	MC	1150_1	Corrected claim processing is not enabled for the processing group*		
+Skygen	CHC	1154_1	This claim is split and cannot be automatically processed*		
+Skygen	CHIP	1154_1	This claim is split and cannot be automatically processed*		
+Skygen	CM	1154_1	This claim is split and cannot be automatically processed*		
+Skygen	MA	1154_1	This claim is split and cannot be automatically processed*		
+Skygen	MC	1154_1	This claim is split and cannot be automatically processed*		
+Skygen	CHC	1155_1	Xray recoding edit could not get External Fees: Bad response from server.		
+Skygen	CHIP	1155_1	Xray recoding edit could not get External Fees: Bad response from server.		
+Skygen	CM	1155_1	Xray recoding edit could not get External Fees: Bad response from server.		
+Skygen	MA	1155_1	Xray recoding edit could not get External Fees: Bad response from server.		
+Skygen	MC	1155_1	Xray recoding edit could not get External Fees: Bad response from server.		
+Skygen	CHC	1156_1	Xray recoding edit could not get External Fees: No amount found for service		
+Skygen	CHIP	1156_1	Xray recoding edit could not get External Fees: No amount found for service		
+Skygen	CM	1156_1	Xray recoding edit could not get External Fees: No amount found for service		
+Skygen	MA	1156_1	Xray recoding edit could not get External Fees: No amount found for service		
+Skygen	MC	1156_1	Xray recoding edit could not get External Fees: No amount found for service		
+Skygen	CHC	1157_1	Member or Group Not Eligible	Y	
+Skygen	CHIP	1157_1	Member or Group Not Eligible	Y	
+Skygen	CM	1157_1	Member or Group Not Eligible	Y	
+Skygen	MA	1157_1	Member or Group Not Eligible	Y	
+Skygen	MC	1157_1	Member or Group Not Eligible	Y	
+Skygen	CHC	1158_1	Member or Group Not Eligible	Y	
+Skygen	CHIP	1158_1	Member or Group Not Eligible	Y	
+Skygen	CM	1158_1	Member or Group Not Eligible	Y	
+Skygen	MA	1158_1	Member or Group Not Eligible	Y	
+Skygen	MC	1158_1	Member or Group Not Eligible	Y	
+Skygen	CHC	1159_1	Member or Group Not Eligible	Y	
+Skygen	CHIP	1159_1	Member or Group Not Eligible	Y	
+Skygen	CM	1159_1	Member or Group Not Eligible	Y	
+Skygen	MA	1159_1	Member or Group Not Eligible	Y	
+Skygen	MC	1159_1	Member or Group Not Eligible	Y	
+Skygen	CHC	1160_1	The premium group and/or client is not active*		
+Skygen	CHIP	1160_1	The premium group and/or client is not active*		
+Skygen	CM	1160_1	The premium group and/or client is not active*		
+Skygen	MA	1160_1	The premium group and/or client is not active*		
+Skygen	MC	1160_1	The premium group and/or client is not active*		
+Skygen	CHC	1163_1	Member or Group Not Eligible	Y	
+Skygen	CHIP	1163_1	Member or Group Not Eligible	Y	
+Skygen	CM	1163_1	Member or Group Not Eligible	Y	
+Skygen	MA	1163_1	Member or Group Not Eligible	Y	
+Skygen	MC	1163_1	Member or Group Not Eligible	Y	
+Skygen	CHC	1164_1	Member or Group Not Eligible	Y	
+Skygen	CHIP	1164_1	Member or Group Not Eligible	Y	
+Skygen	CM	1164_1	Member or Group Not Eligible	Y	
+Skygen	MA	1164_1	Member or Group Not Eligible	Y	
+Skygen	MC	1164_1	Member or Group Not Eligible	Y	
+Skygen	CHC	1165_1	Member or Group Not Eligible	Y	
+Skygen	CHIP	1165_1	Member or Group Not Eligible	Y	
+Skygen	CM	1165_1	Member or Group Not Eligible	Y	
+Skygen	MA	1165_1	Member or Group Not Eligible	Y	
+Skygen	MC	1165_1	Member or Group Not Eligible	Y	
+Skygen	CHC	1166_1	The date of service exceeds the member paid through date.		
+Skygen	CHIP	1166_1	The date of service exceeds the member paid through date.		
+Skygen	CM	1166_1	The date of service exceeds the member paid through date.		
+Skygen	MA	1166_1	The date of service exceeds the member paid through date.		
+Skygen	MC	1166_1	The date of service exceeds the member paid through date.		
+Skygen	CHC	1168_1	Service Replaced due to Savings Club Discount Recoding		
+Skygen	CHIP	1168_1	Service Replaced due to Savings Club Discount Recoding		
+Skygen	CM	1168_1	Service Replaced due to Savings Club Discount Recoding		
+Skygen	MA	1168_1	Service Replaced due to Savings Club Discount Recoding		
+Skygen	MC	1168_1	Service Replaced due to Savings Club Discount Recoding		
+Skygen	CHC	2001_1	Unable to Determine Bank / Checking Account for Self-Funded Premium Group*		
+Skygen	CHIP	2001_1	Unable to Determine Bank / Checking Account for Self-Funded Premium Group*		
+Skygen	CM	2001_1	Unable to Determine Bank / Checking Account for Self-Funded Premium Group*		
+Skygen	MA	2001_1	Unable to Determine Bank / Checking Account for Self-Funded Premium Group*		
+Skygen	MC	2001_1	Unable to Determine Bank / Checking Account for Self-Funded Premium Group*		
+Skygen	CHC	2002_1	Unable to Determine Bank / Checking Account per Assignment Rules*		
+Skygen	CHIP	2002_1	Unable to Determine Bank / Checking Account per Assignment Rules*		
+Skygen	CM	2002_1	Unable to Determine Bank / Checking Account per Assignment Rules*		
+Skygen	MA	2002_1	Unable to Determine Bank / Checking Account per Assignment Rules*		
+Skygen	MC	2002_1	Unable to Determine Bank / Checking Account per Assignment Rules*		
+Skygen	CHC	2003_1	Unable to determine Processing Group for this claim*		
+Skygen	CHIP	2003_1	Unable to determine Processing Group for this claim*		
+Skygen	CM	2003_1	Unable to determine Processing Group for this claim*		
+Skygen	MA	2003_1	Unable to determine Processing Group for this claim*		
+Skygen	MC	2003_1	Unable to determine Processing Group for this claim*		
+Skygen	CHC	3004_2	Please resubmit claim with pre &amp;amp; post-treatment endodontic(root canal)	N	
+Skygen	CHIP	3004_2	Please resubmit claim with pre &amp;amp; post-treatment endodontic(root canal)	N	
+Skygen	CM	3004_2	Please resubmit claim with pre &amp;amp; post-treatment endodontic(root canal)	N	
+Skygen	MA	3004_2	Please resubmit claim with pre &amp;amp; post-treatment endodontic(root canal)	N	
+Skygen	MC	3004_2	Please resubmit claim with pre &amp;amp; post-treatment endodontic(root canal)	N	
+Skygen	CHC	3020_2	All services for member covered by case rate	N	
+Skygen	CHIP	3020_2	All services for member covered by case rate	N	
+Skygen	CM	3020_2	All services for member covered by case rate	N	
+Skygen	MA	3020_2	All services for member covered by case rate	N	
+Skygen	MC	3020_2	All services for member covered by case rate	N	
+Skygen	CHC	3021_2	Please submit this claim to the state fee for service program for consideration	Y	
+Skygen	CHIP	3021_2	Please submit this claim to the state fee for service program for consideration	Y	
+Skygen	CM	3021_2	Please submit this claim to the state fee for service program for consideration	Y	
+Skygen	MA	3021_2	Please submit this claim to the state fee for service program for consideration	Y	
+Skygen	MC	3021_2	Please submit this claim to the state fee for service program for consideration	Y	
+Skygen	CHC	3022_2	Perio scaling &amp; root planing/quad limited to 2 quads per visit or 4 per 2	Y	
+Skygen	CHIP	3022_2	Perio scaling &amp; root planing/quad limited to 2 quads per visit or 4 per 2	Y	
+Skygen	CM	3022_2	Perio scaling &amp; root planing/quad limited to 2 quads per visit or 4 per 2	Y	
+Skygen	MA	3022_2	Perio scaling &amp; root planing/quad limited to 2 quads per visit or 4 per 2	Y	
+Skygen	MC	3022_2	Perio scaling &amp; root planing/quad limited to 2 quads per visit or 4 per 2	Y	
+Skygen	CHC	3023_2	Need copy of original ortho Authorization and band date for continuation review	N	
+Skygen	CHIP	3023_2	Need copy of original ortho Authorization and band date for continuation review	N	
+Skygen	CM	3023_2	Need copy of original ortho Authorization and band date for continuation review	N	
+Skygen	MA	3023_2	Need copy of original ortho Authorization and band date for continuation review	N	
+Skygen	MC	3023_2	Need copy of original ortho Authorization and band date for continuation review	N	
+Skygen	CHC	3024_2	Corrected claims cannot be processed based on electronic submissions	N	
+Skygen	CHIP	3024_2	Corrected claims cannot be processed based on electronic submissions	N	
+Skygen	CM	3024_2	Corrected claims cannot be processed based on electronic submissions	N	
+Skygen	MA	3024_2	Corrected claims cannot be processed based on electronic submissions	N	
+Skygen	MC	3024_2	Corrected claims cannot be processed based on electronic submissions	N	
+Skygen	CHC	3026_2	Service is Not a Covered Benefit	Y	
+Skygen	CHIP	3026_2	Service is Not a Covered Benefit	Y	
+Skygen	CM	3026_2	Service is Not a Covered Benefit	Y	
+Skygen	MA	3026_2	Service is Not a Covered Benefit	Y	
+Skygen	MC	3026_2	Service is Not a Covered Benefit	Y	
+Skygen	CHC	3027_2	Member or Group Not Eligible	Y	
+Skygen	CHIP	3027_2	Member or Group Not Eligible	Y	
+Skygen	CM	3027_2	Member or Group Not Eligible	Y	
+Skygen	MA	3027_2	Member or Group Not Eligible	Y	
+Skygen	MC	3027_2	Member or Group Not Eligible	Y	
+Skygen	CHC	3028_2	Provider suspended from receiving authorization or payment for Medicaid members	N	
+Skygen	CHIP	3028_2	Provider suspended from receiving authorization or payment for Medicaid members	N	
+Skygen	CM	3028_2	Provider suspended from receiving authorization or payment for Medicaid members	N	
+Skygen	MA	3028_2	Provider suspended from receiving authorization or payment for Medicaid members	N	
+Skygen	MC	3028_2	Provider suspended from receiving authorization or payment for Medicaid members	N	
+Skygen	CHC	3029_2	Duplicate service - Service Previously Paid	N	
+Skygen	CHIP	3029_2	Duplicate service - Service Previously Paid	N	
+Skygen	CM	3029_2	Duplicate service - Service Previously Paid	N	
+Skygen	MA	3029_2	Duplicate service - Service Previously Paid	N	
+Skygen	MC	3029_2	Duplicate service - Service Previously Paid	N	
+Skygen	CHC	3030_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	CHIP	3030_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	CM	3030_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	MA	3030_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	MC	3030_2	Your benefit maximum has been met. Services and/or supplies are limited either by dollar amount, duration, or number of visits, and you have reached this limit. 	Y	
+Skygen	CHC	3032_1	D1310 must be billed in conjunction with D1330	Y	
+Skygen	CHIP	3032_1	D1310 must be billed in conjunction with D1330	Y	
+Skygen	CM	3032_1	D1310 must be billed in conjunction with D1330	Y	
+Skygen	MA	3032_1	D1310 must be billed in conjunction with D1330	Y	
+Skygen	MC	3032_1	D1310 must be billed in conjunction with D1330	Y	
+Skygen	CHC	3033_1	D1330 must be billed in conjunction with D1310	Y	
+Skygen	CHIP	3033_1	D1330 must be billed in conjunction with D1310	Y	
+Skygen	CM	3033_1	D1330 must be billed in conjunction with D1310	Y	
+Skygen	MA	3033_1	D1330 must be billed in conjunction with D1310	Y	
+Skygen	MC	3033_1	D1330 must be billed in conjunction with D1310	Y	
+Skygen	CHC	3034_1	Not payable within 6 months of D9947 by dental group conducting D9947	Y	
+Skygen	CHIP	3034_1	Not payable within 6 months of D9947 by dental group conducting D9947	Y	
+Skygen	CM	3034_1	Not payable within 6 months of D9947 by dental group conducting D9947	Y	
+Skygen	MA	3034_1	Not payable within 6 months of D9947 by dental group conducting D9947	Y	
+Skygen	MC	3034_1	Not payable within 6 months of D9947 by dental group conducting D9947	Y	
+Skygen	CHC	3107_1	Not payable unless member has history of orthodontic treatment	Y	
+Skygen	CHIP	3107_1	Not payable unless member has history of orthodontic treatment	Y	
+Skygen	CM	3107_1	Not payable unless member has history of orthodontic treatment	Y	
+Skygen	MA	3107_1	Not payable unless member has history of orthodontic treatment	Y	
+Skygen	MC	3107_1	Not payable unless member has history of orthodontic treatment	Y	
+Skygen	CHC	3124_2	Exceeds the approved number of Continuation of Care office visits	Y	
+Skygen	CHIP	3124_2	Exceeds the approved number of Continuation of Care office visits	Y	
+Skygen	CM	3124_2	Exceeds the approved number of Continuation of Care office visits	Y	
+Skygen	MA	3124_2	Exceeds the approved number of Continuation of Care office visits	Y	
+Skygen	MC	3124_2	Exceeds the approved number of Continuation of Care office visits	Y	
+Skygen	CHC	3125_2	Services prior to 10/01/2012 should be submitted to the previous dental admin 	Y	
+Skygen	CHIP	3125_2	Services prior to 10/01/2012 should be submitted to the previous dental admin 	Y	
+Skygen	CM	3125_2	Services prior to 10/01/2012 should be submitted to the previous dental admin 	Y	
+Skygen	MA	3125_2	Services prior to 10/01/2012 should be submitted to the previous dental admin 	Y	
+Skygen	MC	3125_2	Services prior to 10/01/2012 should be submitted to the previous dental admin 	Y	
+Skygen	CHC	3126_2	Payment held per plan, pending resolution of billing issue.	N	
+Skygen	CHIP	3126_2	Payment held per plan, pending resolution of billing issue.	N	
+Skygen	CM	3126_2	Payment held per plan, pending resolution of billing issue.	N	
+Skygen	MA	3126_2	Payment held per plan, pending resolution of billing issue.	N	
+Skygen	MC	3126_2	Payment held per plan, pending resolution of billing issue.	N	
+Skygen	CHC	3150_2	Please submit W-9 form for consideration of payment.	N	
+Skygen	CHIP	3150_2	Please submit W-9 form for consideration of payment.	N	
+Skygen	CM	3150_2	Please submit W-9 form for consideration of payment.	N	
+Skygen	MA	3150_2	Please submit W-9 form for consideration of payment.	N	
+Skygen	MC	3150_2	Please submit W-9 form for consideration of payment.	N	
+Skygen	CHC	3151_2	Service is Not a Covered Benefit	Y	
+Skygen	CHIP	3151_2	Service is Not a Covered Benefit	Y	
+Skygen	CM	3151_2	Service is Not a Covered Benefit	Y	
+Skygen	MA	3151_2	Service is Not a Covered Benefit	Y	
+Skygen	MC	3151_2	Service is Not a Covered Benefit	Y	
+Skygen	CHC	3201_2	Primary payor payment must be entered at service level.  Corrected Claim Req&#39	N	
+Skygen	CHIP	3201_2	Primary payor payment must be entered at service level.  Corrected Claim Req&#39	N	
+Skygen	CM	3201_2	Primary payor payment must be entered at service level.  Corrected Claim Req&#39	N	
+Skygen	MA	3201_2	Primary payor payment must be entered at service level.  Corrected Claim Req&#39	N	
+Skygen	MC	3201_2	Primary payor payment must be entered at service level.  Corrected Claim Req&#39	N	
+Skygen	CHC	3276_1	D0140 Not Covered Unless Billed with D9995 As a Teledentistry Service	Y	
+Skygen	CHIP	3276_1	D0140 Not Covered Unless Billed with D9995 As a Teledentistry Service	Y	
+Skygen	CM	3276_1	D0140 Not Covered Unless Billed with D9995 As a Teledentistry Service	Y	
+Skygen	MA	3276_1	D0140 Not Covered Unless Billed with D9995 As a Teledentistry Service	Y	
+Skygen	MC	3276_1	D0140 Not Covered Unless Billed with D9995 As a Teledentistry Service	Y	
+Skygen	CHC	3277_1	Extractions Not Payable on Same Date of Service as Partial Dentures	Y	
+Skygen	CHIP	3277_1	Extractions Not Payable on Same Date of Service as Partial Dentures	Y	
+Skygen	CM	3277_1	Extractions Not Payable on Same Date of Service as Partial Dentures	Y	
+Skygen	MA	3277_1	Extractions Not Payable on Same Date of Service as Partial Dentures	Y	
+Skygen	MC	3277_1	Extractions Not Payable on Same Date of Service as Partial Dentures	Y	
+Skygen	CHC	3278_1	D9410 must be billed with another valid service (excluding D5000-D5999)		
+Skygen	CHIP	3278_1	D9410 must be billed with another valid service (excluding D5000-D5999)		
+Skygen	CM	3278_1	D9410 must be billed with another valid service (excluding D5000-D5999)		
+Skygen	MA	3278_1	D9410 must be billed with another valid service (excluding D5000-D5999)		
+Skygen	MC	3278_1	D9410 must be billed with another valid service (excluding D5000-D5999)		
+Skygen	CHC	3280_2	Claims before 1/1/14 are not eligible for the encounter payment.		
+Skygen	CHIP	3280_2	Claims before 1/1/14 are not eligible for the encounter payment.		
+Skygen	CM	3280_2	Claims before 1/1/14 are not eligible for the encounter payment.		
+Skygen	MA	3280_2	Claims before 1/1/14 are not eligible for the encounter payment.		
+Skygen	MC	3280_2	Claims before 1/1/14 are not eligible for the encounter payment.		
+Skygen	CHC	3281_2	Product not eligible for Oxford encounter payment		
+Skygen	CHIP	3281_2	Product not eligible for Oxford encounter payment		
+Skygen	CM	3281_2	Product not eligible for Oxford encounter payment		
+Skygen	MA	3281_2	Product not eligible for Oxford encounter payment		
+Skygen	MC	3281_2	Product not eligible for Oxford encounter payment		
+Skygen	CHC	3285_2	This Claim is part of a NJ FQHC Wrap encounter		
+Skygen	CHIP	3285_2	This Claim is part of a NJ FQHC Wrap encounter		
+Skygen	CM	3285_2	This Claim is part of a NJ FQHC Wrap encounter		
+Skygen	MA	3285_2	This Claim is part of a NJ FQHC Wrap encounter		
+Skygen	MC	3285_2	This Claim is part of a NJ FQHC Wrap encounter		
+Skygen	CHC	3286_2	The benefit package is limited to inpatient acute care fee for service only		
+Skygen	CHIP	3286_2	The benefit package is limited to inpatient acute care fee for service only		
+Skygen	CM	3286_2	The benefit package is limited to inpatient acute care fee for service only		
+Skygen	MA	3286_2	The benefit package is limited to inpatient acute care fee for service only		
+Skygen	MC	3286_2	The benefit package is limited to inpatient acute care fee for service only		
+Skygen	CHC	3301_1	Services prior to 7/1/2023 must be submitted to previous servicer		
+Skygen	CHIP	3301_1	Services prior to 7/1/2023 must be submitted to previous servicer		
+Skygen	CM	3301_1	Services prior to 7/1/2023 must be submitted to previous servicer		
+Skygen	MA	3301_1	Services prior to 7/1/2023 must be submitted to previous servicer		
+Skygen	MC	3301_1	Services prior to 7/1/2023 must be submitted to previous servicer		
+Skygen	CHC	3333_1	Inhalation Of Nitrous/Analgesia, Anxiolysis not payable with Behavior Management	Y	
+Skygen	CHIP	3333_1	Inhalation Of Nitrous/Analgesia, Anxiolysis not payable with Behavior Management	Y	
+Skygen	CM	3333_1	Inhalation Of Nitrous/Analgesia, Anxiolysis not payable with Behavior Management	Y	
+Skygen	MA	3333_1	Inhalation Of Nitrous/Analgesia, Anxiolysis not payable with Behavior Management	Y	
+Skygen	MC	3333_1	Inhalation Of Nitrous/Analgesia, Anxiolysis not payable with Behavior Management	Y	
+Skygen	CHC	3334_1	Teledentistry codes must be billed in conjunction with D0140, D0171, or D9311	Y	
+Skygen	CHIP	3334_1	Teledentistry codes must be billed in conjunction with D0140, D0171, or D9311	Y	
+Skygen	CM	3334_1	Teledentistry codes must be billed in conjunction with D0140, D0171, or D9311	Y	
+Skygen	MA	3334_1	Teledentistry codes must be billed in conjunction with D0140, D0171, or D9311	Y	
+Skygen	MC	3334_1	Teledentistry codes must be billed in conjunction with D0140, D0171, or D9311	Y	
+Skygen	CHC	3335_1	Provider Not Credentialed by State on Date of Service	N	
+Skygen	CHIP	3335_1	Provider Not Credentialed by State on Date of Service	N	
+Skygen	CM	3335_1	Provider Not Credentialed by State on Date of Service	N	
+Skygen	MA	3335_1	Provider Not Credentialed by State on Date of Service	N	
+Skygen	MC	3335_1	Provider Not Credentialed by State on Date of Service	N	
+Skygen	CHC	3336_1	Behavior Management Not Payable with Anesthesia	Y	
+Skygen	CHIP	3336_1	Behavior Management Not Payable with Anesthesia	Y	
+Skygen	CM	3336_1	Behavior Management Not Payable with Anesthesia	Y	
+Skygen	MA	3336_1	Behavior Management Not Payable with Anesthesia	Y	
+Skygen	MC	3336_1	Behavior Management Not Payable with Anesthesia	Y	
+Skygen	CHC	3337_1	Please resubmit claim or auth using submission method required by the state	N	
+Skygen	CHIP	3337_1	Please resubmit claim or auth using submission method required by the state	N	
+Skygen	CM	3337_1	Please resubmit claim or auth using submission method required by the state	N	
+Skygen	MA	3337_1	Please resubmit claim or auth using submission method required by the state	N	
+Skygen	MC	3337_1	Please resubmit claim or auth using submission method required by the state	N	
+Skygen	CHC	3671_1	Ortho Continuation of Care Requires Authorization	Y	
+Skygen	CHIP	3671_1	Ortho Continuation of Care Requires Authorization	Y	
+Skygen	CM	3671_1	Ortho Continuation of Care Requires Authorization	Y	
+Skygen	MA	3671_1	Ortho Continuation of Care Requires Authorization	Y	
+Skygen	MC	3671_1	Ortho Continuation of Care Requires Authorization	Y	
+Skygen	CHC	3672_1	Ortho Continuation of Care Not Found	Y	
+Skygen	CHIP	3672_1	Ortho Continuation of Care Not Found	Y	
+Skygen	CM	3672_1	Ortho Continuation of Care Not Found	Y	
+Skygen	MA	3672_1	Ortho Continuation of Care Not Found	Y	
+Skygen	MC	3672_1	Ortho Continuation of Care Not Found	Y	
+Skygen	CHC	3673_1	Ortho Continuation of Care Request Denied	Y	
+Skygen	CHIP	3673_1	Ortho Continuation of Care Request Denied	Y	
+Skygen	CM	3673_1	Ortho Continuation of Care Request Denied	Y	
+Skygen	MA	3673_1	Ortho Continuation of Care Request Denied	Y	
+Skygen	MC	3673_1	Ortho Continuation of Care Request Denied	Y	
+Skygen	CHC	3674_1	Ortho Continuation of Care Request Found but no Quantity Remaining 	Y	
+Skygen	CHIP	3674_1	Ortho Continuation of Care Request Found but no Quantity Remaining 	Y	
+Skygen	CM	3674_1	Ortho Continuation of Care Request Found but no Quantity Remaining 	Y	
+Skygen	MA	3674_1	Ortho Continuation of Care Request Found but no Quantity Remaining 	Y	
+Skygen	MC	3674_1	Ortho Continuation of Care Request Found but no Quantity Remaining 	Y	
+Skygen	CHC	3675_1	Ortho Continuation of Care Request Found but Does Not Match Claim	Y	
+Skygen	CHIP	3675_1	Ortho Continuation of Care Request Found but Does Not Match Claim	Y	
+Skygen	CM	3675_1	Ortho Continuation of Care Request Found but Does Not Match Claim	Y	
+Skygen	MA	3675_1	Ortho Continuation of Care Request Found but Does Not Match Claim	Y	
+Skygen	MC	3675_1	Ortho Continuation of Care Request Found but Does Not Match Claim	Y	
+Skygen	CHC	3676_1	Ortho Continuation of Care request has expired	Y	
+Skygen	CHIP	3676_1	Ortho Continuation of Care request has expired	Y	
+Skygen	CM	3676_1	Ortho Continuation of Care request has expired	Y	
+Skygen	MA	3676_1	Ortho Continuation of Care request has expired	Y	
+Skygen	MC	3676_1	Ortho Continuation of Care request has expired	Y	
+Skygen	CHC	4000_1	Service Not Covered unless under Active Periodontal Therapy	Y	
+Skygen	CHIP	4000_1	Service Not Covered unless under Active Periodontal Therapy	Y	
+Skygen	CM	4000_1	Service Not Covered unless under Active Periodontal Therapy	Y	
+Skygen	MA	4000_1	Service Not Covered unless under Active Periodontal Therapy	Y	
+Skygen	MC	4000_1	Service Not Covered unless under Active Periodontal Therapy	Y	
+Skygen	CHC	4010_1	The Date of Service does not match the Date Appliance Placed	Y	
+Skygen	CHIP	4010_1	The Date of Service does not match the Date Appliance Placed	Y	
+Skygen	CM	4010_1	The Date of Service does not match the Date Appliance Placed	Y	
+Skygen	MA	4010_1	The Date of Service does not match the Date Appliance Placed	Y	
+Skygen	MC	4010_1	The Date of Service does not match the Date Appliance Placed	Y	
+Skygen	CHC	5037_2	Provider billed in error	N	
+Skygen	CHIP	5037_2	Provider billed in error	N	
+Skygen	CM	5037_2	Provider billed in error	N	
+Skygen	MA	5037_2	Provider billed in error	N	
+Skygen	MC	5037_2	Provider billed in error	N	
+Skygen	CHC	5039_2	Service is Not a Covered Benefit	Y	
+Skygen	CHIP	5039_2	Service is Not a Covered Benefit	Y	
+Skygen	CM	5039_2	Service is Not a Covered Benefit	Y	
+Skygen	MA	5039_2	Service is Not a Covered Benefit	Y	
+Skygen	MC	5039_2	Service is Not a Covered Benefit	Y	
+Skygen	CHC	6020_1	D0140 not covered under CHC unless billed with D9995 as a Telehealth encounter	N	
+Skygen	CHIP	6020_1	D0140 not covered under CHC unless billed with D9995 as a Telehealth encounter	N	
+Skygen	CM	6020_1	D0140 not covered under CHC unless billed with D9995 as a Telehealth encounter	N	
+Skygen	MA	6020_1	D0140 not covered under CHC unless billed with D9995 as a Telehealth encounter	N	
+Skygen	MC	6020_1	D0140 not covered under CHC unless billed with D9995 as a Telehealth encounter	N	
+Skygen	CHC	6021_1	BLE-Qualifying Medical Condition Not Found on Member Enrollment Supplemental ID	N	
+Skygen	CHIP	6021_1	BLE-Qualifying Medical Condition Not Found on Member Enrollment Supplemental ID	N	
+Skygen	CM	6021_1	BLE-Qualifying Medical Condition Not Found on Member Enrollment Supplemental ID	N	
+Skygen	MA	6021_1	BLE-Qualifying Medical Condition Not Found on Member Enrollment Supplemental ID	N	
+Skygen	MC	6021_1	BLE-Qualifying Medical Condition Not Found on Member Enrollment Supplemental ID	N	
+Skygen	CHC	6121_1	Missing state (PROMISe) ID for provider/location	N	
+Skygen	CHIP	6121_1	Missing state (PROMISe) ID for provider/location	N	
+Skygen	CM	6121_1	Missing state (PROMISe) ID for provider/location	N	
+Skygen	MA	6121_1	Missing state (PROMISe) ID for provider/location	N	
+Skygen	MC	6121_1	Missing state (PROMISe) ID for provider/location	N	
+Skygen	CHC	6122_1	BLE Service Authorization found but not Determined*		
+Skygen	CHIP	6122_1	BLE Service Authorization found but not Determined*		
+Skygen	CM	6122_1	BLE Service Authorization found but not Determined*		
+Skygen	MA	6122_1	BLE Service Authorization found but not Determined*		
+Skygen	MC	6122_1	BLE Service Authorization found but not Determined*		
+Skygen	CHC	6140_2	Service is Not a Covered Benefit	Y	
+Skygen	CHIP	6140_2	Service is Not a Covered Benefit	Y	
+Skygen	CM	6140_2	Service is Not a Covered Benefit	Y	
+Skygen	MA	6140_2	Service is Not a Covered Benefit	Y	
+Skygen	MC	6140_2	Service is Not a Covered Benefit	Y	
+Skygen	CHC	8095_1	Pre-Authorization or Post Treatment Review Documentation Required	Y	
+Skygen	CHIP	8095_1	Pre-Authorization or Post Treatment Review Documentation Required	Y	
+Skygen	CM	8095_1	Pre-Authorization or Post Treatment Review Documentation Required	Y	
+Skygen	MA	8095_1	Pre-Authorization or Post Treatment Review Documentation Required	Y	
+Skygen	MC	8095_1	Pre-Authorization or Post Treatment Review Documentation Required	Y	

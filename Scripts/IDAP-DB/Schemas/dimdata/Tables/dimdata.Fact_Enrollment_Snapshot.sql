@@ -1,0 +1,38 @@
+CREATE OR REPLACE TABLE 
+	DIMDATA.Fact_Enrollment_Snapshot
+	(
+		FACT_ENROLLMENT_SNAPSHOT_KEY NUMBER(38,0) AUTOINCREMENT ORDER START 1 INCREMENT 1 NOT NULL,
+		Report_Date_Key INTEGER NOT NULL,
+		Report_Date DATE NOT NULL,
+		Fact_Enrollment_Key INTEGER NOT NULL,
+		MD5_Value_Text VARCHAR NOT NULL,
+		Insert_Datetime TIMESTAMP_TZ(9) NOT NULL,
+		Last_Updated_Datetime TIMESTAMP_TZ(9) NOT NULL,
+		Report_Year_Month_Text VARCHAR NOT NULL,
+		Dim_TPA_Hierarchy_Key INTEGER NOT NULL,
+		Dim_Member_Key INTEGER NOT NULL,
+		Dim_Enrollment_Span_Key INTEGER NOT NULL,
+		Dim_Plan_Key INTEGER NOT NULL,
+		Dim_Sales_Channel_Key INTEGER NOT NULL,
+		Eligibility_Start_Date_Key INTEGER NOT NULL,
+		Eligibility_End_Date_Key INTEGER NOT NULL,
+		Enrollment_Date_Key INTEGER NOT NULL,
+		Renewal_Date_Key INTEGER NOT NULL,
+		Eligibility_Start_Date DATE,
+		Eligibility_End_Date DATE,
+		Enrollment_Date DATE,
+		Renewal_Date DATE,
+		Dim_Group_Key INTEGER,
+		Dim_Sub_Group_Key INTEGER,
+		Dim_GL_Distribution_Key INTEGER,
+		Subscriber_Flag BOOLEAN,
+		Dim_Rate_Cell_Key INTEGER,
+		Eligibility_Days_In_Report_Month_Cnt INTEGER NULL,
+		Dim_Rider_Key INTEGER,
+		Medical_Rider_Flag INTEGER,
+		Dim_Eligibility_Type_Key INTEGER,
+		Dim_Plan_Segment_Key INTEGER,
+		CONSTRAINT PK_Fact_Enrollment_Snapshot PRIMARY KEY (FACT_ENROLLMENT_SNAPSHOT_KEY),
+		CONSTRAINT UK_Fact_Enrollment_Snapshot UNIQUE (Report_Date_Key, Fact_Enrollment_Key)
+	) COMMENT='Static view of FACT_ENROLLMENT taken on the 15th of every month'
+	;

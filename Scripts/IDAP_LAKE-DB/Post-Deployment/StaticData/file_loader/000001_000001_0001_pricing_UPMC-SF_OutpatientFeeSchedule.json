@@ -1,0 +1,32 @@
+{ 
+    "outputSchema": "PRICING",
+    "outputTable": "OUTPATIENT_FEE_SCHEDULE",
+    "hasHeader": true,
+    "hasTrailer": false,
+    "fileType": "delimited",
+    "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+    "fileFormat": "BUSINESS_COMMA_DELIM_FILE_FORMAT",
+    "truncLoad": true,
+    "mappingTypes": { 
+        "all": {
+            "mappingContents": [
+                {
+                    "columnOrder": 1,
+                    "inputField": "PROCEDURE_CODE",
+                    "outputField": "PROCEDURE_CODE"
+                },
+                { 
+                    "columnOrder": 2,
+                    "inputField": "MODIFIER",
+                    "outputField": "MODIFIER"
+
+                },
+                {
+                    "columnOrder": 3,
+                    "inputField": "PRICE",
+                    "outputField": "PRICE"
+                }
+            ]
+        }
+    }
+}

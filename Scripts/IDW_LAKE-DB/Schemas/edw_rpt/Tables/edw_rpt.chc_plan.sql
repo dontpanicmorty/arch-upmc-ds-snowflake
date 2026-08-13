@@ -1,0 +1,23 @@
+CREATE OR REPLACE TABLE EDW_RPT.CHC_PLAN
+(
+CHC_PLAN_KEY                    NUMBER,
+ASSISTANCE_CATEGORY            VARCHAR,
+PROGRAM_STATUS                 VARCHAR,
+DIVISION_ID                    VARCHAR,
+DIVISION_DESC                  VARCHAR,
+RECIPIENT_GROUP_DESC           VARCHAR,
+RECIPIENT_GROUP_CODE           VARCHAR,
+LOAD_DATE                TIMESTAMP_NTZ,
+UPDATE_DATE              TIMESTAMP_NTZ,
+COUNTY_CODE                    VARCHAR,
+COUNTY_DESC                    VARCHAR,
+DPW_COUNTY_CODE                VARCHAR,
+MEDICARE_INDICATOR             VARCHAR,
+RECIPIENT_GROUP_NBR            VARCHAR,
+DPW_PLAN_CODE                  VARCHAR,
+PRODUCT_CODE                   VARCHAR,
+PRODUCT_DESC                   VARCHAR,
+PLAN_NBR                       VARCHAR
+)
+COMMENT='Created for EDWRPT Migration'
+;

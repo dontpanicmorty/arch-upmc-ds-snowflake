@@ -1,0 +1,19 @@
+CREATE OR REPLACE TABLE WPDW.RX_FOR_WELLNESS_EMPI_DAILY_GLOBAL
+(
+MEMBER_ID              VARCHAR,
+MMI                     NUMBER(33,5),
+LAST_NAME              VARCHAR,
+FIRST_NAME             VARCHAR,
+MIDDLE_NAME            VARCHAR,
+DOB              TIMESTAMP_NTZ,
+GENDER                 VARCHAR,
+EMPI_ID                VARCHAR,
+EPIC_MRN               VARCHAR,
+MEDIPAC_MRN            VARCHAR,
+LOAD_DATE        TIMESTAMP_NTZ,
+AMWELL_ID              VARCHAR,
+PROCESS_DATE     TIMESTAMP_NTZ,
+INSERT_DATE      TIMESTAMP_NTZ
+)
+COMMENT='Created for WPDW Migration'
+;

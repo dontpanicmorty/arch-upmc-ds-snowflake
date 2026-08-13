@@ -1,0 +1,225 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_SAT_PLAN_ACCUMULATOR(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables 
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.SAT_PLAN_ACCUMULATOR`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.SAT_PLAN_ACCUMULATOR_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand = 
+`    
+MERGE INTO HUBDATA.SAT_PLAN_ACCUMULATOR TGT
+USING (
+    SELECT     
+        HUB_PLAN_ACCUMULATOR_HKEY,
+        HASH_DIFF,
+        ACCUMULATOR_TYPE_DESC,
+        ACCUMULATOR_PERIOD_TYPE_DESC,
+        SUBSCRIBER_TYPE_DESC
+    FROM STAGEDATA.SAT_PLAN_ACCUMULATOR_TMP
+) SRC  
+ON (TGT.HUB_PLAN_ACCUMULATOR_HKEY = SRC.HUB_PLAN_ACCUMULATOR_HKEY
+AND TGT.HASH_DIFF = SRC.HASH_DIFF
+AND TGT.IS_CURRENT_ROW_FLAG = TRUE)  
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        HUB_PLAN_ACCUMULATOR_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        HASH_DIFF,
+        ACCUMULATOR_TYPE_DESC,
+        ACCUMULATOR_PERIOD_TYPE_DESC,
+        SUBSCRIBER_TYPE_DESC
+    )
+ VALUES 
+    (
+        SRC.HUB_PLAN_ACCUMULATOR_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+        SRC.HASH_DIFF,
+        SRC.ACCUMULATOR_TYPE_DESC,
+        SRC.ACCUMULATOR_PERIOD_TYPE_DESC,
+        SRC.SUBSCRIBER_TYPE_DESC
+    )
+;`;
+    
+// Create update statement to be executed.
+var sqlUpdateCommand=
+`
+UPDATE HUBDATA.SAT_PLAN_ACCUMULATOR TGT SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+    , IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_PLAN_ACCUMULATOR_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+    SELECT HUB_PLAN_ACCUMULATOR_HKEY, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            SAT_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY,
+            SAT_PLAN_ACCUMULATOR.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY SAT_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY ORDER BY SAT_PLAN_ACCUMULATOR.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.SAT_PLAN_ACCUMULATOR
+            JOIN STAGEDATA.SAT_PLAN_ACCUMULATOR_TMP
+                ON (SAT_PLAN_ACCUMULATOR_TMP.HUB_PLAN_ACCUMULATOR_HKEY = SAT_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY)
+        WHERE SAT_PLAN_ACCUMULATOR.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+)
+;`;
+ 
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.SAT_PLAN_ACCUMULATOR
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_PLAN_ACCUMULATOR_HKEY, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    SAT_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY,
+    SAT_PLAN_ACCUMULATOR.ROW_EFFECTIVE_DATETIME
+    FROM HUBDATA.SAT_PLAN_ACCUMULATOR
+        JOIN HUBDATA.HUB_PLAN_ACCUMULATOR
+            ON (HUB_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY = SAT_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY)
+        LEFT OUTER JOIN STAGEDATA.SAT_PLAN_ACCUMULATOR_TMP
+            ON (SAT_PLAN_ACCUMULATOR_TMP.HUB_PLAN_ACCUMULATOR_HKEY = SAT_PLAN_ACCUMULATOR.HUB_PLAN_ACCUMULATOR_HKEY)
+
+    WHERE HUB_PLAN_ACCUMULATOR.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM STAGEDATA.SAT_PLAN_ACCUMULATOR_TMP)
+    AND SAT_PLAN_ACCUMULATOR.IS_CURRENT_ROW_FLAG = TRUE
+    AND SAT_PLAN_ACCUMULATOR_TMP.HUB_PLAN_ACCUMULATOR_HKEY IS NULL
+)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlLogCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+
+    //Execute Merge Command
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log MERGE results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // Execute the Update Command
+    var startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+
+    // Execute the Delete Command
+    var startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsUpdated(), result, sfStatement.getSqlText()]
+        }
+    );
+}
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );        
+    throw result;
+}
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+resultSet = snowflake.execute({sqlText});
+
+return result;
+$$
+;

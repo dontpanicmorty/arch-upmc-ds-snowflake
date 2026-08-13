@@ -1,0 +1,439 @@
+CREATE OR REPLACE PROCEDURE QUALITY.SPU_LOAD_CLEARSENSE_IMMUNIZATIONS("RUN_ID" VARCHAR(16777216), "DATA_FLOW_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE JAVASCRIPT
+COMMENT='Load QUALITY.CCD_IMMUNIZATIONS from XML_SECTION'
+EXECUTE AS OWNER
+AS '
+
+//---------------------------------------
+//-- Prepare for execution
+//---------------------------------------
+
+    var startTime = new Date().toISOString();    
+    var dataDomainName = "";
+    var stepOrderNumber = 0;
+    var stepProcedureName = "QUALITY.SPU_LOAD_CLEARSENSE_IMMUNIZATIONS";
+    
+    var lookupCommand = `
+SELECT DATA_FLOW_NAME, DATA_DOMAIN_NAME, STEP_ORDER_NUMBER, STEP_PROCEDURE_NAME
+FROM UTIL.DATA_FLOW_CONTROL_TABLE
+WHERE IS_ACTIVE = ''Y'' AND DATA_FLOW_NAME = :1 AND STEP_PROCEDURE_NAME = :2
+ORDER BY STEP_ORDER_NUMBER; 
+`;
+
+    var logStartCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES ( 
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,null
+    ,''Starting''
+    )
+`;
+
+    var logEndCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+     RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS    
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Succeeded''
+)
+`;
+
+    var logErrorCommand = `
+INSERT INTO LOGDATA.DATA_FLOW_LOAD_HISTORY 
+(
+    RUN_ID
+    ,DATA_FLOW_NAME
+    ,DATA_DOMAIN_NAME
+    ,STEP_ORDER_NUMBER
+    ,STEP_PROCEDURE_NAME
+    ,EXECUTION_START_TIME
+    ,EXECUTION_END_TIME
+    ,EXECUTION_STATUS
+    ,ERROR_CODE
+    ,ERROR_STATE
+    ,ERROR_MESSAGE
+    ,ERROR_STACK_TRACE_TEXT
+)
+VALUES (
+    :1
+    ,:2
+    ,:3
+    ,:4
+    ,:5
+    ,:6
+    ,CONVERT_TIMEZONE(''UTC'',CURRENT_TIMESTAMP())
+    ,''Error''
+    ,:7
+    ,:8
+    ,:9
+    ,:10
+)
+`;      
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_IMMUNIZATIONS - START
+//-----------------------------------------
+
+
+    var sqlLogCommand = `
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9);
+`;
+
+
+
+    var sqlDeleteImmunizationsCommand = ` 
+DELETE FROM QUALITY.CCD_IMMUNIZATIONS WHERE MRN IN ( SELECT DISTINCT MRN FROM QUALITY.SECTION_XML ); 
+`;
+
+
+    var sqlInsertCcdImmunizationsCommand = `
+INSERT INTO QUALITY.CCD_IMMUNIZATIONS 
+   (
+    SECTION_TITLE,
+    FILENAME,
+    MRN,
+    SECTION_TEMPLATE_ID_EXTENSION_A,
+    SECTION_TEMPLATE_ID_ROOT_A,
+    SECTION_TEMPLATE_ID_ROOT_B,
+    IMMUNIZATION_DATE,
+    IMMUNIZATION_CODE,
+    CODE_SYSTEM,
+    CODE_SYSTEM_NAME,
+    DISPLAY_NAME,
+    MOOD_CODE,
+    STATUS_CODE,
+    ROUTE_CODE,
+    ROUTE_CODE_SYSTEM,
+    ROUTE_CODE_SYSTEM_NAME,
+    ROUTE_CODE_DISPLAY_NAME,
+    APPROACH_SITE_CODE,
+    APPROACH_SITE_CODE_SYSTEM,
+    APPROACH_SITE_CODE_SYSTEM_NAME,
+    APPROACH_SITE_CODE_DISPLAY_NAME,
+    SECTION_TYPE_CODE,
+    SECTION_DISPLAY_NAME,
+    SECTION_CODE_SYSTEM,
+    SECTION_CODE_SYSTEM_NAME,
+    ENTRY_TYPE_CODE,
+    SA_CLASS_CODE,
+    SA_NEGATION_IND,
+    ENTRY_SA_TEMPLATE_ID_EXTENSION_A,
+    ENTRY_SA_TEMPLATE_ID_ROOT_A,
+    ENTRY_SA_TEMPLATE_ID_ROOT_B,
+    SA_ID_ROOT,
+    SA_ID_EXT,
+    DOSE_NULL_FLAVOR,
+    DOSE_VALUE,
+    DOSE_UNIT,
+    MP_CLASS_CODE,
+    MP_ROOT,
+    MP_TEMPLATE_ID_ROOT_B,
+    MP_EXT,
+    MP_MM_NAME,
+    MM_TRANSLATION_CODE,
+    MP_XLATION_CODE_SYS_NAME,
+    LOT_NULL_FLAVOR,
+    LOT_NUMBER,
+    MANUFACTURER,
+    PERFORMER_TYPE_CODE,
+    AE_ID_EXT,
+    AE_ID_ROOT,
+    AE_ADDR_NULL,
+    AE_TELECOM_NULL,
+    PERSON_NAME,
+    REP_ORGANIZATION_ID_EXT,
+    REP_ORGANIZATION_ID_ROOT,
+    REP_ORGANIZATION_NAME,
+    REP_ORGANIZATION_TEL_USE,
+    REP_ORGANIZATION_TELEPHONE,
+    REP_ORGANIZATION_ADDR_USE,
+    REP_ORGANIZATION_STREET_ADDRESS,
+    REP_ORGANIZATION_CITY,
+    REP_ORGANIZATION_STATE,
+    REP_ORGANIZATION_ZIPCODE,
+    REP_ORGANIZATION_COUNTRY,
+    AUTHOR_TEMPLATE_ID_ROOT,
+    AUTHOR_TIME,
+    AUTHOR_EXT,
+    AUTHOR_NULL_FLAVOR,
+    ASSIGN_PERSON_NAME,
+    ER_TYPE_CODE,
+    ER_INVERSION_IND,
+    ER_CLASS_CODE,
+    ER_MOOD_CODE,
+    ER_TEMPLATE_ID_ROOT,
+    ER_ROOT_EXT,
+    ER_ID_ROOT,
+    ER_CODE,
+    ER_DISPLAY_NAME,
+    ER_CODE_SYSTEM_NAME,
+    ER_CODE_SYSTEM,
+    ER_STATUS_CODE,
+    XML_ROW_NUMBER,
+    XML_TS_LAST_MODIFY,
+    XML_TS_SCAN_TIME,
+    INSERT_DATETIME
+)
+SELECT
+    SECTION_TITLE,
+    FILENAME,
+    MRN,
+    SECTION_TEMPLATE_ID_EXTENSION_A,
+    SECTION_TEMPLATE_ID_ROOT_A,
+    SECTION_TEMPLATE_ID_ROOT_B,
+    IMMUNIZATION_DATE,
+    IMMUNIZATION_CODE,
+    CODE_SYSTEM,
+    CODE_SYSTEM_NAME,
+    DISPLAY_NAME,
+    MOOD_CODE,
+    STATUS_CODE,
+    ROUTE_CODE,
+    ROUTE_CODE_SYSTEM,
+    ROUTE_CODE_SYSTEM_NAME,
+    ROUTE_CODE_DISPLAY_NAME,
+    APPROACH_SITE_CODE,
+    APPROACH_SITE_CODE_SYSTEM,
+    APPROACH_SITE_CODE_SYSTEM_NAME,
+    APPROACH_SITE_CODE_DISPLAY_NAME,
+    SECTION_TYPE_CODE,
+    SECTION_DISPLAY_NAME,
+    SECTION_CODE_SYSTEM,
+    SECTION_CODE_SYSTEM_NAME,
+    ENTRY_TYPE_CODE,
+    SA_CLASS_CODE,
+    SA_NEGATION_IND,
+    ENTRY_SA_TEMPLATE_ID_EXTENSION_A,
+    ENTRY_SA_TEMPLATE_ID_ROOT_A,
+    ENTRY_SA_TEMPLATE_ID_ROOT_B,
+    SA_ID_ROOT,
+    SA_ID_EXT,
+    DOSE_NULL_FLAVOR,
+    DOSE_VALUE,
+    DOSE_UNIT,
+    MP_CLASS_CODE,
+    MP_ROOT,
+    MP_TEMPLATE_ID_ROOT_B,
+    MP_EXT,
+    MP_MM_NAME,
+    MM_TRANSLATION_CODE,
+    MP_XLATION_CODE_SYS_NAME,
+    LOT_NULL_FLAVOR,
+    LOT_NUMBER,
+    MANUFACTURER,
+    PERFORMER_TYPE_CODE,
+    AE_ID_EXT,
+    AE_ID_ROOT,
+    AE_ADDR_NULL,
+    AE_TELECOM_NULL,
+    PERSON_NAME,
+    REP_ORGANIZATION_ID_EXT,
+    REP_ORGANIZATION_ID_ROOT,
+    REP_ORGANIZATION_NAME,
+    REP_ORGANIZATION_TEL_USE,
+    REP_ORGANIZATION_TELEPHONE,
+    REP_ORGANIZATION_ADDR_USE,
+    REP_ORGANIZATION_STREET_ADDRESS,
+    REP_ORGANIZATION_CITY,
+    REP_ORGANIZATION_STATE,
+    REP_ORGANIZATION_ZIPCODE,
+    REP_ORGANIZATION_COUNTRY,
+    AUTHOR_TEMPLATE_ID_ROOT,
+    AUTHOR_TIME,
+    AUTHOR_EXT,
+    AUTHOR_NULL_FLAVOR,
+    ASSIGN_PERSON_NAME,
+    ER_TYPE_CODE,
+    ER_INVERSION_IND,
+    ER_CLASS_CODE,
+    ER_MOOD_CODE,
+    ER_TEMPLATE_ID_ROOT,
+    ER_ROOT_EXT,
+    ER_ID_ROOT,
+    ER_CODE,
+    ER_DISPLAY_NAME,
+    ER_CODE_SYSTEM_NAME,
+    ER_CODE_SYSTEM,
+    ER_STATUS_CODE,
+    XML_DATA_ROW_NUM,
+    XML_DATA_TS_LAST_MODIFY,
+    XML_DATA_SCAN_TIME,
+    CURRENT_TIMESTAMP()
+FROM QUALITY.CCD_IMMUNIZATIONS_VW
+`;
+
+
+
+//-----------------------------------------
+//-- SQL to load QUALITY.CCD_IMMUNIZATIONS - END
+//-----------------------------------------
+
+
+
+
+    try
+    {
+    
+//---------------------------------------
+//-- Lookup context details
+//---------------------------------------
+
+        var lookupSet = snowflake.execute({
+            sqlText: lookupCommand, 
+            binds: [DATA_FLOW_NAME,stepProcedureName]
+        });        
+
+        // check and handle for empty response
+        if(!lookupSet.next())
+        {     
+            throw "Unable to lookup data flow context from UTIL.DATA_FLOW_CONTROL_TABLE";
+        }
+
+        dataDomainName = lookupSet.getColumnValueAsString(''DATA_DOMAIN_NAME'');    
+        stepOrderNumber = lookupSet.getColumnValue(''STEP_ORDER_NUMBER'');
+
+//---------------------------------------
+//-- Log Execution Start
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logStartCommand, 
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+
+
+
+//---------------------------------------
+//-- Step logic goes here - STARTING
+//--------------------------------------- 
+    
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteImmunizationsCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log record deletion stats to LOGDATA.TABLE_LOAD_HISTORY
+    var sqlLogCommandDel = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT,RESULT_TEXT, SQL_STATEMENT)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10);
+`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommandDel,
+        binds: [RUN_ID, "QUALITY.CCD_IMMUNIZATIONS", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(), 
+                sfStatement.getNumRowsDeleted(), 
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+
+
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlInsertCcdImmunizationsCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+    
+    // Log Insert results to LOGDATA.TABLE_LOAD_HISTORY
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [RUN_ID, "QUALITY.CCD_IMMUNIZATIONS", "TABLE", startTime, endTime, 
+		        sfStatement.getNumRowsInserted(), 
+				sfStatement.getNumRowsUpdated(),				
+				result, sfStatement.getSqlText()]
+        }
+    );    
+
+
+//---------------------------------------
+//-- Step logic goes here - ENDING
+//---------------------------------------
+
+
+
+
+
+//---------------------------------------
+//-- Log Execution Succeeded
+//---------------------------------------
+
+        snowflake.execute({
+            sqlText: logEndCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime]
+        });
+        
+        return "Success";
+    }
+    catch (err)    
+    {
+    
+//---------------------------------------
+//-- Error handling / Log Execution Failed
+//---------------------------------------
+
+        if(err.code !== undefined)
+        { 
+            var errCode = err.code; 
+            var errState = err.state;
+            var errMessage = err.message;
+            var errTrace = err.stackTraceTxt;
+        }
+        else 
+        { 
+            var errCode = "";
+            var errState = "";
+            var errMessage = err;
+            var errTrace = "";
+        }
+            
+        snowflake.execute({
+            sqlText: logErrorCommand,
+            binds: [RUN_ID,DATA_FLOW_NAME,dataDomainName,stepOrderNumber,stepProcedureName,startTime,errCode,errState,errMessage,errTrace]
+        });  
+
+        throw err;
+    }        
+';

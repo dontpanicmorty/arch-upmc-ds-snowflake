@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW DWOAO.CutActivityFile AS 
+SELECT * FROM CDC_Merge.dbo.CutActivityFile WHERE TPADIVISION !='0002';
+;

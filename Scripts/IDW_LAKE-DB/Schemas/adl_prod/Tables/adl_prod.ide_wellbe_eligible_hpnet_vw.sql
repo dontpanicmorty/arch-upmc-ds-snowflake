@@ -1,0 +1,24 @@
+CREATE OR REPLACE TABLE ADL_PROD.IDE_WELLBE_ELIGIBLE_HPNET_VW
+(
+MMI                            VARCHAR,
+MEMBER_NBR                     VARCHAR,
+MEDICARE_ID                    VARCHAR,
+EPIC_MRN                       VARCHAR,
+HORIZON_HOMECARE_ID            VARCHAR,
+EMPI_ID                        VARCHAR,
+LAST_NAME                      VARCHAR,
+FIRST_NAME                     VARCHAR,
+DOB                      TIMESTAMP_NTZ,
+NEW_ELIGIBILITY                 NUMBER,
+ELIGIBILITY_DATE         TIMESTAMP_NTZ,
+ELIGIBILITY_SOURCE             VARCHAR,
+OVERALL_STATUS                 VARCHAR,
+ENROLLMENT_DATE          TIMESTAMP_NTZ,
+DISENROLLMENT_DATE       TIMESTAMP_NTZ,
+DISENROLLMENT_REASON           VARCHAR,
+DISENROLLMENT_SOURCE           VARCHAR,
+ACTIVE_FLAG                     NUMBER,
+LOAD_DATE                TIMESTAMP_NTZ
+)
+COMMENT='Created for ADL_PROD Migration'
+;

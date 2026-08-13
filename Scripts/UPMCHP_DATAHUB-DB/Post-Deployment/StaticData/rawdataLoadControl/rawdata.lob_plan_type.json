@@ -1,0 +1,16 @@
+{ 
+    "isActive": true, 
+    "isCloneFlag": true, 
+    "isCopyIntoFlag": false, 
+    "dataDomain": "member", 
+    "dataSourceName": "UPMC-HP", 
+    "targetTableName": "RAWDATA.LOB_PLAN_TYPE", 
+    "sourceCloneTableName": "IDAP_LAKE.NETWORK.LOB_PLAN_TYPE", 
+    "sourceFileStageName": null, 
+    "sourceFilePath": null, 
+    "sourceFileFormatName": null, 
+    "sourceFilePattern": null, 
+    "sourceFileDelimitedColumnCount": null, 
+    "sourceFileFixedWidthMapping": null, 
+    "validateDataFlag": null
+} 

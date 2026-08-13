@@ -1,0 +1,21 @@
+{
+    "outputSchema": "PRICING",
+    "outputTable": "HEALTHSPARQ_SHOPPABLE_SERVICES",
+    "hasHeader": true,
+    "hasTrailer": false,
+    "fileType": "delimited",
+    "headerFormat": "BUSINESS_FILE_FORMAT_HEADER",
+    "fileFormat": "BUSINESS_FILE_FORMAT",
+    "truncReload": true,
+    "mappingTypes": {
+        "all": {
+        "mappingContents": [
+            {
+            "columnOrder": 1,
+            "inputField": "CODE",
+            "outputField": "PROCEDURE_CODE"
+            }      
+        ]
+        }
+    }
+}

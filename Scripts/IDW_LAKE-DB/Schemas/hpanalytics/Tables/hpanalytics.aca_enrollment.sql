@@ -1,0 +1,35 @@
+CREATE OR REPLACE TABLE HPANALYTICS.ACA_ENROLLMENT
+(
+MASTER_MEMBER_ID                 VARCHAR,
+MEMBER_NBR                       VARCHAR,
+MEMBERSHIP_DATE            TIMESTAMP_NTZ,
+NAME_LAST                        VARCHAR,
+NAME_FIRST                       VARCHAR,
+NAME_LAST_FIRST                  VARCHAR,
+BIRTH_DATE                 TIMESTAMP_NTZ,
+GENDER_CODE                      VARCHAR,
+AGE                               NUMBER(33,5),
+ADDRESS_ZIP_CODE_BASE            VARCHAR,
+PLAN_NBR                         VARCHAR,
+BUSINESS_UNIT_CODE               VARCHAR,
+BUSINESS_UNIT_DESC               VARCHAR,
+ON_VS_OFF                        VARCHAR,
+NETWORK_NAME                     VARCHAR,
+METAL_LEVEL                      VARCHAR,
+COST_SHARE_TYPE                  VARCHAR,
+MARKET_SEGMENT                   VARCHAR,
+TOBACCO_INDICATOR                VARCHAR,
+PREMIUM_AMOUNT_TOTAL              NUMBER(33,5),
+QUALITY_HEALTH_PLAN_ID           VARCHAR,
+HIOS_ID                          VARCHAR,
+SELECTED_VS_IMPUTED              VARCHAR,
+SITE_ID                          VARCHAR,
+OFFICE_NAME                      VARCHAR,
+TAX_ID                           VARCHAR,
+PROVIDER_ID                      VARCHAR,
+PROVIDER_NAME                    VARCHAR,
+PROVIDER_NPI                     VARCHAR,
+LAST_UPDATED               TIMESTAMP_NTZ
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

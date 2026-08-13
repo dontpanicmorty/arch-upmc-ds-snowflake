@@ -1,0 +1,39 @@
+CREATE OR REPLACE PROCEDURE INFA.SPU_MERGE_DIM_RIDER_FROM_STAGE()
+RETURNS VARCHAR NOT NULL
+language javascript
+AS
+$$
+var result = "";
+var sql_command = "";
+sql_command += "MERGE INTO DIMDATA.DIM_RIDER AS T";
+sql_command += " USING INFA.DIM_RIDER AS S";
+sql_command += " ON (T.DIM_RIDER_KEY=S.DIM_RIDER_KEY)";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'D' THEN DELETE";
+sql_command += " WHEN MATCHED AND S.CONVERT_IND = 'U' THEN UPDATE";
+sql_command += " SET T.MD5_VALUE_TEXT=S.MD5_VALUE_TEXT, T.INSERT_DATETIME=S.INSERT_DATETIME, T.LAST_UPDATED_DATETIME=S.LAST_UPDATED_DATETIME, T.TPA_CLIENT_ID = S.TPA_CLIENT_ID, T.TPA_ID = S.TPA_ID, T.TPA_DIV_ID = S.TPA_DIV_ID, T.RIDER_CODE = S.RIDER_CODE, T.RIDER_EFFECTIVE_DATE = S.RIDER_EFFECTIVE_DATE, T.RIDER_TERMINATION_DATE = S.RIDER_TERMINATION_DATE, T.RIDER_TYPE_CODE = S.RIDER_TYPE_CODE, T.RIDER_DESC = S.RIDER_DESC, T.GROUP_NBR = S.GROUP_NBR, T.SUB_GROUP_NBR = S.SUB_GROUP_NBR";
+sql_command += " WHEN NOT MATCHED THEN INSERT";
+sql_command += " (T.DIM_RIDER_KEY, T.MD5_VALUE_TEXT, T.INSERT_DATETIME, T.LAST_UPDATED_DATETIME, T.TPA_CLIENT_ID, T.TPA_ID, T.TPA_DIV_ID, T.RIDER_CODE, T.RIDER_EFFECTIVE_DATE, T.RIDER_TERMINATION_DATE, T.RIDER_TYPE_CODE, T.RIDER_DESC, T.GROUP_NBR, T.SUB_GROUP_NBR)";
+sql_command += " VALUES";
+sql_command += " (S.DIM_RIDER_KEY, S.MD5_VALUE_TEXT, S.INSERT_DATETIME, S.LAST_UPDATED_DATETIME, S.TPA_CLIENT_ID, S.TPA_ID, S.TPA_DIV_ID, S.RIDER_CODE, S.RIDER_EFFECTIVE_DATE, S.RIDER_TERMINATION_DATE, S.RIDER_TYPE_CODE, S.RIDER_DESC, S.GROUP_NBR, S.SUB_GROUP_NBR)";
+
+try 
+    {
+        var statement = snowflake.createStatement({sqlText: sql_command});
+        var resultSet = statement.execute();
+        resultSet.next();
+        result = "Succeeded";
+        result += "\n RowsInserted: " + resultSet.getColumnValueAsString("number of rows inserted");
+        result += "\n RowsUpdated: " + resultSet.getColumnValueAsString("number of rows updated");
+        result += "\n RowsDeleted: " + resultSet.getColumnValueAsString("number of rows deleted");
+        
+    }
+catch (err)
+    {
+      result = "Failed: Code: " + err.code + "\n  State: " + err.state;
+      result += "\n  Message: " + err.message;
+      result += "\nStack Trace:\n" + err.stackTraceTxt;
+      throw result;
+    }
+return result;
+$$
+;

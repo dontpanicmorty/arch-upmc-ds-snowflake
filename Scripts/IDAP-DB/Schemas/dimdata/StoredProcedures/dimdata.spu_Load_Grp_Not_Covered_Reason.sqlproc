@@ -1,0 +1,145 @@
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_GRP_NOT_COVERED_REASON()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.GRP_NOT_COVERED_REASON`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.GRP_NOT_COVERED_REASON AS tgt
+USING (
+        SELECT DISTINCT
+        FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,GRP_NOT_COVERED_REASON_KEY
+        ,DIM_NOT_COVERED_REASON_KEY
+        ,NOT_COVERED_REASON_POSITION_NBR
+        FROM STAGEDATA.GRP_NOT_COVERED_REASON_SELECT_VW
+    MINUS
+        SELECT
+        IS_LOGICAL_DELETE_FLAG
+        ,GRP_NOT_COVERED_REASON_KEY
+        ,DIM_NOT_COVERED_REASON_KEY
+        ,NOT_COVERED_REASON_POSITION_NBR
+        FROM DIMDATA.GRP_NOT_COVERED_REASON
+
+    ) AS src
+ON (tgt.GRP_NOT_COVERED_REASON_KEY = src.GRP_NOT_COVERED_REASON_KEY
+AND tgt.DIM_NOT_COVERED_REASON_KEY = src.DIM_NOT_COVERED_REASON_KEY
+AND tgt.NOT_COVERED_REASON_POSITION_NBR = src.NOT_COVERED_REASON_POSITION_NBR)
+
+WHEN MATCHED
+
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE
+
+WHEN NOT MATCHED
+
+THEN INSERT 
+    (
+        GRP_NOT_COVERED_REASON_KEY
+        ,INSERT_DATETIME
+        ,LAST_UPDATED_DATETIME
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIM_NOT_COVERED_REASON_KEY
+        ,NOT_COVERED_REASON_POSITION_NBR
+    )
+    VALUES
+    (
+        src.GRP_NOT_COVERED_REASON_KEY
+        ,CURRENT_TIMESTAMP()
+        ,CURRENT_TIMESTAMP()
+        ,FALSE
+        ,src.DIM_NOT_COVERED_REASON_KEY
+        ,src.NOT_COVERED_REASON_POSITION_NBR
+    )
+;`;
+
+// set delete command which will update to is_logical_delete to true
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.GRP_NOT_COVERED_REASON
+SET IS_LOGICAL_DELETE_FLAG = TRUE, LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+FROM (SELECT GRP_FROM.GRP_NOT_COVERED_REASON_KEY, GRP_FROM.DIM_NOT_COVERED_REASON_KEY, GRP_FROM.NOT_COVERED_REASON_POSITION_NBR
+    FROM DIMDATA.GRP_NOT_COVERED_REASON GRP_FROM
+        LEFT OUTER JOIN (SELECT DISTINCT GRP_NOT_COVERED_REASON_KEY, DIM_NOT_COVERED_REASON_KEY, NOT_COVERED_REASON_POSITION_NBR
+            FROM STAGEDATA.GRP_NOT_COVERED_REASON_SELECT_VW) STAGE_DATA
+        ON (STAGE_DATA.GRP_NOT_COVERED_REASON_KEY = GRP_FROM.GRP_NOT_COVERED_REASON_KEY
+        AND STAGE_DATA.DIM_NOT_COVERED_REASON_KEY = GRP_FROM.DIM_NOT_COVERED_REASON_KEY
+        AND STAGE_DATA.NOT_COVERED_REASON_POSITION_NBR = GRP_FROM.NOT_COVERED_REASON_POSITION_NBR)
+    WHERE STAGE_DATA.GRP_NOT_COVERED_REASON_KEY IS NULL
+    AND GRP_FROM.GRP_NOT_COVERED_REASON_KEY > 999
+    AND GRP_FROM.IS_LOGICAL_DELETE_FLAG = FALSE
+    ) DELETES
+WHERE GRP_NOT_COVERED_REASON.GRP_NOT_COVERED_REASON_KEY = DELETES.GRP_NOT_COVERED_REASON_KEY
+AND GRP_NOT_COVERED_REASON.DIM_NOT_COVERED_REASON_KEY = DELETES.DIM_NOT_COVERED_REASON_KEY
+AND GRP_NOT_COVERED_REASON.NOT_COVERED_REASON_POSITION_NBR = DELETES.NOT_COVERED_REASON_POSITION_NBR
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try 
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+return result;
+$$
+;

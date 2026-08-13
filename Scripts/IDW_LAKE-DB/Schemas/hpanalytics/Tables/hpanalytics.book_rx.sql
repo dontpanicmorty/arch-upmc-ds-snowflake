@@ -1,0 +1,14 @@
+CREATE OR REPLACE TABLE HPANALYTICS.BOOK_RX
+(
+CORPORATION_ID           VARCHAR,
+GROUP_ID                 VARCHAR,
+DIVISION_ID              VARCHAR,
+PLAN_NBR                 VARCHAR,
+SERVICE_DATE       TIMESTAMP_NTZ,
+PAYMENT_DATE       TIMESTAMP_NTZ,
+RX_PAID                   NUMBER(33,5),
+RX                        NUMBER(33,5),
+DAY_SUPPLY_CNT            NUMBER(33,5)
+)
+COMMENT='Created for HPANALYTICS Migration'
+;

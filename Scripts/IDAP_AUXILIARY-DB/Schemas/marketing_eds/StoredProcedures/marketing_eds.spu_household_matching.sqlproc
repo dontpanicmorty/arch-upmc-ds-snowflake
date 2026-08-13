@@ -1,0 +1,270 @@
+CREATE OR REPLACE PROCEDURE MARKETING_EDS.SPU_HOUSEHOLD_MATCHING()
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+    function runCmd(sqlText) {
+        var stmt = snowflake.createStatement({sqlText: sqlText});
+        return stmt.execute();
+    }
+
+    var d = new Date();
+    var datePart = d.toISOString().split('T')[0].replace(/-/g, '');
+    var timePart = d.toTimeString().split(' ')[0].replace(/:/g, ''); 
+    var JOB_ID = 'HH_BRIDGE_' + datePart + '_' + timePart;
+
+    // Open JOB_LOG
+    snowflake.execute({
+        sqlText: `INSERT INTO LOGDATA.JOB_LOG (JOB_ID, START_TIME, PROCEDURE_NAME)
+                  VALUES (:1, CURRENT_TIMESTAMP(), 'MARKETING_EDS.SPU_HOUSEHOLD_MATCHING')`,
+        binds: [JOB_ID]
+    });
+
+    var startTime = new Date().toISOString().replace('T', ' ').replace('Z', '');
+    var targetTableName = 'HOUSEHOLD_BRIDGE';
+    var finalSqlText = '';
+
+    var sqlLogCommand = `
+        INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, 
+        RESULT_TEXT, SQL_STATEMENT, QUERY_ID, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, 
+        ERROR_STACK_TRACE_TEXT)
+        VALUES (:1, :2, :3, :4::timestamp_ltz, :5::timestamp_ltz, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15);
+    `;
+
+    try {
+                
+        runCmd(`TRUNCATE TABLE MARKETING_EDS.HOUSEHOLD_BRIDGE;`);
+
+        finalSqlText = `INSERT INTO MARKETING_EDS.HOUSEHOLD_BRIDGE (HOUSEHOLD_KEY, INDIVIDUAL_KEY, MMI_STATUS, MATCH_TYPE, PRIO, INSERT_DATETIME)
+WITH STEP1 AS (
+    SELECT
+        DENSE_RANK() OVER (ORDER BY CONTRACT_NBR) AS HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        '1-CONTRACT MATCH' AS MATCH_TYPE,
+        1 AS PRIO,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+    FROM MARKETING_EDS.HOUSEHOLD_SOURCE_VW
+),
+STEP2 AS (
+    SELECT
+        HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        MAX(MATCH_TYPE) AS MATCH_TYPE,
+        MAX(PRIO) AS PRIO,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+    FROM (
+        SELECT
+            COALESCE(MIN(STEP1_B.HOUSEHOLD_KEY) OVER (PARTITION BY STEP1_A.HOUSEHOLD_KEY), STEP1_A.HOUSEHOLD_KEY) AS HOUSEHOLD_KEY,
+            STEP1_A.INDIVIDUAL_KEY,
+            CASE
+                WHEN STEP1_A.HOUSEHOLD_KEY > STEP1_B.HOUSEHOLD_KEY THEN '2-MAIDRESPPARTY MATCH'
+                ELSE STEP1_A.MATCH_TYPE
+            END AS MATCH_TYPE,
+            CASE
+                WHEN STEP1_A.HOUSEHOLD_KEY > STEP1_B.HOUSEHOLD_KEY THEN 2
+                ELSE STEP1_A.PRIO
+            END AS PRIO,
+            STEP1_A.CONTRACT_NBR,
+            STEP1_A.MAIDRESPPARTY,
+            STEP1_A.ADDRESSLASTNAME,
+            STEP1_A.ADDRESS,
+            STEP1_A.MMI_STATUS,
+            STEP1_A.LINE_OF_BUSINESS,
+            STEP1_A.ADDRESS_CNT
+        FROM STEP1 AS STEP1_A
+        LEFT JOIN STEP1 AS STEP1_B ON 1 = 1
+            AND UPPER(STEP1_A.MAIDRESPPARTY) = UPPER(STEP1_B.MAIDRESPPARTY)
+            AND STEP1_B.MAIDRESPPARTY IS NOT NULL
+            AND STEP1_B.MAIDRESPPARTY NOT ILIKE '%UNKNOWN%'
+            AND STEP1_B.MAIDRESPPARTY != ''
+            AND STEP1_B.LINE_OF_BUSINESS IN ('MA', 'CHIP')
+    )
+    GROUP BY
+        HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+),
+STEP3 AS (
+    SELECT
+        HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        MAX(MATCH_TYPE) AS MATCH_TYPE,
+        MAX(PRIO) AS PRIO,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+    FROM (
+        SELECT
+            COALESCE(MIN(STEP2_B.HOUSEHOLD_KEY) OVER (PARTITION BY STEP2_A.HOUSEHOLD_KEY), STEP2_A.HOUSEHOLD_KEY) AS HOUSEHOLD_KEY,
+            STEP2_A.INDIVIDUAL_KEY,
+            CASE
+                WHEN STEP2_A.HOUSEHOLD_KEY > STEP2_B.HOUSEHOLD_KEY THEN '3-ADDRESSLASTNAME MATCH'
+                ELSE STEP2_A.MATCH_TYPE
+            END AS MATCH_TYPE,
+            CASE
+                WHEN STEP2_A.HOUSEHOLD_KEY > STEP2_B.HOUSEHOLD_KEY THEN 3
+                ELSE STEP2_A.PRIO
+            END AS PRIO,
+            STEP2_A.CONTRACT_NBR,
+            STEP2_A.MAIDRESPPARTY,
+            STEP2_A.ADDRESSLASTNAME,
+            STEP2_A.ADDRESS,
+            STEP2_A.MMI_STATUS,
+            STEP2_A.LINE_OF_BUSINESS,
+            STEP2_A.ADDRESS_CNT
+        FROM STEP2 AS STEP2_A
+        LEFT JOIN STEP2 AS STEP2_B ON 1 = 1
+            AND UPPER(STEP2_A.ADDRESSLASTNAME) = UPPER(STEP2_B.ADDRESSLASTNAME)
+            AND STEP2_B.ADDRESSLASTNAME IS NOT NULL
+            AND STEP2_B.ADDRESSLASTNAME != ''
+            AND STEP2_B.ADDRESS_CNT <= 10
+    )
+    GROUP BY
+        HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+),
+STEP4 AS (
+    SELECT
+        HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        MAX(MATCH_TYPE) AS MATCH_TYPE,
+        MAX(PRIO) AS PRIO,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+    FROM (
+        SELECT
+            COALESCE(MIN(STEP3_B.HOUSEHOLD_KEY) OVER (PARTITION BY STEP3_A.HOUSEHOLD_KEY), STEP3_A.HOUSEHOLD_KEY) AS HOUSEHOLD_KEY,
+            STEP3_A.INDIVIDUAL_KEY,
+            CASE
+                WHEN STEP3_A.HOUSEHOLD_KEY > STEP3_B.HOUSEHOLD_KEY THEN '4-ADDRESS MATCH'
+                ELSE STEP3_A.MATCH_TYPE
+            END AS MATCH_TYPE,
+            CASE
+                WHEN STEP3_A.HOUSEHOLD_KEY > STEP3_B.HOUSEHOLD_KEY THEN 4
+                ELSE STEP3_A.PRIO
+            END AS PRIO,
+            STEP3_A.CONTRACT_NBR,
+            STEP3_A.MAIDRESPPARTY,
+            STEP3_A.ADDRESSLASTNAME,
+            STEP3_A.ADDRESS,
+            STEP3_A.MMI_STATUS,
+            STEP3_A.LINE_OF_BUSINESS,
+            STEP3_A.ADDRESS_CNT
+        FROM STEP3 AS STEP3_A
+        LEFT JOIN STEP3 AS STEP3_B ON 1 = 1
+            AND UPPER(STEP3_A.ADDRESS) = UPPER(STEP3_B.ADDRESS)
+            AND STEP3_B.ADDRESS IS NOT NULL
+            AND STEP3_B.ADDRESS != ''
+            AND STEP3_B.ADDRESS_CNT <= 10
+    )
+    GROUP BY
+        HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        CONTRACT_NBR,
+        MAIDRESPPARTY,
+        ADDRESSLASTNAME,
+        ADDRESS,
+        MMI_STATUS,
+        LINE_OF_BUSINESS,
+        ADDRESS_CNT
+),
+STEP5 AS (
+    SELECT 
+        DENSE_RANK() OVER (ORDER BY HOUSEHOLD_KEY) AS HOUSEHOLD_KEY,
+        INDIVIDUAL_KEY,
+        MMI_STATUS,
+        MATCH_TYPE,
+        PRIO
+    FROM STEP4
+)
+SELECT
+    HOUSEHOLD_KEY,
+    INDIVIDUAL_KEY,
+    MMI_STATUS,
+    MATCH_TYPE,
+    PRIO,
+    :1
+FROM STEP5;`;
+
+        var finalStatement = snowflake.createStatement({sqlText: finalSqlText, binds: [startTime]});
+        finalStatement.execute();
+
+        var endTime = new Date().toISOString();
+        var insertCount = finalStatement.getNumRowsInserted();
+        var queryId = finalStatement.getQueryId();
+        var resultText = "Succeeded. Produced " + insertCount + " rows.";
+
+        // Write Success to TABLE_LOAD_HISTORY
+        snowflake.execute({
+            sqlText: sqlLogCommand,
+            binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, insertCount, 0, 
+                    0, resultText, finalSqlText, queryId,      null, null, null, null]
+        });
+
+        // Close JOB_LOG with success time
+        snowflake.execute({
+            sqlText: `UPDATE LOGDATA.JOB_LOG SET END_TIME = CURRENT_TIMESTAMP() 
+                      WHERE JOB_ID = :1`,
+            binds: [JOB_ID]
+        });
+
+        return resultText;
+
+    } catch(err) {
+
+        var endTime = new Date().toISOString();
+        var resultText = "Failed: Code: " + err.code + "\n  State: " + err.state + "\n  Message: " + err.message;
+        var qId = (typeof finalStatement !== 'undefined' && finalStatement) ? finalStatement.getQueryId() : null;
+
+        // Write Failure to TABLE_LOAD_HISTORY
+        snowflake.execute({
+            sqlText: sqlLogCommand,
+            binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, 0, 0, 0, resultText, finalSqlText, qId, err.code, err.state, err.message, err.stackTraceTxt]
+        });
+
+        // Close JOB_LOG with failure time
+        snowflake.execute({
+            sqlText: `UPDATE LOGDATA.JOB_LOG SET END_TIME = CURRENT_TIMESTAMP() 
+                      WHERE JOB_ID = :1`,
+            binds: [JOB_ID]
+        });
+
+        throw resultText;
+    }
+$$;

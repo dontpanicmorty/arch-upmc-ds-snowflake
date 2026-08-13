@@ -1,0 +1,345 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_SAT_RIDER_DETAIL(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.SAT_RIDER_DETAIL`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.SAT_RIDER_DETAIL_TMP
+AS
+SELECT
+*
+,UTIL.FXN_ARRAY_HASH([
+    RIDER_DESC,
+    RIDER_TERMINATION_DATE,
+    TIER_METHOD_CODE,
+    RIDER_AMT_1,
+    RIDER_AMT_2,
+    RIDER_AMT_3,
+    RIDER_AMT_4,
+    RIDER_AMT_5,
+    RIDER_AMT_6,
+    RIDER_AMT_7,
+    RIDER_AMT_8,
+    RIDER_AMT_9,
+    RIDER_AMT_10,
+    RIDER_TYPE_CODE,
+    AR_CASH_GL_DISTRIBUTION_CODE,
+    COMPANY_CODE,
+    ELIGIBILITY_RULE_CODE,
+    GL_DISTRIBUTION_CODE,
+    FORMULARY_CODE])
+AS HASH_DIFF
+
+FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand = 
+`    
+MERGE INTO HUBDATA.SAT_RIDER_DETAIL TGT
+USING (
+    SELECT    
+        TPA_CLIENT_ID,
+        TPA_ID,
+        TPA_DIV_ID,
+        RIDER_CODE,
+        RIDER_EFFECTIVE_DATE,
+        RIDER_DESC,
+        RIDER_TERMINATION_DATE,
+        TIER_METHOD_CODE,
+        RIDER_AMT_1,
+        RIDER_AMT_2,
+        RIDER_AMT_3,
+        RIDER_AMT_4,
+        RIDER_AMT_5,
+        RIDER_AMT_6,
+        RIDER_AMT_7,
+        RIDER_AMT_8,
+        RIDER_AMT_9,
+        RIDER_AMT_10,
+        RIDER_TYPE_CODE,
+        AR_CASH_GL_DISTRIBUTION_CODE,
+        COMPANY_CODE,
+        ELIGIBILITY_RULE_CODE,
+        GL_DISTRIBUTION_CODE,
+        GROUP_NBR,
+        SUB_GROUP_NBR,
+        FORMULARY_CODE,
+        HUB_RIDER_HKEY,
+        HASH_DIFF
+    FROM STAGEDATA.SAT_RIDER_DETAIL_TMP
+) SRC  
+ON (TGT.HUB_RIDER_HKEY = SRC.HUB_RIDER_HKEY 
+AND TGT.RIDER_EFFECTIVE_DATE = SRC.RIDER_EFFECTIVE_DATE
+AND TGT.GROUP_NBR = SRC.GROUP_NBR
+AND TGT.SUB_GROUP_NBR = SRC.SUB_GROUP_NBR
+AND TGT.HASH_DIFF = SRC.HASH_DIFF
+AND TGT.IS_CURRENT_ROW_FLAG = TRUE) 
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        HUB_RIDER_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        HASH_DIFF,
+        RIDER_EFFECTIVE_DATE,
+        RIDER_DESC,
+        RIDER_TERMINATION_DATE,
+        TIER_METHOD_CODE,
+        RIDER_AMT_1,
+        RIDER_AMT_2,
+        RIDER_AMT_3,
+        RIDER_AMT_4,
+        RIDER_AMT_5,
+        RIDER_AMT_6,
+        RIDER_AMT_7,
+        RIDER_AMT_8,
+        RIDER_AMT_9,
+        RIDER_AMT_10,
+        RIDER_TYPE_CODE,
+        AR_CASH_GL_DISTRIBUTION_CODE,
+        COMPANY_CODE,
+        ELIGIBILITY_RULE_CODE,
+        GL_DISTRIBUTION_CODE,
+        GROUP_NBR,
+        SUB_GROUP_NBR,
+        FORMULARY_CODE
+    )
+ VALUES 
+    (
+        SRC.HUB_RIDER_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+        SRC.HASH_DIFF,
+        SRC.RIDER_EFFECTIVE_DATE,
+        SRC.RIDER_DESC,
+        SRC.RIDER_TERMINATION_DATE,
+        SRC.TIER_METHOD_CODE,
+        SRC.RIDER_AMT_1,
+        SRC.RIDER_AMT_2,
+        SRC.RIDER_AMT_3,
+        SRC.RIDER_AMT_4,
+        SRC.RIDER_AMT_5,
+        SRC.RIDER_AMT_6,
+        SRC.RIDER_AMT_7,
+        SRC.RIDER_AMT_8,
+        SRC.RIDER_AMT_9,
+        SRC.RIDER_AMT_10,
+        SRC.RIDER_TYPE_CODE,
+        SRC.AR_CASH_GL_DISTRIBUTION_CODE,
+        SRC.COMPANY_CODE,
+        SRC.ELIGIBILITY_RULE_CODE,
+        SRC.GL_DISTRIBUTION_CODE,
+        SRC.GROUP_NBR,
+        SRC.SUB_GROUP_NBR,
+        SRC.FORMULARY_CODE
+    )
+;`;
+    
+// Create update statement to be executed.
+var sqlUpdateCommand=
+
+`
+UPDATE HUBDATA.SAT_RIDER_DETAIL TGT SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, CURRENT_TIMESTAMP())
+    , IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_RIDER_HKEY, RIDER_EFFECTIVE_DATE, GROUP_NBR, SUB_GROUP_NBR, ROW_EFFECTIVE_DATETIME) IN (
+    SELECT HUB_RIDER_HKEY, RIDER_EFFECTIVE_DATE, GROUP_NBR, SUB_GROUP_NBR, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            SAT_RIDER_DETAIL.HUB_RIDER_HKEY,
+            SAT_RIDER_DETAIL.RIDER_EFFECTIVE_DATE,
+            SAT_RIDER_DETAIL.GROUP_NBR,
+            SAT_RIDER_DETAIL.SUB_GROUP_NBR,
+            SAT_RIDER_DETAIL.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY SAT_RIDER_DETAIL.HUB_RIDER_HKEY, 
+                                            SAT_RIDER_DETAIL.RIDER_EFFECTIVE_DATE,
+                                            SAT_RIDER_DETAIL.GROUP_NBR,
+                                            SAT_RIDER_DETAIL.SUB_GROUP_NBR 
+                                ORDER BY SAT_RIDER_DETAIL.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.SAT_RIDER_DETAIL
+            JOIN STAGEDATA.SAT_RIDER_DETAIL_TMP
+                ON (SAT_RIDER_DETAIL_TMP.HUB_RIDER_HKEY = SAT_RIDER_DETAIL.HUB_RIDER_HKEY
+                AND SAT_RIDER_DETAIL_TMP.RIDER_EFFECTIVE_DATE = SAT_RIDER_DETAIL.RIDER_EFFECTIVE_DATE
+                AND SAT_RIDER_DETAIL_TMP.GROUP_NBR = SAT_RIDER_DETAIL.GROUP_NBR
+                AND SAT_RIDER_DETAIL_TMP.SUB_GROUP_NBR = SAT_RIDER_DETAIL.SUB_GROUP_NBR)
+        WHERE SAT_RIDER_DETAIL.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+)
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.SAT_RIDER_DETAIL
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_RIDER_HKEY, RIDER_EFFECTIVE_DATE, GROUP_NBR, SUB_GROUP_NBR, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    SAT_RIDER_DETAIL.HUB_RIDER_HKEY,
+    SAT_RIDER_DETAIL.RIDER_EFFECTIVE_DATE,
+    SAT_RIDER_DETAIL.GROUP_NBR,
+    SAT_RIDER_DETAIL.SUB_GROUP_NBR,
+    SAT_RIDER_DETAIL.ROW_EFFECTIVE_DATETIME
+
+    FROM HUBDATA.SAT_RIDER_DETAIL
+        JOIN HUBDATA.HUB_RIDER
+            ON (HUB_RIDER.HUB_RIDER_HKEY = SAT_RIDER_DETAIL.HUB_RIDER_HKEY)
+        LEFT OUTER JOIN STAGEDATA.SAT_RIDER_DETAIL_TMP
+                ON (SAT_RIDER_DETAIL_TMP.HUB_RIDER_HKEY = SAT_RIDER_DETAIL.HUB_RIDER_HKEY
+                AND SAT_RIDER_DETAIL_TMP.RIDER_EFFECTIVE_DATE = SAT_RIDER_DETAIL.RIDER_EFFECTIVE_DATE
+                AND SAT_RIDER_DETAIL_TMP.GROUP_NBR = SAT_RIDER_DETAIL.GROUP_NBR
+                AND SAT_RIDER_DETAIL_TMP.SUB_GROUP_NBR = SAT_RIDER_DETAIL.SUB_GROUP_NBR)
+    WHERE HUB_RIDER.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM STAGEDATA.SAT_RIDER_DETAIL_TMP)
+    AND SAT_RIDER_DETAIL.IS_CURRENT_ROW_FLAG = TRUE
+    AND SAT_RIDER_DETAIL_TMP.HUB_RIDER_HKEY IS NULL
+)
+;`;
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    targetTableName = `STAGEDATA.SAT_RIDER_DETAIL_TMP`;
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Merge Command
+    targetTableName = `HUBDATA.SAT_RIDER_DETAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Update Command
+    targetTableName = `HUBDATA.SAT_RIDER_DETAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Delete Command
+    targetTableName = `HUBDATA.SAT_RIDER_DETAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;

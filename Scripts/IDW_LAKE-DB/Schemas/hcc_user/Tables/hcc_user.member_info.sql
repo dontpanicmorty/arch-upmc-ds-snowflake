@@ -1,0 +1,38 @@
+CREATE OR REPLACE TABLE HCC_USER.MEMBER_INFO
+(
+MEMBER_NBR                        VARCHAR,
+HIC_NBR                           VARCHAR,
+CURR_HIC_NBR                      VARCHAR,
+MASTER_MEMBER_ID                  VARCHAR,
+MEMBER_NAME                       VARCHAR,
+NAME_FIRST                        VARCHAR,
+NAME_LAST                         VARCHAR,
+BIRTH_DATE                  TIMESTAMP_NTZ,
+COUNTY                            VARCHAR,
+STATE                             VARCHAR,
+MEMBERSHIP_DATE             TIMESTAMP_NTZ,
+YEAR_MONTH                        VARCHAR,
+AGE                             NUMBER(3),
+GENDER                            VARCHAR,
+LOB                               VARCHAR,
+PLAN_TYPE                         VARCHAR,
+PLAN_NBR                          VARCHAR,
+PBP                               VARCHAR,
+MM                                 NUMBER,
+CY                                 NUMBER,
+CY_MONTH                           NUMBER,
+FY                                 NUMBER,
+FY_MONTH                           NUMBER,
+IMPUTED_SITE_ID                   VARCHAR,
+SELECTED_SITE_ID                  VARCHAR,
+FINAL_SITE_ID                     VARCHAR,
+SITE_ID                           VARCHAR,
+IMPUTED_OR_SELECTED               VARCHAR,
+IMPUTED_PROVIDER_ID               VARCHAR,
+SELECTED_PROVIDER_ID              VARCHAR,
+FINAL_PROVIDER_ID                 VARCHAR,
+PCP_ID                            VARCHAR,
+IMPUTED_OR_SELECTED_PCP           VARCHAR
+)
+COMMENT='Created for HCC_USER Migration'
+;

@@ -1,0 +1,353 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_RAWDATA_TABLE(JOB_ID VARCHAR, RAWDATA_LOAD_CONTROL_HKEY VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVASCRIPT
+COMMENT='Call this Stored Procedure with parameters JOB_ID, SOURCE_TABLE_NAME, and TARGET_TABLE_NAME to load Target Tables.' 
+EXECUTE AS OWNER
+AS 
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var loadDatetime = null;
+
+var sqlControlRecordSelect =
+`SELECT IS_CLONE_FLAG, IS_COPY_INTO_FLAG, DATA_SOURCE_NAME, TARGET_TABLE_NAME, SOURCE_CLONE_TABLE_NAME, SOURCE_FILE_STAGE_NAME, SOURCE_FILE_PATH, SOURCE_FILE_FORMAT_NAME, SOURCE_FILE_PATTERN, SOURCE_FILE_DELIMITED_COLUMN_COUNT, SOURCE_FILE_FIXED_WIDTH_MAPPING, VALIDATE_DATA_FLAG, TRIM_FIXED_WIDTH_COLUMNS_FLAG, IS_PARQUET_FLAG, IS_TRUNCATE_RELOAD_FLAG
+FROM UTIL.RAWDATA_LOAD_CONTROL
+WHERE RAWDATA_LOAD_CONTROL_HKEY = :1;`;
+
+try 
+{
+     //Lookup Job
+    var targetTableName = 'LOGDATA.JOB_LOG';
+    var sqlLogCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlLogCommand, binds: [JOB_ID]});
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME") // Set startTime from job start time
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //get the control record
+    sfStatement = snowflake.createStatement({sqlText: sqlControlRecordSelect, binds: [RAWDATA_LOAD_CONTROL_HKEY]});     
+    var rsControlRecords = sfStatement.execute();
+    rsControlRecords.next();
+    var targetTableName = rsControlRecords.TARGET_TABLE_NAME; 
+
+    if (rsControlRecords.IS_CLONE_FLAG) //call clone function
+    {
+        var result = cloneTable
+            (
+                rsControlRecords.TARGET_TABLE_NAME,
+                rsControlRecords.SOURCE_CLONE_TABLE_NAME,
+                loadDatetime
+            );
+    }
+
+    if (rsControlRecords.IS_COPY_INTO_FLAG) //call copy into function
+    {
+        var result = copyIntoTable
+            (
+                rsControlRecords.DATA_SOURCE_NAME,
+                rsControlRecords.TARGET_TABLE_NAME,
+                rsControlRecords.SOURCE_FILE_STAGE_NAME,
+                rsControlRecords.SOURCE_FILE_PATH,
+                rsControlRecords.SOURCE_FILE_FORMAT_NAME,
+                rsControlRecords.SOURCE_FILE_PATTERN,
+                rsControlRecords.SOURCE_FILE_DELIMITED_COLUMN_COUNT,
+                rsControlRecords.SOURCE_FILE_FIXED_WIDTH_MAPPING,
+                rsControlRecords.VALIDATE_DATA_FLAG,
+                rsControlRecords.TRIM_FIXED_WIDTH_COLUMNS_FLAG,
+                rsControlRecords.IS_PARQUET_FLAG,
+                rsControlRecords.IS_TRUNCATE_RELOAD_FLAG,
+                loadDatetime
+            );
+    }
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\\n  State: " + err.state;
+    result += "\\n  Message: " + err.message;
+    result += "\\nStack Trace:\\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+return result;
+
+//end main processing
+
+function cloneTable(targetTableName, sourceTableName, loadDatetime)
+{
+    // Create clone statement to be executed.
+    let cloneDatetime = loadDatetime.toISOString()
+    let sqlCloneCommand = 
+    `CREATE OR REPLACE TABLE ${targetTableName} 
+    CLONE ${sourceTableName} AT(TIMESTAMP => '${cloneDatetime}')
+    ;`;
+
+    //Execute clone Command
+    let startTime = new Date().toISOString();    
+    sfStatement = snowflake.createStatement({sqlText: sqlCloneCommand});
+    sfStatement.execute();
+    let endTime = new Date().toISOString();
+    let result = "Succeeded";
+
+    //Log results to table
+    let sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Get the count of rows in the target table after cloning.
+    let sqlCountComamnd = `SELECT COUNT(1) AS ROW_COUNT FROM ${targetTableName};`;
+
+    startTime = new Date().toISOString();  
+    sfStatement = snowflake.createStatement({sqlText: sqlCountComamnd});
+    let rsRowCount = sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    rsRowCount.next();
+
+    //Log results to table
+    sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, rsRowCount.ROW_COUNT, null, null, result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    return result;
+}
+
+function copyIntoTable(dataSourceName, targetTableName, sourceFileStageName, sourceFilePath, sourceFileFormatName, sourceFilePattern, sourceFileDelimitedColumnCount, sourceFileFixedWidthColumnMapping, validateDataFlag, trimFixedWidthColumnsFlag, isParquetFileFlag, isTruncateReloadFlag, loadDatetime)
+{
+
+    //Setup the column list for the SELECT section of the COPY INTO
+    let columnList = "METADATA$FILENAME, METADATA$FILE_ROW_NUMBER, METADATA$START_SCAN_TIME";
+
+    if (sourceFileDelimitedColumnCount) //Check if delimited file type and build $1..n column names
+    {
+        for (let i = 1; i <= sourceFileDelimitedColumnCount; i++)
+        {
+            columnList = columnList.concat(', $', i);
+        }
+    };
+
+    if (sourceFileFixedWidthColumnMapping) //Check if fixed width file type and build SUBSTR($1) column names
+    {
+        if (trimFixedWidthColumnsFlag) 
+        {
+            sourceFileFixedWidthColumnMapping.forEach(item => 
+                {
+                    columnList += `, TRIM(SUBSTR($1, ${item.startPosition}, ${item.length}))`;
+                }
+            )   
+        }
+        else
+        {
+            sourceFileFixedWidthColumnMapping.forEach(item => 
+                {
+                    columnList += `, SUBSTR($1, ${item.startPosition}, ${item.length})`;
+                }
+            )    
+        }
+    };
+
+    let sqlCopyInto = ``;
+    //Setup the COPY INTO statment
+    if (isParquetFileFlag === true)
+    {
+        sqlCopyInto =
+        `COPY INTO ${targetTableName}
+        FROM '${sourceFileStageName}${sourceFilePath}'
+        FILE_FORMAT = ${sourceFileFormatName}
+        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+        INCLUDE_METADATA = 
+        (
+            FILENAME = METADATA$FILENAME,
+            FILE_ROW_NUMBER = METADATA$FILE_ROW_NUMBER,
+            FILE_LOAD_DATETIME = METADATA$START_SCAN_TIME            
+        ) 
+        PATTERN = '${sourceFilePattern}'
+        ;`;
+    }
+    else
+    {
+        sqlCopyInto = 
+        `COPY INTO ${targetTableName}
+        FROM
+        (
+            SELECT
+            ${columnList}
+            FROM '${sourceFileStageName}${sourceFilePath}'
+            (
+                FILE_FORMAT => ${sourceFileFormatName}
+                ,PATTERN => '${sourceFilePattern}'
+            )
+        );`;
+    };
+
+    //Execute Truncate Command on Target Table if flag is set to TRUE
+    if (isTruncateReloadFlag === true)
+    {
+        let sqlTruncateCommand = `TRUNCATE TABLE ${targetTableName};`;
+        sfStatement = snowflake.createStatement({sqlText: sqlTruncateCommand});
+        sfStatement.execute();
+    };
+
+    //Execute the COPY INTO Command
+    let startTime = new Date().toISOString();    
+    sfStatement = snowflake.createStatement({sqlText: sqlCopyInto});
+    let rsCopyInto = sfStatement.execute();
+    let endTime = new Date().toISOString();
+    let result = "Succeeded";
+
+    //need to save this for below
+    let numberRowInserted = sfStatement.getNumRowsInserted();    
+
+    //Log results to table
+    let sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+
+    //Check if files loaded, need validated
+    if (validateDataFlag && numberRowInserted > 0)
+    {
+        switch (dataSourceName)
+        {
+            case 'NVA':
+            {
+                return fileValidationForNVA(rsCopyInto, sourceFileStageName, sourceFilePath);
+            }
+            default:
+            {
+                result = 'Failed';
+                throw {
+                    code: "-1",
+                    message: "Validation routine is not defined for DataSource: "+dataSourceName,
+                    stackTraceTxt: new Error().stack,
+                    state: "00000"
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+function fileValidationForNVA(rsFilesLoaded, sourceFileStageName, sourceFilePath)
+{
+    let result = 'Succeeded';
+
+    //get stage url
+    let stageName = sourceFileStageName.split('.')[1]; //remove the schema. from the stage name
+    let sqlCommand = `SHOW STAGES IN SCHEMA RAWDATA;`;
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    sfStatement.execute();
+
+    sqlCommand = `SELECT "url" AS URL FROM TABLE(RESULT_SCAN(query_id => '${sfStatement.getQueryId()}')) WHERE "name" = :1;`;
+    sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds:[stageName]});
+    rsStageDetail = sfStatement.execute();
+    rsStageDetail.next();
+
+    let stageURL = rsStageDetail.URL;
+
+    //loop through all files loaded and validate them
+    while (rsFilesLoaded.next())
+    {
+        if (rsFilesLoaded.rows_loaded != rsFilesLoaded.rows_parsed)
+        {
+            result = 'Failed';
+            throw {
+                code: "-1",
+                message: "Rows Loaded Does Not Match Rows Parsed",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+        let filename =  rsFilesLoaded.file.replace(stageURL,'');
+        //get the trailer record from the file to compare.
+        let sqlCommand = 
+            `SELECT
+            NVA_PAID_CLAIM_EXTRACTS.FILENAME
+            ,COUNT(1) AS ROW_COUNT
+            ,SUM(NVA_PAID_CLAIM_EXTRACTS."PaidAmt"::number(36,2)) AS SUM_PAID_CLAIMS
+            ,TRAILER."ClaimSeqNo"::number(38,0) AS TRAILER_COUNT
+            ,TRAILER."ClaimType"::number(36,2) AS TRAILER_SUM_PAID_CLAIMS
+            FROM RAWDATA.NVA_PAID_CLAIM_EXTRACTS
+                JOIN RAWDATA.NVA_PAID_CLAIM_EXTRACTS TRAILER
+                    ON (TRAILER.FILENAME = NVA_PAID_CLAIM_EXTRACTS.FILENAME
+                    AND TRAILER."ClaimNo" = 'TRAILER')
+            WHERE NVA_PAID_CLAIM_EXTRACTS."ClaimNo" <> 'TRAILER'
+            AND NVA_PAID_CLAIM_EXTRACTS.FILENAME = '${filename}'
+            GROUP BY NVA_PAID_CLAIM_EXTRACTS.FILENAME, TRAILER."ClaimSeqNo", TRAILER."ClaimType"
+            HAVING SUM_PAID_CLAIMS <> TRAILER_SUM_PAID_CLAIMS OR ROW_COUNT <> TRAILER_COUNT
+            ;`;
+        sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+        sfStatement.execute();
+
+        if (sfStatement.getRowCount() !== 0)
+        {
+            result = 'Failed';
+            throw {
+                code: "-1",
+                message: "File failed validation against TRAILER record: "+filename,
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+    }
+
+    return result;
+}
+
+$$
+;

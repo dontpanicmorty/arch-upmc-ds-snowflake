@@ -1,0 +1,63 @@
+CREATE OR REPLACE PROCEDURE RAWDATA.SPU_LOAD_RAWDATA(DATA_SOURCE_NAME VARCHAR, DATA_DOMAIN_NAME VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+COMMENT = 'This a developer procedure to test load the hub for a given data source'
+EXECUTE AS CALLER
+AS
+$$
+var startTime = new Date().toISOString();
+
+try
+{
+    //Get the current user
+    var sqlCommand=`SELECT SUBSTRING(CURRENT_USER(), 1, POSITION('@' IN CURRENT_USER())-1);`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    resultSet = sfStatement.execute();
+
+    resultSet.next();
+    let jobId = resultSet.getColumnValue(1)+"_"+startTime;
+
+    //Create Job Record
+    var sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID(:1, 'RAWDATA.SPU_LOAD_RAWDATA');`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId]});     
+    sfStatement.execute();
+
+    //get list of tables to load
+    if (DATA_SOURCE_NAME && !DATA_DOMAIN_NAME) //by dataSource
+    {
+        var sqlCommand = `SELECT RAWDATA_LOAD_CONTROL_HKEY FROM UTIL.RAWDATA_LOAD_CONTROL WHERE IS_ACTIVE = TRUE AND DATA_SOURCE_NAME = '${DATA_SOURCE_NAME}';`;
+    }
+    else if (!DATA_SOURCE_NAME && DATA_DOMAIN_NAME)
+    {
+        var sqlCommand = `SELECT RAWDATA_LOAD_CONTROL_HKEY FROM UTIL.RAWDATA_LOAD_CONTROL WHERE IS_ACTIVE = TRUE AND DATA_DOMAIN_NAME = '${DATA_DOMAIN_NAME}';`;
+    }
+    else
+    {
+        sqlCommand = `throw error;`;
+    }
+    
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand});
+    resultSet = sfStatement.execute();
+    while (resultSet.next())
+        {
+            var sqlCommand = `CALL RAWDATA.SPU_LOAD_RAWDATA_TABLE(:1, :2);`;
+            var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId, resultSet.RAWDATA_LOAD_CONTROL_HKEY]});
+            sfStatement.execute();
+        }
+
+    //End Job Record
+    var sqlCommand = `CALL LOGDATA.SPU_SET_JOB_ID_ENDTIME(:1);`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [jobId]});     
+    sfStatement.execute();
+
+    return 'Done!'
+}
+catch (err)
+{
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+    throw result;
+}
+$$
+;

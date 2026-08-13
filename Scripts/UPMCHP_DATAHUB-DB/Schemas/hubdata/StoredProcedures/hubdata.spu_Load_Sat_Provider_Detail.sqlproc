@@ -1,0 +1,312 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_SAT_PROVIDER_DETAIL(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.SAT_PROVIDER_DETAIL`;
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.SAT_PROVIDER_DETAIL_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO HUBDATA.SAT_PROVIDER_DETAIL TGT
+USING (
+    SELECT 
+	       HUB_PROVIDER_HKEY,
+	       HASH_DIFF,
+	       PROVIDER_TYPE_NAME,
+	       FULL_NAME,
+	       FIRST_NAME,
+	       LAST_NAME,
+	       MIDDLE_NAME,
+	       MIDDLE_INITIAL_NAME,
+	       GENDER_NAME,
+	       EMAIL_ADDRESS,
+	       SOCIAL_SECURITY_NBR,
+	       DEGREE_TEXT,
+	       SUFFIX_NAME,
+	       LOCUM_TENENS_IND,
+	       INVISIBLE_PROVIDER_IND,
+	       TEMPORARY_PROVIDER_IND,
+	       NATIONAL_PROVIDER_ID,
+	       DATE_OF_BIRTH,
+	       UPIN_NBR,
+	       PRIMARY_PREFERRED_DELIVERY_METHOD_CODE,
+	       BOARD_CERTIFIED_IND,
+	       STATE_MEDICAID_ID,
+           PRIMARY_SPECIALTY_NAME,
+           PRIMARY_TAXONOMY_CODE,
+           PRESCRIBER_SOURCE_CODE,
+	       PROVIDER_START_DATE,
+	       PROVIDER_ACTIVE_IND,
+	       FACILITY_INCEPTION_DATE
+    FROM STAGEDATA.SAT_PROVIDER_DETAIL_TMP
+) SRC
+ON (TGT.HUB_PROVIDER_HKEY = SRC.HUB_PROVIDER_HKEY  
+AND TGT.HASH_DIFF = SRC.HASH_DIFF
+AND TGT.IS_CURRENT_ROW_FLAG = TRUE)
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        HUB_PROVIDER_HKEY,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        HASH_DIFF,
+	    PROVIDER_TYPE_NAME,
+	    FULL_NAME,
+	    FIRST_NAME,
+	    LAST_NAME,
+	    MIDDLE_NAME,
+	    MIDDLE_INITIAL_NAME,
+	    GENDER_NAME,
+	    EMAIL_ADDRESS,
+	    SOCIAL_SECURITY_NBR,
+	    DEGREE_TEXT,
+	    SUFFIX_NAME,
+	    LOCUM_TENENS_IND,
+	    INVISIBLE_PROVIDER_IND,
+	    TEMPORARY_PROVIDER_IND,
+	    NATIONAL_PROVIDER_ID,
+	    DATE_OF_BIRTH,
+	    UPIN_NBR,
+	    PRIMARY_PREFERRED_DELIVERY_METHOD_CODE,
+	    BOARD_CERTIFIED_IND,
+	    STATE_MEDICAID_ID,
+        PRIMARY_SPECIALTY_NAME,
+        PRIMARY_TAXONOMY_CODE,
+        PRESCRIBER_SOURCE_CODE,
+	    PROVIDER_START_DATE,
+	    PROVIDER_ACTIVE_IND,
+	    FACILITY_INCEPTION_DATE
+    )
+ VALUES 
+    (
+        src.HUB_PROVIDER_HKEY,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+        src.HASH_DIFF,
+	    src.PROVIDER_TYPE_NAME,
+	    src.FULL_NAME,
+	    src.FIRST_NAME,
+	    src.LAST_NAME,
+	    src.MIDDLE_NAME,
+	    src.MIDDLE_INITIAL_NAME,
+	    src.GENDER_NAME,
+	    src.EMAIL_ADDRESS,
+	    src.SOCIAL_SECURITY_NBR,
+	    src.DEGREE_TEXT,
+	    src.SUFFIX_NAME,
+	    src.LOCUM_TENENS_IND,
+	    src.INVISIBLE_PROVIDER_IND,
+	    src.TEMPORARY_PROVIDER_IND,
+	    src.NATIONAL_PROVIDER_ID,
+	    src.DATE_OF_BIRTH,
+	    src.UPIN_NBR,
+	    src.PRIMARY_PREFERRED_DELIVERY_METHOD_CODE,
+	    src.BOARD_CERTIFIED_IND,
+	    src.STATE_MEDICAID_ID,
+        src.PRIMARY_SPECIALTY_NAME,
+        src.PRIMARY_TAXONOMY_CODE,
+        src.PRESCRIBER_SOURCE_CODE,
+	    src.PROVIDER_START_DATE,
+	    src.PROVIDER_ACTIVE_IND,
+	    src.FACILITY_INCEPTION_DATE
+
+    )
+;`;
+
+// Create update statement to be executed.
+var sqlUpdateCommand=
+
+`
+UPDATE HUBDATA.SAT_PROVIDER_DETAIL TGT SET 
+    ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1)
+    , IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_PROVIDER_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+    SELECT HUB_PROVIDER_HKEY, ROW_EFFECTIVE_DATETIME
+    FROM (
+        SELECT 
+            SAT_PROVIDER_DETAIL.HUB_PROVIDER_HKEY,
+            SAT_PROVIDER_DETAIL.ROW_EFFECTIVE_DATETIME,
+            ROW_NUMBER() OVER (PARTITION BY SAT_PROVIDER_DETAIL.HUB_PROVIDER_HKEY ORDER BY SAT_PROVIDER_DETAIL.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+        FROM HUBDATA.SAT_PROVIDER_DETAIL
+            JOIN STAGEDATA.SAT_PROVIDER_DETAIL_TMP
+                ON (SAT_PROVIDER_DETAIL_TMP.HUB_PROVIDER_HKEY = SAT_PROVIDER_DETAIL.HUB_PROVIDER_HKEY)
+        WHERE SAT_PROVIDER_DETAIL.IS_CURRENT_ROW_FLAG = TRUE
+    )
+    WHERE RNUM >= 2
+)
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.SAT_PROVIDER_DETAIL
+SET 
+    ROW_EXPIRATION_DATETIME = :1
+    ,IS_CURRENT_ROW_FLAG = FALSE
+WHERE (HUB_PROVIDER_HKEY, ROW_EFFECTIVE_DATETIME) IN
+(
+    SELECT
+    SAT_PROVIDER_DETAIL.HUB_PROVIDER_HKEY,
+    SAT_PROVIDER_DETAIL.ROW_EFFECTIVE_DATETIME
+    FROM HUBDATA.SAT_PROVIDER_DETAIL
+        JOIN HUBDATA.HUB_PROVIDER
+            ON (HUB_PROVIDER.HUB_PROVIDER_HKEY = SAT_PROVIDER_DETAIL.HUB_PROVIDER_HKEY)
+        LEFT OUTER JOIN STAGEDATA.SAT_PROVIDER_DETAIL_TMP
+            ON (SAT_PROVIDER_DETAIL_TMP.HUB_PROVIDER_HKEY = SAT_PROVIDER_DETAIL.HUB_PROVIDER_HKEY)
+
+    WHERE HUB_PROVIDER.DATA_SOURCE_NAME IN (SELECT DISTINCT DATA_SOURCE_NAME FROM STAGEDATA.SAT_PROVIDER_DETAIL_TMP)
+    AND SAT_PROVIDER_DETAIL.IS_CURRENT_ROW_FLAG = TRUE
+    AND SAT_PROVIDER_DETAIL_TMP.HUB_PROVIDER_HKEY IS NULL
+)
+;`;
+
+var sqlLogCommand = 
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+(JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11);`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    targetTableName = `STAGEDATA.SAT_PROVIDER_DETAIL_TMP`;
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Merge Command
+    targetTableName = `HUBDATA.SAT_PROVIDER_DETAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Update Command
+    targetTableName = `HUBDATA.SAT_PROVIDER_DETAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Delete Command
+    targetTableName = `HUBDATA.SAT_PROVIDER_DETAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+$$
+;
+

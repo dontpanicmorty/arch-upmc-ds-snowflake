@@ -1,0 +1,8 @@
+!set variable_substitution=true;
+CREATE OR REPLACE VIEW UPMCVH_PROD.PLAN_WAIVER
+AS
+SELECT
+PLAN_ID,
+WAIVER_ID
+FROM &{IDAP_LAKE}.VIRTUAL_HEALTH_STAGE.PLAN_WAIVER;
+!set variable_substitution=false;
