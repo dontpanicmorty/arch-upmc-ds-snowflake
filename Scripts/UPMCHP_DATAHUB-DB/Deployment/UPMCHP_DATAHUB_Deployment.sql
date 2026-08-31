@@ -259,6 +259,7 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_contract_status.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_detail.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_identifier.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_office_link_detail.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_medical_group_ownership_status.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_member_detail.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_member_address.sql;
@@ -279,6 +280,8 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/hubdata/Tables/hubdata.sat_provider_contract_status.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_plan_segment_detail.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_provider_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_office_link_detail.sql;
+!load ../Schemas/hubdata/Tables/hubdata.sat_provider_office_specific_email.sql;
 
 !load ../Schemas/hubdata/Tables/hubdata.sat_provider_identifier.sql;
 !load ../Schemas/hubdata/Tables/hubdata.sat_rider_detail.sql;
@@ -942,6 +945,7 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_nva_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_medical_group_detail_skygen_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_medical_group_identifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_medical_group_office_link_detail_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_medical_group_ownership_status_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_office_address_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_office_address_mc400Upm_select_vw.sql;
@@ -984,6 +988,8 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/stagedata/Views/stagedata.sat_provider_detail_skygen_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_provider_identifier_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_provider_identifier_mc400Upm_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_office_link_detail_cactus_select_vw.sql;
+!load ../Schemas/stagedata/Views/stagedata.sat_provider_office_specific_email_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_standard_address_detail_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.wrk_address_query_batch_cactus_select_vw.sql;
 !load ../Schemas/stagedata/Views/stagedata.sat_provider_identifier_esi_select_vw.sql;
@@ -1125,6 +1131,7 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Contract_Status.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Detail.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Identifier.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Office_Link_Detail.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Medical_Group_Ownership_Status.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Member_Address.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Member_Current_Attribute.sqlproc;
@@ -1143,6 +1150,8 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Attribute.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Contract_Detail.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Contract_Status.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.Spu_Load_Sat_Provider_Office_Link_Detail.sqlproc;
+!load ../Schemas/hubdata/StoredProcedures/hubdata.Spu_Load_Sat_Provider_Office_Specific_Email.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Plan_Segment_Detail.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Detail.sqlproc;
 !load ../Schemas/hubdata/StoredProcedures/hubdata.spu_Load_Sat_Provider_Identifier.sqlproc;

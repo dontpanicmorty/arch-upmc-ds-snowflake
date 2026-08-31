@@ -1,0 +1,243 @@
+CREATE OR REPLACE PROCEDURE HUBDATA.SPU_LOAD_SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL(JOB_ID VARCHAR, SOURCE_VIEW_NAME VARCHAR) 
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var loadDatetime = null;
+var procedureName = Object.keys(this)[0];
+var targetTableName = `HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL`; 
+
+// Create temp table statement to be executed.
+var sqlTempTableCommand =
+`
+CREATE OR REPLACE TEMPORARY TABLE STAGEDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP
+AS
+SELECT * FROM ${SOURCE_VIEW_NAME}
+;`;
+
+// Create merge statement to be executed.
+var sqlMergeCommand =
+`
+MERGE INTO HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL TGT
+USING (
+    SELECT
+        LNK_PROVIDER_OFFICE_HKEY,
+        HASH_DIFF,
+        EMAIL_ADDRESS
+    FROM STAGEDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP
+) SRC 
+ON (
+    TGT.LNK_PROVIDER_OFFICE_HKEY = SRC.LNK_PROVIDER_OFFICE_HKEY
+    AND TGT.HASH_DIFF = SRC.HASH_DIFF
+    AND TGT.IS_CURRENT_ROW_FLAG = TRUE
+)
+
+WHEN NOT MATCHED 
+
+THEN INSERT 
+    (
+        LNK_PROVIDER_OFFICE_HKEY,
+        HASH_DIFF,
+        ROW_EFFECTIVE_DATETIME,
+        ROW_EXPIRATION_DATETIME,
+        IS_CURRENT_ROW_FLAG,
+        EMAIL_ADDRESS
+    )
+ VALUES 
+    (
+        SRC.LNK_PROVIDER_OFFICE_HKEY,
+        SRC.HASH_DIFF,
+        :1,
+        TO_TIMESTAMP_TZ('9999-12-31'),
+        TRUE,
+		SRC.EMAIL_ADDRESS
+        
+    )
+;`;
+    
+// Create update statement to be executed.
+var sqlUpdateCommand =
+`
+UPDATE HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL TGT
+    SET ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1), IS_CURRENT_ROW_FLAG = FALSE
+    WHERE (LNK_PROVIDER_OFFICE_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+        SELECT
+            LNK_PROVIDER_OFFICE_HKEY,
+            ROW_EFFECTIVE_DATETIME
+        FROM (
+            SELECT
+                SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.LNK_PROVIDER_OFFICE_HKEY,
+                SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.ROW_EFFECTIVE_DATETIME,
+                ROW_NUMBER() OVER (PARTITION BY SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.LNK_PROVIDER_OFFICE_HKEY ORDER BY SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
+            FROM
+                HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL
+            JOIN
+                STAGEDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP
+                ON SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.LNK_PROVIDER_OFFICE_HKEY = SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP.LNK_PROVIDER_OFFICE_HKEY
+            WHERE SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.IS_CURRENT_ROW_FLAG = TRUE
+        )
+        WHERE RNUM >= 2
+    )
+;`;
+
+// Create delete statement to be executed.
+var sqlDeleteCommand =
+`
+UPDATE HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL
+    SET ROW_EXPIRATION_DATETIME = :1, IS_CURRENT_ROW_FLAG = FALSE
+    WHERE (LNK_PROVIDER_OFFICE_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+        SELECT
+            SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.LNK_PROVIDER_OFFICE_HKEY,
+            SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.ROW_EFFECTIVE_DATETIME
+        FROM
+            HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL
+		JOIN HUBDATA.LNK_PROVIDER_OFFICE 
+		    ON LNK_PROVIDER_OFFICE.LNK_PROVIDER_OFFICE_HKEY = SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.LNK_PROVIDER_OFFICE_HKEY
+        LEFT OUTER JOIN
+            STAGEDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP
+            ON SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.LNK_PROVIDER_OFFICE_HKEY = SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP.LNK_PROVIDER_OFFICE_HKEY
+        WHERE
+            SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL.IS_CURRENT_ROW_FLAG = TRUE
+            AND UPPER(LNK_PROVIDER_OFFICE.O_DATA_SOURCE_NAME) = 'CACTUS'
+           	AND LNK_PROVIDER_OFFICE.IS_CURRENT_ROW_FLAG = TRUE
+			AND SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP.LNK_PROVIDER_OFFICE_HKEY IS NULL
+    )
+;`;
+
+var sqlLogCommand = 
+`
+INSERT INTO LOGDATA.TABLE_LOAD_HISTORY (JOB_ID, NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+    VALUES (:1, :2, :3, :4::timestamp_ltz, :5::timestamp_ltz, :6, :7, :8, :9, :10, :11)
+;`;
+
+try 
+{
+     //Lookup Job
+    var sqlCommand = `SELECT START_TIME FROM LOGDATA.JOB_LOG WHERE JOB_ID = :1;`;
+    var sfStatement = snowflake.createStatement({sqlText: sqlCommand, binds: [JOB_ID]});     
+    var rsJobLog = sfStatement.execute();
+    while (rsJobLog.next())
+    {
+        loadDatetime = rsJobLog.getColumnValue("START_TIME")
+    }
+   
+    if (!loadDatetime)
+        {
+            throw {
+                code: "-1",
+                message: "Job Id Not Found!",
+                stackTraceTxt: new Error().stack,
+                state: "00000"
+            }
+        }
+
+    //Stage source data to temp table to be reused later.
+    targetTableName = `STAGEDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL_TMP`;
+    startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlTempTableCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    //Execute Merge Command
+    targetTableName = `HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Update Command
+    targetTableName = `HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+    // Execute the Delete Command
+    targetTableName = `HUBDATA.SAT_PROVIDER_OFFICE_SPECIFIC_EMAIL`;
+    startTime = new Date().toISOString();
+    sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand, binds:[loadDatetime]});
+    sfStatement.execute();
+    endTime = new Date().toISOString();
+    result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+        }
+    );
+
+}
+
+catch (err)
+{
+    var endTime = new Date().toISOString();
+    var result =  "Failed: Code: " + err.code + "\n  State: " + err.state;
+    result += "\n  Message: " + err.message;
+    result += "\nStack Trace:\n" + err.stackTraceTxt;
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY 
+        (JOB_ID, NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT, QUERY_ID)
+        VALUES (:1,:2,:3,:4::timestamp_ltz,:5::timestamp_ltz,:6,:7,:8,:9,:10,:11,:12);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[JOB_ID, targetTableName, "TABLE", startTime, endTime, "Failed", sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt, sfStatement.getQueryId()]
+        }
+    );        
+    throw result;
+}
+
+//Validate what just loaded
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_DUPE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_PRIMARY_KEY_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+sqlText = `CALL LOGDATA.SPU_VALIDATE_DATA_ALLOWED_VALUE_CHECK('${JOB_ID}','${targetTableName}');`;
+snowflake.execute({sqlText});
+
+return result;
+
+$$
+;

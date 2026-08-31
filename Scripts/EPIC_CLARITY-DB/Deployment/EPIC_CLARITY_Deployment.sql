@@ -138,13 +138,6 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../schemas/dbo/views/epic_clarity.dbo.zc_um_not_required_rsn_vw.sql;
 !load ../schemas/dbo/views/epic_clarity.dbo.zc_um_status_vw.sql;
 !load ../schemas/dbo/views/epic_clarity.dbo.zc_val_type_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.coverage_member_list_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.docs_rcvd_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.docs_rcvd_dx_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.episode_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.episode_link_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.pat_cvg_file_order_vw.sql;
-!load ../schemas/dbo/views/epic_clarity.dbo.patient_fyi_flags_vw.sql;
 --<schemaname>
 --<schemaname>
 --<schemaname>

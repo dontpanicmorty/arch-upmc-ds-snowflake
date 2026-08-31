@@ -123,8 +123,8 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 
 --authorization
 !load ../Schemas/authorization/FileFormats/authorization.pahub_all_eoc_file_format.sql;
+
 !load ../Schemas/authorization/FileFormats/authorization.rx_prior_authorization_file_format.sql;
-!load ../Schemas/authorization/FileFormats/authorization.pa_hub_prior_auth_file_format.sql;
 
 --claim
 !load ../Schemas/claim/FileFormats/claim.amplifon_commercial_file_format.sql;
@@ -171,7 +171,6 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 
 --dhs
 !load ../Schemas/dhs/FileFormats/dhs.medicaid_pend_enroll_file_format.sql;
-!load ../Schemas/dhs/FileFormats/dhs.oim_header_and_detail_file_format.sql;
 
 --member
 !load ../Schemas/member/FileFormats/member.qualtrics_survey_response_file_format.sql;
@@ -314,8 +313,6 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 --authorization
 !load ../Schemas/authorization/Tables/authorization.pahub_all_eoc.sql;
 !load ../Schemas/authorization/Tables/authorization.RX_PRIOR_AUTHORIZATION.sql;
-!load ../Schemas/authorization/Tables/authorization.pa_hub_prior_authorizations_current.sql;
-!load ../Schemas/authorization/Tables/authorization.pa_hub_prior_authorizations_history.sql;
 
 --util
 !load ../Schemas/util/Tables/util.file_loader_control.sql;
@@ -478,20 +475,9 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/cms/Tables/cms.drug_event_ddps_otc_stage.sql;
 !load ../Schemas/cms/Tables/cms.drug_event_cms_otc_history.sql;
 !load ../Schemas/cms/Tables/cms.npi.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_stage.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexbh_history.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexbt_history.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexch_history.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexct_history.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexdt_history.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexph_history.sql;
-!load ../Schemas/cms/Tables/cms.partd_exclusion_warning_pexpt_history.sql;
 
 --dhs
 !load ../Schemas/dhs/Tables/dhs.medicaid_pend_enroll.sql; 
-!load ../Schemas/dhs/Tables/dhs.oim_header_and_detail_stage.sql;
-!load ../Schemas/dhs/Tables/dhs.oim_detail_history.sql;
-!load ../Schemas/dhs/Tables/dhs.oim_header_history.sql;
 
 --emma_stage
 !load ../Schemas/emma_stage/Tables/emma_stage.dbo__live_contact_member_ids.sql;
@@ -1353,9 +1339,6 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/assessment/Views/assessment.snp_scan_current_cms_backdate_invalid_vw.sql;
 
 
---authorization
-!load ../Schemas/authorization/Views/authorization.pa_hub_prior_authorizations_vw.sql;
-
 --claim
 
 !load ../Schemas/claim/Views/claim.cmu_cvs_stoploss_det_current_vw.sql;
@@ -1535,27 +1518,9 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../schemas/cms/Views/cms.drug_event_cms_otc_vw.sql;
 !load ../schemas/cms/Views/cms.drug_event_cms_ddps_return_post2025_vw.sql;
 !load ../schemas/cms/Views/cms.drug_event_cms_ddps_return_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexbh_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexbh_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexbt_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexbt_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexch_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexch_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexct_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexct_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexdt_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexdt_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexph_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexph_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexpt_current_vw.sql;
-!load ../schemas/cms/Views/cms.partd_exclusion_warning_pexpt_vw.sql;
 
 --dhs
 !load ../Schemas/dhs/Views/dhs.medicaid_pend_enroll_vw.sql; 
-!load ../Schemas/dhs/Views/dhs.oim_detail_current_vw.sql;
-!load ../Schemas/dhs/Views/dhs.oim_header_current_vw.sql;
-!load ../Schemas/dhs/Views/dhs.oim_detail_vw.sql;
-!load ../Schemas/dhs/Views/dhs.oim_header_vw.sql;
 
 --logdata
 !load ../Schemas/logdata/Views/util.ADF_DB_EXTRACT_PIPELINE_LOGGING_VW.sql;

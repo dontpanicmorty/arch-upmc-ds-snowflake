@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION STAGEDATA.FXN_GET_LOCATION_CODE_MC400(DATA_SOURCE_NAME VARCHAR, SERVICE_TYPE_CODE VARCHAR, CLAIM_LEVEL_SERVICE_REASON_IND VARCHAR, LOCATION_TYPE_CODE VARCHAR, REVENUE_CODE VARCHAR)
+CREATE OR REPLACE FUNCTION STAGEDATA.FXN_GET_LOCATION_CODE_MC400(DATA_SOURCE_NAME VARCHAR, SERVICE_TYPE_CODE VARCHAR, SERVICE_REASON_CODE VARCHAR, LOCATION_TYPE_CODE VARCHAR)
 RETURNS VARCHAR
 LANGUAGE JAVASCRIPT
 COMMENT ='Returns the location_code for a claim line in MC400'
@@ -6,11 +6,6 @@ AS
 $$
 
 const validDataSources = ['MC400Dnt','MC400Upm'];
-const trimmedRevenueCode = REVENUE_CODE ? REVENUE_CODE.trim() : '';
-const normalizedRevenueCode =
-    trimmedRevenueCode.length >= 1 && trimmedRevenueCode.length <= 3
-        ? trimmedRevenueCode.padStart(4, '0')
-        : trimmedRevenueCode;
 
 // Validate the data source
 
@@ -19,41 +14,31 @@ if (!validDataSources.includes(DATA_SOURCE_NAME))
     throw 'Invalid DATA_SOURCE_NAME: '+DATA_SOURCE_NAME;
 }
 
-// CLAIM_LEVEL_SERVICE_REASON_IND is defined in a CTE in SAT_CLAIM_LINE_MC400UPM_SELECT_VW and SAT_CLAIM_LINE_MC400DNT_SELECT_VW and = '1' when the claim has at least one claim line record with SERVICE_REASON_CODE = 'LL' and '0' otherwise
-// Any claim line record whose claim has at least one claim line record with SERVICE_REASON_CODE = 'LL' returns 'O'
-if (String(CLAIM_LEVEL_SERVICE_REASON_IND).trim() === '1')
-{
-    return 'O';
-}
-
-// Revenue code criteria:
-// Between 0100 and 0219 OR in (0022, 0024)
-const inpatientRevenue =
-       (normalizedRevenueCode >= '0100' && normalizedRevenueCode <= '0219')
-    || normalizedRevenueCode === '0022'
-    || normalizedRevenueCode === '0024';
-
 switch (SERVICE_TYPE_CODE)
 {
-    case 'F':
-
-        // Revenue code qualifies as inpatient
-        if (inpatientRevenue)
-        {
-            return 'I';
-        }
-
+  case 'F':
+    if (SERVICE_REASON_CODE == 'LL') 
+      {
         return 'O';
-
-    case 'P':
-
-        if (LOCATION_TYPE_CODE)
-        {
-            return LOCATION_TYPE_CODE;
-        }
+      } 
+    else 
+      {
+        return 'I';
+      }
+    break;
+  case 'P':
+    if (LOCATION_TYPE_CODE)
+      {
+        return LOCATION_TYPE_CODE
+      }
+    else
+      {
         return 'U';
-    case 'SM':
-        return 'O';
+      }
+    break;
+  case 'SM':
+    return 'O';
+    break;
 }
 
 return 'U';

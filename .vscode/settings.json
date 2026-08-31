@@ -1,0 +1,31 @@
+{
+  "sqltools.connections": [],
+  "marklogic.documentsDb": "data-hub-FINAL",
+  "marklogic.modulesDb": "data-hub-MODULES",
+  "editor.formatOnSave": true,
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "git.autofetch": true,
+  "prettier.bracketSpacing": false,
+  "docthis.includeDateTag": true,
+  "eslint.enable": true,
+  "prettier.singleQuote": true,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/bin": true
+  },
+  "prettier.trailingComma": "none",
+  "azureFunctions.deploySubpath": ".",
+  "azureFunctions.postDeployTask": "npm install (functions)",
+  "azureFunctions.projectLanguage": "JavaScript",
+  "azureFunctions.projectRuntime": "~4",
+  "debug.internalConsoleOptions": "neverOpen",
+  "azureFunctions.preDeployTask": "npm prune (functions)",
+  "snowflake.showExecuteAboveStatement.enabled": true,
+  "azureFunctions.projectSubpath": "Functions\\JavaScript"
+}

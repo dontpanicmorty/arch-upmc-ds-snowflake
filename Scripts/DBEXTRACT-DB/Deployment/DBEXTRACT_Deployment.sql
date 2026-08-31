@@ -40,8 +40,6 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/DatabaseLevelObjects/emma_stage.schema.sql;
 !load ../Schemas/DatabaseLevelObjects/epic_caboodle_stage.schema.sql;
 !load ../Schemas/DatabaseLevelObjects/epic_clarity_stage.schema.sql;
-!load ../Schemas/DatabaseLevelObjects/messagecenter_stage.schema.sql;
-
 
 
 
@@ -223,24 +221,6 @@ COMMENT='CLI CI/CD Deployment Compare Database for build.'
 !load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__zc_um_not_required_rsn.sql;
 !load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__zc_um_status.sql;
 !load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__zc_val_type.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__coverage_member_list.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__docs_rcvd.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__docs_rcvd_dx.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__episode.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__episode_link.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__pat_cvg_file_order.sql;
-!load ../Schemas/epic_clarity_stage/Tables/epic_clarity_stage.dbo__patient_fyi_flags.sql;
-
-
---messagecenter_stage
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__message_headers.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__responses.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__messages.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__worklist.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__message_status.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__representatives.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__message_category.sql;
-!load ../Schemas/messagecenter_stage/Tables/messagecenter_stage.dbo__headers.sql;
 
 ----------------------------------------------------------------------------------------------------------
 -- FUNCTIONS

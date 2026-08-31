@@ -31,12 +31,12 @@ USING (
         MG_TPA_ID,
         MG_TPA_DIV_ID,
         MG_DATA_SOURCE_NAME,
-        MEDICAL_GROUP_ID,
+        MEDICAL_GROUP_ID AS MG_MEDICAL_GROUP_ID,
         O_TPA_CLIENT_ID,
         O_TPA_ID,
         O_TPA_DIV_ID,
         O_DATA_SOURCE_NAME,
-        OFFICE_ID
+        OFFICE_ID AS O_OFFICE_ID
     FROM STAGEDATA.LNK_MEDICAL_GROUP_OFFICE_TMP
 ) SRC  
 ON (
@@ -49,77 +49,50 @@ WHEN NOT MATCHED
 THEN INSERT
     (
         LNK_MEDICAL_GROUP_OFFICE_HKEY,
+		INSERT_DATETIME,
         HUB_MEDICAL_GROUP_HKEY,
         HUB_OFFICE_HKEY,
-        ROW_EFFECTIVE_DATETIME,
-        ROW_EXPIRATION_DATETIME,
         IS_CURRENT_ROW_FLAG,
         MG_TPA_CLIENT_ID,
         MG_TPA_ID,
         MG_TPA_DIV_ID,
         MG_DATA_SOURCE_NAME,
-        MEDICAL_GROUP_ID,
+        MG_MEDICAL_GROUP_ID,
         O_TPA_CLIENT_ID,
         O_TPA_ID,
         O_TPA_DIV_ID,
         O_DATA_SOURCE_NAME,
-        OFFICE_ID
+        O_OFFICE_ID
     )
 VALUES 
     (
         SRC.LNK_MEDICAL_GROUP_OFFICE_HKEY,
-        SRC.HUB_MEDICAL_GROUP_HKEY,
-        SRC.HUB_OFFICE_HKEY,
         :1,
-        TO_TIMESTAMP_TZ('9999-12-31'),
+		SRC.HUB_MEDICAL_GROUP_HKEY,
+        SRC.HUB_OFFICE_HKEY,
         TRUE,
         SRC.MG_TPA_CLIENT_ID,
         SRC.MG_TPA_ID,
         SRC.MG_TPA_DIV_ID,
         SRC.MG_DATA_SOURCE_NAME,
-        SRC.MEDICAL_GROUP_ID,
+        SRC.MG_MEDICAL_GROUP_ID,
         SRC.O_TPA_CLIENT_ID,
         SRC.O_TPA_ID,
         SRC.O_TPA_DIV_ID,
         SRC.O_DATA_SOURCE_NAME,
-        SRC.OFFICE_ID
+        SRC.O_OFFICE_ID
     )
 ;`;
 
-// Create update statement to be executed.
-var sqlUpdateCommand =
-`
-UPDATE HUBDATA.LNK_MEDICAL_GROUP_OFFICE TGT
-    SET ROW_EXPIRATION_DATETIME = DATEADD('millisecond', -1, :1), IS_CURRENT_ROW_FLAG = FALSE
-    WHERE (LNK_MEDICAL_GROUP_OFFICE_HKEY, ROW_EFFECTIVE_DATETIME) IN (
-        SELECT
-            LNK_MEDICAL_GROUP_OFFICE_HKEY,
-            ROW_EFFECTIVE_DATETIME
-        FROM (
-            SELECT
-                HUBDATA.LNK_MEDICAL_GROUP_OFFICE_HKEY,
-                HUBDATA.ROW_EFFECTIVE_DATETIME,
-                ROW_NUMBER() OVER (PARTITION BY HUBDATA.LNK_MEDICAL_GROUP_OFFICE_HKEY ORDER BY HUBDATA.ROW_EFFECTIVE_DATETIME DESC) AS RNUM
-            FROM
-                HUBDATA.LNK_MEDICAL_GROUP_OFFICE AS HUBDATA
-            JOIN
-                STAGEDATA.LNK_MEDICAL_GROUP_OFFICE_TMP AS STAGEDATA
-                ON (HUBDATA.LNK_MEDICAL_GROUP_OFFICE_HKEY = STAGEDATA.LNK_MEDICAL_GROUP_OFFICE_HKEY)
-            WHERE HUBDATA.IS_CURRENT_ROW_FLAG = TRUE
-        )
-        WHERE RNUM >= 2
-    )
-;`;
 
 // Create delete statement to be executed.
 var sqlDeleteCommand =
 `
 UPDATE HUBDATA.LNK_MEDICAL_GROUP_OFFICE
-    SET ROW_EXPIRATION_DATETIME = :1, IS_CURRENT_ROW_FLAG = FALSE
-    WHERE (LNK_MEDICAL_GROUP_OFFICE_HKEY, ROW_EFFECTIVE_DATETIME) IN (
+    SET IS_CURRENT_ROW_FLAG = FALSE
+    WHERE (LNK_MEDICAL_GROUP_OFFICE_HKEY) IN (
         SELECT
-            HUBDATA.LNK_MEDICAL_GROUP_OFFICE_HKEY,
-            HUBDATA.ROW_EFFECTIVE_DATETIME
+            HUBDATA.LNK_MEDICAL_GROUP_OFFICE_HKEY
         FROM
             HUBDATA.LNK_MEDICAL_GROUP_OFFICE AS HUBDATA
         LEFT OUTER JOIN
@@ -194,22 +167,6 @@ try
         }
     );
 
-    // Execute the Update Command
-    targetTableName = `HUBDATA.LNK_MEDICAL_GROUP_OFFICE`;
-    startTime = new Date().toISOString();
-    sfStatement = snowflake.createStatement({sqlText: sqlUpdateCommand, binds:[loadDatetime]});
-    sfStatement.execute();
-    endTime = new Date().toISOString();
-    result = "Succeeded";
-
-    //Log results to table
-    snowflake.execute
-    (
-        {
-        sqlText: sqlLogCommand,
-        binds: [JOB_ID, targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
-        }
-    );
 
     // Execute the Delete Command
     targetTableName = `HUBDATA.LNK_MEDICAL_GROUP_OFFICE`;
