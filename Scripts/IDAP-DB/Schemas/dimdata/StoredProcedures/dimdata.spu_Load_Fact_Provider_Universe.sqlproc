@@ -1,0 +1,235 @@
+--REVIEWER: Loader for DIMDATA.FACT_PROVIDER_UNIVERSE from STAGEDATA.FACT_PROVIDER_UNIVERSE_SELECT_VW.
+--Modelled on dimdata.spu_Load_Pharmacy_Dim_Provider_Address rather than
+--dimdata.spu_Load_Fact_Claim_Authorization_Detail, because this fact carries MD5_VALUE_TEXT and
+--IS_LOGICAL_DELETE_FLAG and therefore needs the sentinel-scoped soft-delete pattern, not the hard DELETE
+--that the claim-authorization loader uses.
+--
+--Items needing a reviewer decision:
+--
+--  (1) THE MERGE ON CLAUSE IS THE GRAIN, and it is kept identical to UK_Fact_Provider_Universe on
+--      dimdata.Fact_Provider_Universe. Snowflake does not enforce that UK, so this ON clause is what
+--      actually de-duplicates. If the UK changes, change this and the soft-delete join below to match --
+--      all three have to stay in sync or rows will silently double up.
+--
+--  (2) THE STAGING VIEW'S ADDRESS FAN-OUT REACHES HERE. stagedata.Fact_Provider_Universe_Select_vw joins
+--      DIM_PROVIDER_ADDRESS on PROVIDER_OFFICE_ID alone, which is not unique (see item (3) in that file's
+--      header). The duplicate rows differ in DIM_PROVIDER_ADDRESS_KEY, so they survive both the staging
+--      SELECT DISTINCT and the ON clause here, and land as genuine duplicate facts. Fix the staging join
+--      before running this in anything but a sandbox.
+--
+--  (3) SURROGATE KEY SEED. Uses the repo's standard
+--      (SELECT IFNULL(MAX(<KEY>), 100000000) FROM <target> WHERE MD5_VALUE_TEXT = '<sentinel>')
+--      + ROW_NUMBER() OVER (ORDER BY 1) pattern, scoped to this proc's own sentinel so a future second
+--      feed into this fact gets its own key range. Note the sentinel here is the HYPHEN variant
+--      'N/A-UPMCHP-DATAHUB', matching the STTM and stagedata.Fact_Provider_Universe_Select_vw. The
+--      pharmacy procs use the UNDERSCORE variant 'N/A-UPMCHP_DATAHUB'. The two are different strings and
+--      this scoping depends on them matching exactly -- do not let them drift.
+--
+--  (4) WHEN MATCHED updates RELATIONSHIP_START_DATE and RELATIONSHIP_TERM_DATE even though their _KEY
+--      counterparts are in the ON clause. That is deliberate: the staging view resolves both keys through
+--      IFNULL(...,1), so several distinct real dates (or a NULL date) can collapse onto the unknown-member
+--      key 1. Without these two in the UPDATE, a corrected date would never propagate.
+--
+--  (5) NO !load REGISTRATION. This proc is not yet referenced from
+--      Scripts/IDAP-DB/Deployment/IDAP_Deployment.sql, and nothing calls it from
+--      Scripts/LoadScripts/. It will not deploy or run until both are wired up.
+
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_FACT_PROVIDER_UNIVERSE()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.FACT_PROVIDER_UNIVERSE`;
+
+// Create merge statement to be executed.
+// The MINUS block is the change-detection step: only rows that differ from what is already in the target
+// reach the MERGE at all.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.FACT_PROVIDER_UNIVERSE AS tgt
+USING (
+        SELECT
+        MD5_VALUE_TEXT
+        ,FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,DIM_PROVIDER_KEY
+        ,DIM_MEDICAL_GROUP_KEY
+        ,DIM_PROVIDER_ADDRESS_KEY
+        ,DIM_STANDARD_ADDRESS_KEY
+        ,DIM_PROVIDER_OWNERSHIP_KEY
+        ,CARE_TYPE_NAME
+        ,RELATIONSHIP_START_DATE
+        ,RELATIONSHIP_START_DATE_KEY
+        ,RELATIONSHIP_TERM_DATE
+        ,RELATIONSHIP_TERM_DATE_KEY
+        FROM STAGEDATA.FACT_PROVIDER_UNIVERSE_SELECT_VW
+    MINUS
+        SELECT
+        MD5_VALUE_TEXT
+        ,IS_LOGICAL_DELETE_FLAG
+        ,DIM_TPA_HIERARCHY_KEY
+        ,DIM_PROVIDER_KEY
+        ,DIM_MEDICAL_GROUP_KEY
+        ,DIM_PROVIDER_ADDRESS_KEY
+        ,DIM_STANDARD_ADDRESS_KEY
+        ,DIM_PROVIDER_OWNERSHIP_KEY
+        ,CARE_TYPE_NAME
+        ,RELATIONSHIP_START_DATE
+        ,RELATIONSHIP_START_DATE_KEY
+        ,RELATIONSHIP_TERM_DATE
+        ,RELATIONSHIP_TERM_DATE_KEY
+        FROM DIMDATA.FACT_PROVIDER_UNIVERSE
+    ) AS src
+
+ON (tgt.DIM_TPA_HIERARCHY_KEY = src.DIM_TPA_HIERARCHY_KEY
+AND tgt.DIM_PROVIDER_KEY = src.DIM_PROVIDER_KEY
+AND tgt.DIM_MEDICAL_GROUP_KEY = src.DIM_MEDICAL_GROUP_KEY
+AND tgt.DIM_PROVIDER_ADDRESS_KEY = src.DIM_PROVIDER_ADDRESS_KEY
+AND tgt.DIM_STANDARD_ADDRESS_KEY = src.DIM_STANDARD_ADDRESS_KEY
+AND tgt.DIM_PROVIDER_OWNERSHIP_KEY = src.DIM_PROVIDER_OWNERSHIP_KEY
+AND tgt.RELATIONSHIP_START_DATE_KEY = src.RELATIONSHIP_START_DATE_KEY
+AND tgt.RELATIONSHIP_TERM_DATE_KEY = src.RELATIONSHIP_TERM_DATE_KEY)
+
+WHEN MATCHED
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.CARE_TYPE_NAME = src.CARE_TYPE_NAME,
+    tgt.RELATIONSHIP_START_DATE = src.RELATIONSHIP_START_DATE,
+    tgt.RELATIONSHIP_TERM_DATE = src.RELATIONSHIP_TERM_DATE
+
+WHEN NOT MATCHED
+
+THEN INSERT
+    (
+    FACT_PROVIDER_UNIVERSE_KEY
+    ,MD5_VALUE_TEXT
+    ,INSERT_DATETIME
+    ,LAST_UPDATED_DATETIME
+    ,IS_LOGICAL_DELETE_FLAG
+    ,DIM_TPA_HIERARCHY_KEY
+    ,DIM_PROVIDER_KEY
+    ,DIM_MEDICAL_GROUP_KEY
+    ,DIM_PROVIDER_ADDRESS_KEY
+    ,DIM_STANDARD_ADDRESS_KEY
+    ,DIM_PROVIDER_OWNERSHIP_KEY
+    ,CARE_TYPE_NAME
+    ,RELATIONSHIP_START_DATE
+    ,RELATIONSHIP_START_DATE_KEY
+    ,RELATIONSHIP_TERM_DATE
+    ,RELATIONSHIP_TERM_DATE_KEY
+    )
+VALUES
+    (
+    (SELECT IFNULL(MAX(FACT_PROVIDER_UNIVERSE_KEY), 100000000) FROM DIMDATA.FACT_PROVIDER_UNIVERSE WHERE MD5_VALUE_TEXT = 'N/A-UPMCHP-DATAHUB') + ROW_NUMBER() OVER (ORDER BY 1)
+    ,src.MD5_VALUE_TEXT
+    ,CURRENT_TIMESTAMP()
+    ,CURRENT_TIMESTAMP()
+    ,FALSE
+    ,src.DIM_TPA_HIERARCHY_KEY
+    ,src.DIM_PROVIDER_KEY
+    ,src.DIM_MEDICAL_GROUP_KEY
+    ,src.DIM_PROVIDER_ADDRESS_KEY
+    ,src.DIM_STANDARD_ADDRESS_KEY
+    ,src.DIM_PROVIDER_OWNERSHIP_KEY
+    ,src.CARE_TYPE_NAME
+    ,src.RELATIONSHIP_START_DATE
+    ,src.RELATIONSHIP_START_DATE_KEY
+    ,src.RELATIONSHIP_TERM_DATE
+    ,src.RELATIONSHIP_TERM_DATE_KEY
+    )
+;`;
+
+// set delete command which will update is_logical_delete to true
+// This specifically uses the MD5_VALUE_TEXT sentinel so it only touches rows this proc inserted, leaving
+// any future second feed into this fact alone.
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.FACT_PROVIDER_UNIVERSE
+SET
+IS_LOGICAL_DELETE_FLAG = TRUE
+,LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHERE FACT_PROVIDER_UNIVERSE_KEY IN
+(
+    SELECT FACT_PROVIDER_UNIVERSE.FACT_PROVIDER_UNIVERSE_KEY
+    FROM DIMDATA.FACT_PROVIDER_UNIVERSE
+        LEFT OUTER JOIN STAGEDATA.FACT_PROVIDER_UNIVERSE_SELECT_VW
+            ON (FACT_PROVIDER_UNIVERSE.DIM_TPA_HIERARCHY_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.DIM_TPA_HIERARCHY_KEY
+            AND FACT_PROVIDER_UNIVERSE.DIM_PROVIDER_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.DIM_PROVIDER_KEY
+            AND FACT_PROVIDER_UNIVERSE.DIM_MEDICAL_GROUP_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.DIM_MEDICAL_GROUP_KEY
+            AND FACT_PROVIDER_UNIVERSE.DIM_PROVIDER_ADDRESS_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.DIM_PROVIDER_ADDRESS_KEY
+            AND FACT_PROVIDER_UNIVERSE.DIM_STANDARD_ADDRESS_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.DIM_STANDARD_ADDRESS_KEY
+            AND FACT_PROVIDER_UNIVERSE.DIM_PROVIDER_OWNERSHIP_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.DIM_PROVIDER_OWNERSHIP_KEY
+            AND FACT_PROVIDER_UNIVERSE.RELATIONSHIP_START_DATE_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.RELATIONSHIP_START_DATE_KEY
+            AND FACT_PROVIDER_UNIVERSE.RELATIONSHIP_TERM_DATE_KEY = FACT_PROVIDER_UNIVERSE_SELECT_VW.RELATIONSHIP_TERM_DATE_KEY)
+    WHERE FACT_PROVIDER_UNIVERSE_SELECT_VW.MD5_VALUE_TEXT IS NULL
+    AND FACT_PROVIDER_UNIVERSE.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND FACT_PROVIDER_UNIVERSE.MD5_VALUE_TEXT = 'N/A-UPMCHP-DATAHUB' --Only want to update records inserted by this stored proc.
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+    throw result;
+}
+return result;
+$$
+;

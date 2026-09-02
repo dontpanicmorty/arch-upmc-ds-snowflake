@@ -1,0 +1,333 @@
+--REVIEWER: Loader for the UPMCHP_DATAHUB feed into DIMDATA.DIM_PROVIDER_ADDRESS, sourced from
+--STAGEDATA.DIM_PROVIDER_ADDRESS_SELECT_VW. Derived from the DIM_PROVIDER_ADDRESS worksheet of
+--STTM/IDAP STAGEDATA STTM.xlsx. Modelled directly on dimdata.spu_Load_Pharmacy_Dim_Provider_Address,
+--which loads the sibling pharmacy feed into the same dimension.
+--
+--Naming: plain spu_Load_Dim_Provider_Address, matching the plain STAGEDATA.DIM_PROVIDER_ADDRESS_SELECT_VW
+--that the STTM names. If a source qualifier is later wanted for symmetry with the pharmacy proc, rename
+--to spu_Load_Dim_Provider_Address_Upmchp_Datahub -- rename only, no body change.
+--
+--Items needing a reviewer decision:
+--
+--  (1) SURROGATE KEY COLLISION WITH THE PHARMACY LOADER -- READ THIS BEFORE RUNNING.
+--      spu_Load_Pharmacy_Dim_Provider_Address seeds its keys with
+--        (SELECT IFNULL(MAX(DIM_PROVIDER_ADDRESS_KEY), 100000000) FROM DIMDATA.DIM_PROVIDER_ADDRESS
+--         WHERE MD5_VALUE_TEXT = 'N/A-UPMCHP_DATAHUB') + ROW_NUMBER() OVER (ORDER BY 1)
+--      i.e. the MAX is scoped to that proc's own sentinel. If this proc copied that pattern with its own
+--      sentinel, BOTH feeds would seed from 100000000 on an empty dimension and both would emit
+--      100000001, 100000002, ... -- duplicate primary keys. Snowflake does not enforce
+--      PK_Dim_Provider_Address, so nothing would raise an error; the duplicates would just be there.
+--      This proc therefore seeds from the UNSCOPED MAX over the whole dimension, so it can never collide
+--      with the pharmacy feed or with any future third feed. That is a deliberate deviation from the
+--      pattern in the pharmacy proc.
+--      NOTE: the pharmacy proc has the same latent bug in reverse and should probably get the same fix,
+--      but it is outside the scope of this file and is not touched here.
+--
+--  (2) SENTINEL SPELLING. This proc uses the HYPHEN variant 'N/A-UPMCHP-DATAHUB' -- what the STTM
+--      specifies, and what stagedata.Dim_Provider_Address_Select_vw emits. The pharmacy proc and view use
+--      the UNDERSCORE variant 'N/A-UPMCHP_DATAHUB'. These are different strings, and that is what keeps
+--      the two feeds' soft deletes from clobbering each other's rows -- so the difference is load-bearing,
+--      not a typo to clean up. Do not let them converge.
+--
+--  (3) THE STTM'S INSERT/LAST_UPDATED LITERALS ARE NEVER USED. stagedata.Dim_Provider_Address_Select_vw
+--      projects TO_TIMESTAMP_TZ('1900-01-01') and TO_TIMESTAMP_TZ('9999-12-31') per the STTM, but this
+--      proc sets both columns to CURRENT_TIMESTAMP() on insert and LAST_UPDATED_DATETIME to
+--      CURRENT_TIMESTAMP() on update, exactly as every other loader in this repo does. So the open
+--      question flagged as item (2) in the staging view's header is harmless in practice -- those two
+--      literals are dead columns. They should still be resolved with the STTM author, and once they are,
+--      both columns can be dropped from the staging view entirely.
+--
+--  (4) DIM_PROVIDER_ADDRESS_KEY IS NOT READ FROM THE STAGING VIEW. The staging view projects it as a NULL
+--      placeholder to keep its shape aligned with the STTM column list; this proc owns the real key. The
+--      placeholder is now demonstrably unused and can be deleted from the staging view -- see the
+--      TODO(STTM) block above it there.
+--
+--  (5) NO !load REGISTRATION. Not yet referenced from Scripts/IDAP-DB/Deployment/IDAP_Deployment.sql and
+--      not called from anything in Scripts/LoadScripts/. It will not deploy or run until both are wired up.
+
+CREATE OR REPLACE PROCEDURE DIMDATA.SPU_LOAD_DIM_PROVIDER_ADDRESS()
+RETURNS VARCHAR NOT NULL
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS
+$$
+// get procedure start time and set variables
+var startTime = new Date().toISOString();
+var procedureName = Object.keys(this)[0];
+var targetTableName = `DIMDATA.DIM_PROVIDER_ADDRESS`;
+
+// Create merge statement to be executed.
+// The MINUS block is the change-detection step: only rows that differ from what is already in the target
+// reach the MERGE at all.
+var sqlMergeCommand =
+`
+MERGE INTO DIMDATA.DIM_PROVIDER_ADDRESS AS tgt
+USING (
+        SELECT
+        MD5_VALUE_TEXT
+        ,FALSE AS IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIVISION_ID
+        ,PROVIDER_ADDRESS_TYPE_CODE
+        ,PROVIDER_ADDRESS_TYPE_DESC
+        ,PROVIDER_OFFICE_ID
+        ,PROVIDER_OFFICE_NAME
+        ,PROVIDER_FULL_ADDRESS_FORMATTED
+        ,PROVIDER_ADDRESS_LINE1_TEXT
+        ,PROVIDER_ADDRESS_LINE2_TEXT
+        ,PROVIDER_CITY_NAME
+        ,PROVIDER_STATE_ABBREV_NAME
+        ,PROVIDER_STATE_FULL_NAME
+        ,PROVIDER_COUNTY_NAME
+        ,PROVIDER_COUNTRY_NAME
+        ,PROVIDER_COUNTRY_ISO2
+        ,PROVIDER_COUNTRY_ISO3
+        ,PROVIDER_ZIP_CODE_NBR
+        ,PROVIDER_LATITUDE_NBR
+        ,PROVIDER_LONGITUDE_NBR
+        ,PROVIDER_OFFICE_MANAGER_NAME
+        ,HANDICAP_ACCESS_IND
+        ,TELE_HEALTH_IND
+        ,RECEIVES_MAIL_IND
+        ,E_PRESCRIBE_IND
+        ,MA_SUPER_PCP_IND
+        ,EMR_SYSTEM_NAME
+        FROM STAGEDATA.DIM_PROVIDER_ADDRESS_SELECT_VW
+    MINUS
+        SELECT
+        MD5_VALUE_TEXT
+        ,IS_LOGICAL_DELETE_FLAG
+        ,TPA_CLIENT_ID
+        ,TPA_ID
+        ,TPA_DIVISION_ID
+        ,PROVIDER_ADDRESS_TYPE_CODE
+        ,PROVIDER_ADDRESS_TYPE_DESC
+        ,PROVIDER_OFFICE_ID
+        ,PROVIDER_OFFICE_NAME
+        ,PROVIDER_FULL_ADDRESS_FORMATTED
+        ,PROVIDER_ADDRESS_LINE1_TEXT
+        ,PROVIDER_ADDRESS_LINE2_TEXT
+        ,PROVIDER_CITY_NAME
+        ,PROVIDER_STATE_ABBREV_NAME
+        ,PROVIDER_STATE_FULL_NAME
+        ,PROVIDER_COUNTY_NAME
+        ,PROVIDER_COUNTRY_NAME
+        ,PROVIDER_COUNTRY_ISO2
+        ,PROVIDER_COUNTRY_ISO3
+        ,PROVIDER_ZIP_CODE_NBR
+        ,PROVIDER_LATITUDE_NBR
+        ,PROVIDER_LONGITUDE_NBR
+        ,PROVIDER_OFFICE_MANAGER_NAME
+        ,HANDICAP_ACCESS_IND
+        ,TELE_HEALTH_IND
+        ,RECEIVES_MAIL_IND
+        ,E_PRESCRIBE_IND
+        ,MA_SUPER_PCP_IND
+        ,EMR_SYSTEM_NAME
+        FROM DIMDATA.DIM_PROVIDER_ADDRESS
+    ) AS src
+
+--This ON clause is UK_Dim_Provider_Address, column for column. Snowflake does not enforce that UNIQUE
+--constraint, so this clause is what actually de-duplicates the dimension. If the UK on
+--dimdata.Dim_Provider_Address changes, change this and the soft-delete join below to match.
+ON (tgt.PROVIDER_ADDRESS_TYPE_CODE = src.PROVIDER_ADDRESS_TYPE_CODE
+AND tgt.PROVIDER_OFFICE_ID = src.PROVIDER_OFFICE_ID
+AND tgt.PROVIDER_OFFICE_NAME = src.PROVIDER_OFFICE_NAME
+AND tgt.PROVIDER_ADDRESS_LINE1_TEXT = src.PROVIDER_ADDRESS_LINE1_TEXT
+AND tgt.PROVIDER_ADDRESS_LINE2_TEXT = src.PROVIDER_ADDRESS_LINE2_TEXT
+AND tgt.PROVIDER_CITY_NAME = src.PROVIDER_CITY_NAME
+AND tgt.PROVIDER_STATE_ABBREV_NAME = src.PROVIDER_STATE_ABBREV_NAME
+AND tgt.PROVIDER_ZIP_CODE_NBR = src.PROVIDER_ZIP_CODE_NBR
+AND tgt.PROVIDER_COUNTRY_NAME = src.PROVIDER_COUNTRY_NAME)
+
+WHEN MATCHED
+THEN UPDATE SET
+    tgt.LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP(),
+    tgt.IS_LOGICAL_DELETE_FLAG = FALSE,
+    tgt.TPA_CLIENT_ID = src.TPA_CLIENT_ID,
+    tgt.TPA_ID = src.TPA_ID,
+    tgt.TPA_DIVISION_ID = src.TPA_DIVISION_ID,
+    tgt.PROVIDER_ADDRESS_TYPE_DESC = src.PROVIDER_ADDRESS_TYPE_DESC,
+    tgt.PROVIDER_FULL_ADDRESS_FORMATTED = src.PROVIDER_FULL_ADDRESS_FORMATTED,
+    tgt.PROVIDER_STATE_FULL_NAME = src.PROVIDER_STATE_FULL_NAME,
+    tgt.PROVIDER_COUNTY_NAME = src.PROVIDER_COUNTY_NAME,
+    tgt.PROVIDER_COUNTRY_ISO2 = src.PROVIDER_COUNTRY_ISO2,
+    tgt.PROVIDER_COUNTRY_ISO3 = src.PROVIDER_COUNTRY_ISO3,
+    tgt.PROVIDER_LATITUDE_NBR = src.PROVIDER_LATITUDE_NBR,
+    tgt.PROVIDER_LONGITUDE_NBR = src.PROVIDER_LONGITUDE_NBR,
+    tgt.PROVIDER_OFFICE_MANAGER_NAME = src.PROVIDER_OFFICE_MANAGER_NAME,
+    tgt.HANDICAP_ACCESS_IND = src.HANDICAP_ACCESS_IND,
+    tgt.TELE_HEALTH_IND = src.TELE_HEALTH_IND,
+    tgt.RECEIVES_MAIL_IND = src.RECEIVES_MAIL_IND,
+    tgt.E_PRESCRIBE_IND = src.E_PRESCRIBE_IND,
+    tgt.MA_SUPER_PCP_IND = src.MA_SUPER_PCP_IND,
+    tgt.EMR_SYSTEM_NAME = src.EMR_SYSTEM_NAME
+
+WHEN NOT MATCHED
+
+THEN INSERT
+    (
+    DIM_PROVIDER_ADDRESS_KEY
+    ,MD5_VALUE_TEXT
+    ,INSERT_DATETIME
+    ,LAST_UPDATED_DATETIME
+    ,IS_LOGICAL_DELETE_FLAG
+    ,TPA_CLIENT_ID
+    ,TPA_ID
+    ,TPA_DIVISION_ID
+    ,PROVIDER_ADDRESS_TYPE_CODE
+    ,PROVIDER_ADDRESS_TYPE_DESC
+    ,PROVIDER_OFFICE_ID
+    ,PROVIDER_OFFICE_NAME
+    ,PROVIDER_FULL_ADDRESS_FORMATTED
+    ,PROVIDER_ADDRESS_LINE1_TEXT
+    ,PROVIDER_ADDRESS_LINE2_TEXT
+    ,PROVIDER_CITY_NAME
+    ,PROVIDER_STATE_ABBREV_NAME
+    ,PROVIDER_STATE_FULL_NAME
+    ,PROVIDER_COUNTY_NAME
+    ,PROVIDER_COUNTRY_NAME
+    ,PROVIDER_COUNTRY_ISO2
+    ,PROVIDER_COUNTRY_ISO3
+    ,PROVIDER_ZIP_CODE_NBR
+    ,PROVIDER_LATITUDE_NBR
+    ,PROVIDER_LONGITUDE_NBR
+    ,PROVIDER_OFFICE_MANAGER_NAME
+    ,HANDICAP_ACCESS_IND
+    ,TELE_HEALTH_IND
+    ,RECEIVES_MAIL_IND
+    ,E_PRESCRIBE_IND
+    ,MA_SUPER_PCP_IND
+    ,EMR_SYSTEM_NAME
+    )
+VALUES
+    (
+    --REVIEWER: see item (1) in the header. The MAX below is deliberately NOT scoped to this proc's
+    --MD5_VALUE_TEXT sentinel, unlike spu_Load_Pharmacy_Dim_Provider_Address. Scoping it would make this
+    --feed and the pharmacy feed both start at 100000001 and issue duplicate primary keys.
+    (SELECT IFNULL(MAX(DIM_PROVIDER_ADDRESS_KEY), 100000000) FROM DIMDATA.DIM_PROVIDER_ADDRESS) + ROW_NUMBER() OVER (ORDER BY 1)
+    ,src.MD5_VALUE_TEXT
+    ,CURRENT_TIMESTAMP()
+    ,CURRENT_TIMESTAMP()
+    ,FALSE
+    ,src.TPA_CLIENT_ID
+    ,src.TPA_ID
+    ,src.TPA_DIVISION_ID
+    ,src.PROVIDER_ADDRESS_TYPE_CODE
+    ,src.PROVIDER_ADDRESS_TYPE_DESC
+    ,src.PROVIDER_OFFICE_ID
+    ,src.PROVIDER_OFFICE_NAME
+    ,src.PROVIDER_FULL_ADDRESS_FORMATTED
+    ,src.PROVIDER_ADDRESS_LINE1_TEXT
+    ,src.PROVIDER_ADDRESS_LINE2_TEXT
+    ,src.PROVIDER_CITY_NAME
+    ,src.PROVIDER_STATE_ABBREV_NAME
+    ,src.PROVIDER_STATE_FULL_NAME
+    ,src.PROVIDER_COUNTY_NAME
+    ,src.PROVIDER_COUNTRY_NAME
+    ,src.PROVIDER_COUNTRY_ISO2
+    ,src.PROVIDER_COUNTRY_ISO3
+    ,src.PROVIDER_ZIP_CODE_NBR
+    ,src.PROVIDER_LATITUDE_NBR
+    ,src.PROVIDER_LONGITUDE_NBR
+    ,src.PROVIDER_OFFICE_MANAGER_NAME
+    ,src.HANDICAP_ACCESS_IND
+    ,src.TELE_HEALTH_IND
+    ,src.RECEIVES_MAIL_IND
+    ,src.E_PRESCRIBE_IND
+    ,src.MA_SUPER_PCP_IND
+    ,src.EMR_SYSTEM_NAME
+    )
+;`;
+
+// set delete command which will update is_logical_delete to true
+// This specifically uses the MD5_VALUE_TEXT sentinel so it only touches rows this proc inserted, leaving
+// the pharmacy feed's rows and any rows loaded from SQL Server alone.
+var sqlDeleteCommand =
+`
+UPDATE DIMDATA.DIM_PROVIDER_ADDRESS
+SET
+IS_LOGICAL_DELETE_FLAG = TRUE
+,LAST_UPDATED_DATETIME = CURRENT_TIMESTAMP()
+WHERE DIM_PROVIDER_ADDRESS_KEY IN
+(
+    SELECT DIM_PROVIDER_ADDRESS.DIM_PROVIDER_ADDRESS_KEY
+    FROM DIMDATA.DIM_PROVIDER_ADDRESS
+        LEFT OUTER JOIN STAGEDATA.DIM_PROVIDER_ADDRESS_SELECT_VW
+            ON (DIM_PROVIDER_ADDRESS.PROVIDER_ADDRESS_TYPE_CODE = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_ADDRESS_TYPE_CODE
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_OFFICE_ID = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_OFFICE_ID
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_OFFICE_NAME = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_OFFICE_NAME
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_ADDRESS_LINE1_TEXT = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_ADDRESS_LINE1_TEXT
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_ADDRESS_LINE2_TEXT = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_ADDRESS_LINE2_TEXT
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_CITY_NAME = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_CITY_NAME
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_STATE_ABBREV_NAME = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_STATE_ABBREV_NAME
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_ZIP_CODE_NBR = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_ZIP_CODE_NBR
+            AND DIM_PROVIDER_ADDRESS.PROVIDER_COUNTRY_NAME = DIM_PROVIDER_ADDRESS_SELECT_VW.PROVIDER_COUNTRY_NAME)
+    WHERE DIM_PROVIDER_ADDRESS_SELECT_VW.MD5_VALUE_TEXT IS NULL
+    AND DIM_PROVIDER_ADDRESS.IS_LOGICAL_DELETE_FLAG = FALSE
+    AND DIM_PROVIDER_ADDRESS.MD5_VALUE_TEXT = 'N/A-UPMCHP-DATAHUB' --Only want to update records inserted by this stored proc. Do not want to edit records added by the pharmacy feed or by SQL Server
+)
+;`;
+
+var sqlLogCommand =
+`INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+(NAME, TYPE, START_TIME, END_TIME, INSERT_COUNT, UPDATE_COUNT, DELETE_COUNT, RESULT_TEXT, SQL_STATEMENT, QUERY_ID)
+VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10)
+;`;
+
+try
+{
+    //Execute Merge Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlMergeCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+    // You must run a seperate query to find records in the target that do not exist in the source and mark them as deleted
+    //Execute DELETE Command
+    var startTime = new Date().toISOString();
+    var sfStatement = snowflake.createStatement({sqlText: sqlDeleteCommand});
+    sfStatement.execute();
+    var endTime = new Date().toISOString();
+    var result = "Succeeded";
+
+    //Log results to table
+    snowflake.execute
+    ({
+        sqlText: sqlLogCommand,
+        binds: [targetTableName, "TABLE", startTime, endTime, sfStatement.getNumRowsInserted(), sfStatement.getNumRowsUpdated(), sfStatement.getNumRowsDeleted(), result, sfStatement.getSqlText(), sfStatement.getQueryId()]
+    });
+
+}
+
+catch (err)
+{
+    var result = "Failed";
+    var endTime = new Date().toISOString();
+
+    //Log results to table
+    var sqlLogCommand = `INSERT INTO LOGDATA.TABLE_LOAD_HISTORY
+        (NAME, TYPE, START_TIME, END_TIME, RESULT_TEXT, SQL_STATEMENT, ERROR_CODE, ERROR_STATE, ERROR_MESSAGE, ERROR_STACK_TRACE_TEXT)
+        VALUES (:1,:2,:3::timestamp_ltz,:4::timestamp_ltz,:5,:6,:7,:8,:9,:10);`;
+
+    snowflake.execute
+    (
+        {
+        sqlText: sqlLogCommand,
+        binds:[targetTableName, "TABLE", startTime, endTime, result, sfStatement.getSqlText(), err.code, err.state, err.message, err.stackTraceTxt]
+        }
+    );
+    throw result;
+}
+return result;
+$$
+;
