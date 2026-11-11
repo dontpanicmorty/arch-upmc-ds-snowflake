@@ -1,0 +1,466 @@
+Hobbs, David E  1:02
+All right, let me just give it like 30 seconds, then we'll go ahead and get started.
+Okay, let's go ahead and get started. So by the way, I started the recording, just so everybody knows, and I guess we'll go ahead and get started with questions if that's okay. Kumar wanted to start since he's got some timing issues. Did you want to go ahead and go with it?
+
+Patel, Dixitkumar  1:46
+Yeah, sure. So let me share my screen.
+Ohh.
+Hi, Steve. So it's regarding the provider view, right? So as we discussed last time, right? So Info has two records and basically Cactus has one record. So I did look for the, oh, not this one.
+So I, so cactus has only one record. So I did drill down and look for the stores. And what I found is this cactus source, right? This is from Upmc Data Hub. So we'll have only one record from the source itself, right?
+So in that case, how do we proceed with the union with the info view?
+Should we include all both of this record?
+
+Grier, Steven  2:45
+What are these two records? Are they both active, both real, one historical?
+
+Patel, Dixitkumar  2:50
+So one is, I mean, kind of not active, say if you look at the row effective date, right? So this one was row expired on 2026, 10, 8.
+
+Grier, Steven  3:02
+Yeah.
+
+Patel, Dixitkumar  3:03
+Right, so...
+Everything is same except for the indicator part, convert indicator. So it was you and then it was I, updated as a I. So in that case, should we pick one record or?
+
+Grier, Steven  3:26
+So do we, I'm assuming that because we only have one record on the Data Hub side that we don't have this historical version of the record.
+
+Patel, Dixitkumar  3:32
+Yeah, yeah.
+
+Grier, Steven  3:34
+And if the only difference is the convert indicator, do we know what that column means?
+
+Patel, Dixitkumar  3:41
+So I couldn't find any definition, but let me see, convert indicator.
+Extra call on me.
+Ah, let me see. They should have that code.
+Sorry, let me just scroll it down.
+I can look it up to find if I can find any difference why we have this indicator difference.
+But other than that, I mean, if it's not important, is it okay to just pick one record and load it so that we don't have dupes?
+
+Grier, Steven  4:38
+I'm taking a look here. I mean, so I'm okay for this specific record, because this looks like everything is the same.
+But I don't know if that's the case for all records, but I just did a search in our repo.
+It looks like convert indicators used in a bunch of the bridge.
+Inserts.
+Okay, so...
+Fact enrollment. Oh, that's fact enrollment. Okay, so let's see, this might be...
+So an I, a U, or a D looks like it's a record that needs to be inserted, updated, or deleted.
+
+Patel, Dixitkumar  5:24
+Mhm.
+
+Grier, Steven  5:27
+So it doesn't have any meaningful...
+representation. It's more a processing column that we create. So for me, if I look at dim provider.
+Right, so in the existing info merge for dim provider from stage, it looks like.
+We do deletes, updates.
+And then when it's not matched, we do an insert and we set that column to an I. Is that right?
+Server, actually, don't even see that column, so...
+Might default to an I, so, but...
+So if that's the only difference between these two rows.
+then there's no actual difference. So we would only want one row.
+
+Patel, Dixitkumar  6:15
+Wallander, right?
+
+Grier, Steven  6:16
+Yeah.
+
+Patel, Dixitkumar  6:17
+Okay, sounds good. So I'll perform some more analysis on see if I'll check a couple of other records as well and see if there are any other differences than I and you. If not, then probably we'll just pick up the latest one.
+
+Grier, Steven  6:32
+I would look through, and maybe this is just a recommendation to make the analysis a little easier, but I would hash.
+The columns together and exclude things that are that are just processing based, hash hash those columns with a, you know, the same hashing function we use everywhere else, and like excluding row effective and expiration, it just hash the actual values and see how many duplicates you have.
+Excluding some of the things that...
+aren't going to provide much meaning, right? So it's like, if everything shows up and it matches, then the hash will be the same. And then you can look at scenarios where the hash is different, and then we can kind of reverse engine and see why. But it's, so anyways, it's just an easier way to, I'm just doing the same thing from an Epic perspective.
+
+Patel, Dixitkumar  7:22
+HAM.
+
+Grier, Steven  7:23
+And I've found that that helps. I mean, it really matters which columns you include, but you can change that. It's better than, so it's kind of better than grouping.
+
+Patel, Dixitkumar  7:35
+Yeah.
+Yeah, yeah, no, I was just checking like I think we don't have that many like codes.
+So another question, so if that provider ID, right, let's say this source ID is 429010, right? If it's present in data hub, right?
+Um...
+So let's look at this one. So we do have cactus UPMC. So in that case, should we union this or should we exclude the infra record?
+because we already have this provider ID.
+So if you look at the source provider NBR, right, it is 9429010.
+
+Grier, Steven  8:25
+Yeah, so again, it, it, it's more.
+You think?
+So we would want to keep in the data hub, we're getting 2 records because this provider exists in both MC400 and Cactus.
+
+Patel, Dixitkumar  8:42
+Mhm.
+
+Grier, Steven  8:43
+We want to keep the cactus record.
+In the event that they both exist, if they don't both exist, then we keep the MC400 record.
+Um...
+The problem is that the provider ID listed here is different, and I believe the provider ID is used in the lookup.
+So the challenge is that we want to keep the cactus record over the MC400 record. We want claims to link, claims, provider contracts, and provider universe to link to the same provider record.
+So in this scenario, I don't think we can treat data source name as part of the key. And we'll get a little bit awkward, I think, as we start looking at those lookups. So I guess the answer I think is we're going to need to try this first by only taking one of those two records.
+
+Patel, Dixitkumar  9:25
+Um...
+
+Grier, Steven  9:45
+preferring Cactus over MC400.
+
+Patel, Dixitkumar  9:49
+Okay, I mean because this is existing view, so I'm not sure. We didn't develop this view. It was there.
+So, I mean, there won't be any impact, right, if we change.
+
+Grier, Steven  10:02
+Oh, probably, yeah. We'll have to assess that. So, but what I, what I, what we'll have to do as a part of this is is is going to involve that assessment anyways. And I'm, for love of God, hopefully almost done with this Epic stuff and can jump back in here and start looking at the changes we need to make.
+
+Patel, Dixitkumar  10:04
+Okay.
+OKOK.
+
+Grier, Steven  10:22
+that touch on the claims dimension that'll help with the guidance that we need here for how we put these two views together. But yes, in my mind, one of the things that we're doing different right now is that we, that was different from previous, is that I don't want separate records for the same provider, one coming from Cactus and one coming from MC400. I want them to conform to the
+same provider data, that might not end up working. And in the event it doesn't end up working, then we'll walk it back and we'll include data source name as a key column.
+But one of the things that we're going to need to do from a provider universe perspective is conform those. So we need to have Cactus over MC400. What I'm not 100% on.
+is if we want both of these records to exist in the dim and the lookup picks the Cactus record over the MC400 record.
+
+Patel, Dixitkumar  11:21
+Okay.
+
+Grier, Steven  11:21
+That's where I'm not certain. So I think that for now, we need to have the logic that picks Cactus over MC400. So if we put that in the view and we've over-filtered, we can move that logic to other views later if we have issues. But it still makes sense to build the logic and put it in this view now, test it, get down to one record, confirm it's the correct record that we want.
+across the scenarios where we have Cactus and MC400 scenarios where we only have one or the other, because that logic is valuable, we're going to need that regardless. So let's build it in now, let's confirm it now, and if we have an issue, have a chance to start playing with these what if games.
+with the new facts and the lookups, then we'll start to see that.
+
+Patel, Dixitkumar  12:08
+Okay, so the order would be cactus preferable. If not in cactus, then MCK 400. And if not on both of them, then from info.
+
+Grier, Steven  12:22
+Yes, so from the data hub right now, but it's going to be more than just Cactus and MC400 eventually. So there's going to be ESI data in there, there's going to be Skygen data in there too. So it just isn't showing up because the IDs are different. So we shouldn't have too much overlap, but there will be some overlap.
+
+Patel, Dixitkumar  12:32
+Yeah, yeah.
+Yeah.
+
+Grier, Steven  12:40
+In some cases, because I didn't, Alyssa, correct me if I'm wrong, but I think that there are some pharmacies that get entered into Cactus.
+
+Hale, Alyssa  12:51
+I think so. I'm not as familiar with the whole Pharmacy Edition piece though, but we've had some and I think it's like facilities and stuff.
+
+Grier, Steven  13:01
+Yeah, so that's where it gets weird. Because like, again, the IDs aren't going to overlap because of like the prefixing and like all that. But once we get to the lookup, the lookups will start to find multiple records, potentially.
+
+Patel, Dixitkumar  13:06
+Yeah.
+
+Grier, Steven  13:19
+We want the lookups to all pick the same record where it's applicable. I do have some concerns over the data mismatching, but again, like I was trying to say earlier, we should start by filtering. We can move that filter to other places later without having to change the logic, so we don't lose anything by over-filtering now.
+In our in our development.
+So let's put that filter in place. Let's pick the record that we want. If there are more choices than just Cactus and MC400, we can set the precedence for each of those sources and then figure out how to code that as we get into, you know, the engineering part of this.
+
+Patel, Dixitkumar  14:00
+Okay, so let me figure out that part and I'll probably ping you with the list, like what should be the priority if we have that, if it comes to multiple sources, then we can go from there.
+
+Grier, Steven  14:15
+Yeah, and what we'll probably end up doing, and that's why I don't want to get too caught up on the priority. Like we can keep it high level for now, because we're going to need to find a way to make that a data-driven decision.
+So we're going to have a table that has data source name and some sort of priority indicator that's going to be used in the join.
+Because the code isn't going to say cactus over MC400, the code's going to sort by priority and pick the highest priority available. So when we actually implement this from a code perspective, we'll have another table that we end up creating that drives the priority here.
+So we will keep it light for now. And when we start to engineer, we'll need the rules, but it'll be a table-driven thing that we'll be able to tweak as we go.
+
+Patel, Dixitkumar  15:06
+Okay.
+Okay, so.
+
+Grier, Steven  15:09
+And if we need more definition of that, I can kind of put it in as an example.
+What I mean, but I hopefully that.
+
+Patel, Dixitkumar  15:22
+Yes, so right now, I mean, should we work on that separate table or should we just right now go as it is and just try to figure out which sources we can look, I mean, put a priority manually or something like that?
+
+Grier, Steven  15:41
+So the mapping just is to call out what the priority is. When we go to actually code the view, we will create a data set so that it's not hard-coded.
+
+Patel, Dixitkumar  15:44
+Mm.
+Okay, sounds good.
+
+Grier, Steven  15:57
+Because by the time you put that in a mapping doc, you've already done more work, I think, than it's it will take to build a table, so...
+
+Patel, Dixitkumar  16:06
+Okay, yeah, makes sense. Okay, sounds good. Yeah, that's all from my side. Thank you.
+
+Hobbs, David E  16:15
+Okay, let's see if we can go with a question that is more immediately necessary, something that can't wait till Friday, if we could.
+Anyone?
+
+Allen, Maurice  16:29
+I have a question about the is logical delete flag in our dimension tables.
+So, Steve, um, right now I'm working on a contract and a couple of the...
+Dimensional tables that is derived from in the join logic, we need to have an is logical delete flag, which...
+doesn't currently exist. So where it's missing, do we need to revisit that?
+dims, I guess like stage data DML or add it in the votes procedure.
+
+Grier, Steven  17:09
+So an is logical delete flag.
+
+Allen, Maurice  17:19
+Because, yeah, I was gonna say...
+
+Grier, Steven  17:19
+I want to, I want to say it exists in the dim, not in the stage.
+
+Allen, Maurice  17:25
+Okay.
+
+Grier, Steven  17:28
+But it depends, and that's where, that's what I'm thinking about is, yeah.
+
+Allen, Maurice  17:32
+Yeah, we've had some competing conventions where it's existed at the layer above the table, so in the view, and then in the load procedure, once either a match exists, then we will retain it as false and...
+I think where it doesn't exist, it gets updated to true, or may have that backwards. But the load procedure handles whether it's true or false.
+
+Grier, Steven  18:02
+Right, that's the ideal, but I'm trying to think about when we do this conversion, we won't have all of the information from a historical perspective. So I'm concerned about over-flagging old records. But yes, ideally it's part of the procedure where...
+If our current state of what's in the data hub and coming through those extracts and through raw data.
+If that exists in the dimension, but the values are different.
+then it's a logical delete of the existing record and an insert of a new provider record.
+If it exists, but the values are same, we do nothing. If it doesn't exist, it's an insert. But the logical delete is based off of both what is coming out of the data hub and what's already in the dim, which tells me it has to live in the...
+the insert procedure, not in the stage data view.
+That doesn't mean that's how it's coded today. That doesn't mean that's going to functionally work out. So it might be case by case, it's a little bit different. We want it all to be the same. We want it all to be in the procedure.
+But I know that what's already in that provider space is a little awkward, so it might take some...
+Might take some some playing around to get things to line up.
+
+Allen, Maurice  19:24
+Well, if we're building today stage data fact views, we need to...
+have some agreed upon convention, even if it changes like later, what would be your recommendation?
+
+Grier, Steven  19:36
+Yeah.
+The convention that we want is that isLogicalDelete is not part of the stage data view, that it is set by the procedure that merges the stage data into the dim.
+
+Allen, Maurice  19:49
+Okay.
+
+Grier, Steven  19:50
+That's the convention. What I'm saying is I don't know if we're going to be able to do that in all cases, because the info data sets that flag, because it does the same operation on SQL Server, maintaining a full fact and DIM model on SQL Server that we then consume.
+
+Allen, Maurice  19:56
+Right.
+
+Grier, Steven  20:09
+So, it's going to come over with that is logical delete flag already set.
+That's where it gets awkward, is because of what's coming from info.
+
+Allen, Maurice  20:19
+Okay, in the example that I'm attempting to discuss when building out, oops, I have that twice. I was also running some tests here in the.
+Logic that's here for a fact provider contract. The is logical delete flag doesn't exist in this dim provider contract attribute table. So wherever it is absent throughout the rest of these joins, would we need to or would I need to go back?
+and refactor those load procedures to include the is logical delete flag to handle it because we're essentially like trying to choose between the records that should and shouldn't be included. But until that's addressed, then this can't be built.
+
+Grier, Steven  21:14
+So the isLogicalDelete flag is a requirement for a slowly changing dimension.
+
+Allen, Maurice  21:19
+Yeah.
+
+Grier, Steven  21:21
+So if fact provider, sorry, dim provider contact info is not a slowly changing dimension, then it should not have an is logical delete flag.
+
+Allen, Maurice  21:31
+So if dim provider contract attribute is not a slowly changing dimension, it should not have a logical delete flag. Yeah, I don't. What is this? So we have the attribute key and sort of that.
+
+Grier, Steven  21:46
+Yeah, this is not, yeah, this is not a...
+
+Allen, Maurice  21:46
+Contract termination reading. Yeah, this doesn't constitute one. Okay.
+
+Grier, Steven  21:51
+Right, so it would not have that flag.
+So the join logic shouldn't have a clause that checks for is logical delete flag, because there's no is logical delete flag on a type 1 dimension.
+
+Allen, Maurice  22:08
+Okay, do we?
+If a table then has that is logical delete flag only when it's SCD type 2, should we be making sure that each of the tables in these joins?
+does or doesn't not, does or doesn't have it based on the data that it contains and then update the STTM and then reflect the logic for those changes because I guess that means here, this being present in the STTM, we need to delete that and then anywhere else where it isn't applicable.
+Remove it, and where it is applicable but doesn't exist in the table, add that to the load procedure.
+
+Grier, Steven  23:02
+Um...
+There's a lot more involved with converting A dimension from an SCD1 to an SCD2.
+
+Allen, Maurice  23:12
+Okay.
+
+Grier, Steven  23:12
+So the dimensions that are out there today, if they are not SCD2, then the mapping and the logic should get updated. I don't think there's any scenario where we would want to make a dimension SCD2 where it isn't today without a lot more conversation.
+
+Allen, Maurice  23:30
+Okay.
+
+Grier, Steven  23:31
+We would need to make sure that that data is historically relevant and that it is important to have that history, because then we'll have to completely reprocess that dimension and it will change how everyone that queries it today needs to write their queries.
+Because if you you can't just query an STD type 2 dimension without accounting for the fact that it has history, so us we can't so that that means that we can't change one from type one to type 2 without addressing every use case of that dimension.
+
+Allen, Maurice  24:03
+As a team, is there any way for us to know at a glance which of these?
+Tables should be one versus two.
+So that, yeah.
+
+Grier, Steven  24:20
+Should, I can tell you whether they are or aren't, but I can't say whether they should or shouldn't be, because they haven't taken a look at that. Yeah, they are, they are or aren't if they have, if they don't, if they have an effective date expiration date set of columns, and in this logical delete flag.
+
+Allen, Maurice  24:26
+Then let's do the former then. Yeah, whether they are or aren't.
+
+Grier, Steven  24:39
+then it's an SCD type 2, because SCD type 2s have to have an effective span.
+If they do not have an effective and end date, then it can't be a CCD type 2.
+
+Allen, Maurice  24:51
+Okay.
+
+Grier, Steven  24:52
+It may.
+
+Allen, Maurice  24:52
+Oh, right, right, you're right, yeah.
+
+Grier, Steven  24:54
+So, that's that's the that's the key, and the is logical delete flag is a way of shortening the the the sequel.
+
+Allen, Maurice  25:03
+Mhm.
+
+Grier, Steven  25:04
+From checking with your current dates between those dates every time to just checking if the flag is true or false and setting logical deletes for the older records, right? So, that that's so a logical delete flag is just a shortcut from a from a SQL perspective, but the true SCD nature of a table is whether or not it has an effective span.
+
+Allen, Maurice  25:13
+Right, right.
+Okay.
+Because the most current record would have its expiration as, what is that, 2999 December 31st, right?
+
+Grier, Steven  25:34
+Well, that's the act, so that's the thing with the net with SCD 2, there's a difference between, there's a difference between current and active. So, the current record in SCD 2, you know, it's like in the data hub, we have row effective date and expiration date. We also have address effective date and expiration date.
+And so you can have a span of a previous address that gets modified. It doesn't change when that address was associated with an office, it changes the attribute, what the actual physical address was. Maybe there was an issue with the zip code and they had to fix it. So the is logical delete flag just means that the...
+record is the current record, the effective span of that record is today, which is different from whether that record is historically active currently or not. So in the DIMs, I believe that everything is more of a simplistic view. It has an effective span or a...
+Doesn't logical delete is based off of the effective span, and we should have for every active or for every span there should be one is logical delete equals false record and potentially many is logical delete true records.
+
+Allen, Maurice  26:52
+Mhm, mhm, okay.
+All right, so.
+
+Grier, Steven  26:57
+I feel like there's holes in that explanation though. I feel like that, I feel like that doesn't quite align.
+So I apologize if it's more confusing now than it was before.
+
+Allen, Maurice  27:08
+No, no. So in a previous life and a different platform, I worked with Data Build Tool and how they look at.
+incremental data or like snapshot data, like they do use the SCD2 framework of like an effective and then a non-effective or less.
+Update it, or you know, whichever one has a null expiration or that last effective, then that's the...
+record that's false. Everything else is true and in terms of it being a logical delete. Translating the application here into just Snowflake DML is sort of where we're at DML and DDL. So you mentioned that you're able to tell us which ones are and which ones are not versus which ones should and which ones shouldn't be. How can you tell us which ones are so that we can also...
+sort of find that out just as easily or be aware of them just as easily.
+
+Grier, Steven  28:05
+So...
+Yeah, it's just looking at the columns. So if you look at the contract, I'm sorry, the contract attribute table, you've inserted last updated and you have a termination reason code and description. There's no effective span for when those termination reason code and description values were active. And the termination reason on a contract isn't historically relevant.
+Right, you would create a new term reason whenever you have a new way in which a contract will term, but you wouldn't necessarily need to know that reason code AC or 15 or whatever it happens to be means termed by date today.
+And six months ago, it meant turn because the data lapsed or something like that, right? Like that's not an analytically important difference. So it's a combination of what columns exist and what data is meant to be in the table. And then just kind of looking at that, you can see whether or not it's possible for this to be type 2.
+
+Allen, Maurice  29:06
+Okay, and there's no context. Oh, sorry.
+
+Grier, Steven  29:06
+So it's.
+No, I was just going to say, it's a combination of the columns and the context. You just have to infer the context.
+
+Allen, Maurice  29:14
+Yeah, that last part is what I was going to ask about. There's no context in which the reason code and description combination would no longer be like applicable or relevant to the data it's being associated with. Like it's essentially just exists to allow us to map and then see when something was inserted at and then the last time it was updated.
+
+Grier, Steven  29:37
+Right, so from an analytical perspective, the code would have a current description. That's what we call it today, what it should show up on the report today. The code will be associated with a contract because you can filter your contracts based by term code.
+
+Allen, Maurice  29:45
+Mm-hmm.
+All right.
+
+Grier, Steven  30:14
+So, it's it from a usage perspective, the way the fact dim model gets interrogated, you can you can infer.
+You can infer some things. Again, it's not.
+
+Allen, Maurice  30:25
+Okay.
+
+Grier, Steven  30:29
+It's assumption-based, right? It's like an inference. It's not written down. It's not something that there's a document that outlines. We didn't stamp the tables with a tag, which is probably a great idea of which ones are type 2 and which ones aren't, to make that something that you don't have to infer.
+
+Allen, Maurice  30:50
+Okay, Um, that's helpful. I will.
+touch base with, I think Alyssa was working on the back provider contract, STTM. After I rerun this, just to make sure that it, if it works without that, there's nothing else that ends up flagging as an error, then we're good. If not, then it's just checking where those is logical delete flags.
+exist or don't and being conscious of those combination of columns with the date and the effective the effective date column and going from there.
+Thank you.
+
+Grier, Steven  31:27
+Oh, okay, yeah, and I think, you know, you led me down the path of we should be tagging our tables when they're SDD2, so I'm going to look into that.
+Because it's not something that we should rely on inference. Everyone brings a little bit different experience and can infer a different outcome. So a tag is a great idea.
+
+Hobbs, David E  31:36
+He still.
+Okay, so it looks like we're already past our time box. Do you have a hard stop, Steve, or can we take it at the question?
+
+Grier, Steven  31:55
+I do have a hard stop. I have two other calls. I have to pick one to go to.
+
+Hobbs, David E  32:01
+Okay.
+
+Grier, Steven  32:02
+Actually, you know what, no, I do, I'm sorry, I'm looking at 1230. I have, I have, I don't have to be on this 12 o'clock, so I have a little bit of time if there's other questions.
+
+Hobbs, David E  32:12
+Yeah, I don't want to cut into anybody's lunchtime, but maybe we have a time for a question, one or two questions, if anybody would like to.
+Askey one.
+
+Grier, Steven  32:28
+What's lunchtime?
+
+Hobbs, David E  32:32
+Yeah, maybe we could talk about that. Well, it sounds like everybody's kind of silent here. Let me get to give a real quick last call.
+Anything at all?
+
+Grier, Steven  32:46
+If you're making anything particularly good for lunch, throw it in the chat. I'm curious, I'm always looking for more.
+
+Hobbs, David E  32:52
+Yeah.
+
+Grier, Steven  32:54
+Sorry, I want, I want to extend.
+
+Hobbs, David E  32:54
+All right, well, maybe maybe we are good. Maybe we're good till Friday.
+So I appreciate this extra time that you've allocated to our team. I appreciate it very much. Thank you.
+
+Grier, Steven  33:06
+Yeah, absolutely. Chew up calendar time, any time. Please just fill it up because I can jump on a call. I can't take the free slots and do something different with them. It's weird. So it kind of gets around some of the priority conversation. So please, if you, if there's questions,
+steal time. Eventually we're going to get to the point where I need that heads down time to get you answers, but some of these we've been able to kind of move some blockers around. So I would say feel free to steal more time anytime that you need.
+
+Hobbs, David E  33:44
+All right, thank you. Well, if there's nothing else, we'll go ahead and end it. Appreciate it, everybody.
+Thank you.
+
+Grier, Steven  33:50
+Thanks, see ya.
+
+Hale, Alyssa  33:51
+Thank you.
